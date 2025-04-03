@@ -14,7 +14,6 @@ body {
     overflow-x: hidden;
 }
 
-/* 공통 버튼 스타일 */
 .btn {
     padding: clamp(8px, 2vw, 12px);
     border-radius: 8px;
@@ -27,7 +26,6 @@ body {
     transform: scale(1.05);
 }
 
-/* 접근성을 위한 숨겨진 라벨 */
 .hidden-label {
     position: absolute;
     width: 1px;
@@ -37,66 +35,6 @@ body {
     overflow: hidden;
     clip: rect(0, 0, 0, 0);
     border: 0;
-}
-
-/* 로그인 섹션 스타일 */
-.login-section {
-    background-color: white;
-    border-radius: 12px;
-    padding: 20px;
-    margin: 50px auto;
-    max-width: 400px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-    text-align: center;
-}
-
-.login-section h2 {
-    font-size: 24px;
-    margin-bottom: 20px;
-    color: #4285F4;
-}
-
-.login-section label {
-    display: block;
-    text-align: left;
-    margin: 10px 0 5px;
-    font-size: 16px;
-}
-
-.login-section input {
-    width: 100%;
-    padding: 10px;
-    border-radius: 8px;
-    border: 1px solid #ddd;
-    margin-bottom: 15px;
-    font-size: 16px;
-}
-
-.login-btn {
-    width: 100%;
-    background-color: #4285F4;
-    color: white;
-    margin-bottom: 10px;
-}
-
-.login-btn:hover {
-    background-color: #3367D6;
-}
-
-.register-btn {
-    width: 100%;
-    background-color: #34C759;
-    color: white;
-}
-
-.register-btn:hover {
-    background-color: #2EA44F;
-}
-
-.login-message {
-    margin-top: 10px;
-    font-size: 14px;
-    color: #EA4335;
 }
 
 /* Navigation Drawer 스타일 */
@@ -173,26 +111,19 @@ body {
 
 .reset-btn {
     width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    border: none;
     background-color: #4285F4;
     color: white;
     font-size: 16px;
+    cursor: pointer;
     margin-top: 20px;
+    transition: all 0.3s;
 }
 
 .reset-btn:hover {
     background-color: #3367D6;
-}
-
-.logout-btn {
-    width: 100%;
-    background-color: #EA4335;
-    color: white;
-    font-size: 16px;
-    margin-top: 10px;
-}
-
-.logout-btn:hover {
-    background-color: #D32F2F;
 }
 
 .main-content {
@@ -206,7 +137,6 @@ body {
     padding: 20px;
 }
 
-/* 대시보드 스타일 */
 .dashboard {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -347,7 +277,6 @@ body {
     object-fit: contain;
 }
 
-/* 통계 스타일 */
 .stats-section {
     background-color: white;
     border-radius: 12px;
@@ -846,7 +775,6 @@ body {
     padding: 5px 0;
 }
 
-/* 화면 전환 애니메이션 */
 .main-content .container > section {
     opacity: 0;
     transform: translateY(20px);
@@ -858,7 +786,6 @@ body {
     transform: translateY(0);
 }
 
-/* 반응형 디자인 */
 @media (max-width: 576px) {
     .hamburger-icon {
         font-size: 25px;
@@ -902,4 +829,27 @@ body {
     .week-day {
         padding: 10px;
     }
+}
+.nav-item {
+    padding: 10px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.nav-item:hover {
+    background-color: #e0e0e0;
+}
+
+#login-btn, #logout-btn {
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    border: none;
+    background-color: #4285F4;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+    margin-top: 20px;
+    transition: all 0.3s;
+    text-align: center;
 }

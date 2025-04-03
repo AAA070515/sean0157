@@ -135,7 +135,7 @@
                     <div class="goal-inputs">
                         <div class="goal-period">
                             <h4>Daily Goal</h4>
-                            <input type="number" id=" bulkyGoal" min="0" placeholder="Hours">
+                            <input type="number" id="dailyGoal" min="0" placeholder="Hours">
                             <button class="btn" onclick="saveGoal('daily')">Save</button>
                         </div>
                         <div class="goal-period">
@@ -173,7 +173,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
         import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-storage.js";
 
         const firebaseConfig = {
@@ -191,26 +191,31 @@
         const db = getFirestore(app);
         const storage = getStorage(app);
 
+        console.log("Firebase initialized:", app, auth, db, storage);
+
         const loginBtn = document.getElementById('login-btn');
         const logoutBtn = document.getElementById('logout-btn');
 
-        window.auth = auth; // 전역 변수로 노출 (script.js에서 사용)
+        window.auth = auth;
         window.db = db;
         window.storage = storage;
 
+        let unsubscribe = null;
+
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                window.userUID = user.uid; // 전역 변수로 UID 설정
+                window.userUID = user.uid;
+                console.log("User UID set:", window.userUID);
                 loginBtn.style.display = 'none';
                 logoutBtn.style.display = 'block';
-                console.log('Logged in as:', user.displayName, user.email);
-                syncDataFromFirestore(); // 데이터 동기화
+                syncDataFromFirestore();
             } else {
                 window.userUID = null;
+                console.log("User logged out, UID cleared");
                 loginBtn.style.display = 'block';
                 logoutBtn.style.display = 'none';
-                console.log('Logged out');
-                resetLocalData(); // 로그아웃 시 로컬 데이터 초기화
+                if (unsubscribe) unsubscribe();
+                resetLocalData();
             }
         });
 
@@ -218,8 +223,7 @@
             const provider = new GoogleAuthProvider();
             signInWithPopup(auth, provider)
                 .then((result) => {
-                    const user = result.user;
-                    console.log('Login successful:', user.displayName);
+                    console.log('Login successful:', result.user.displayName);
                 })
                 .catch((error) => {
                     console.error('Login failed:', error.message);
@@ -237,10 +241,13 @@
         });
 
         function syncDataFromFirestore() {
-            if (!window.userUID) return;
+            if (!window.userUID) {
+                console.error("No user UID for syncing data");
+                return;
+            }
 
             const userDocRef = doc(db, "users", window.userUID);
-            getDoc(userDocRef).then((docSnap) => {
+            unsubscribe = onSnapshot(userDocRef, (docSnap) => {
                 if (docSnap.exists()) {
                     const data = docSnap.data();
                     window.subjects = data.subjects || [];
@@ -250,7 +257,9 @@
                     window.todos = data.todos || [];
                     window.goals = data.goals || { daily: null, weekly: null };
                     window.studySessions = data.studySessions || {};
+                    console.log("Data synced from Firestore:", data);
                 } else {
+                    console.log("No data exists for user, initializing...");
                     setDoc(userDocRef, {
                         subjects: [],
                         studyData: {},
@@ -274,13 +283,27 @@
                 renderHome();
                 renderTodos();
                 updateGoalsProgress();
-            }).catch((error) => {
+            }, (error) => {
                 console.error("Error syncing data:", error);
             });
         }
 
         function saveDataToFirestore() {
-            if (!window.userUID) return;
+            if (!window.userUID) {
+                console.error("No user UID available. User might not be logged in.");
+                return;
+            }
+
+            console.log("Attempting to save data to Firestore for UID:", window.userUID);
+            console.log("Data to save:", {
+                subjects: window.subjects,
+                studyData: window.studyData,
+                subjectStudyTime: window.subjectStudyTime,
+                diaryData: window.diaryData,
+                todos: window.todos,
+                goals: window.goals,
+                studySessions: window.studySessions
+            });
 
             const userDocRef = doc(db, "users", window.userUID);
             setDoc(userDocRef, {
@@ -291,8 +314,12 @@
                 todos: window.todos,
                 goals: window.goals,
                 studySessions: window.studySessions
-            }, { merge: true }).catch((error) => {
-                console.error("Error saving data:", error);
+            }, { merge: true })
+            .then(() => {
+                console.log("Data successfully saved to Firestore:", window.diaryData);
+            })
+            .catch((error) => {
+                console.error("Error saving data to Firestore:", error);
             });
         }
 

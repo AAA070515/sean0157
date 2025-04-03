@@ -3,26 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Study Dashboard</title>
+    <title>윤사랑 공부해 | Yoon Sarang Study</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <!-- 로그인 화면 -->
-    <section id="loginScreen" class="login-section">
-        <h2>Welcome</h2>
-        <label for="usernameInput" class="hidden-label">Email</label>
-        <input type="email" id="usernameInput" placeholder="Email" required>
-        <label for="passwordInput" class="hidden-label">Password</label>
-        <input type="password" id="passwordInput" placeholder="Password" required>
-        <button class="btn login-btn" onclick="login()">Login</button>
-        <button class="btn register-btn" onclick="register()">Register</button>
-        <div id="loginMessage" class="login-message"></div>
-    </section>
-
-    <!-- 네비게이션 드로어 -->
-    <div class="nav-drawer hidden">
-        <span class="hamburger-icon" onclick="toggleDrawer()">☰</span>
-        <div class="overlay hidden" onclick="closeDrawer()"></div>
+    <nav class="nav-drawer">
+        <div class="hamburger-icon" onclick="toggleDrawer()">☰</div>
         <div class="drawer-content hidden">
             <div class="nav-item active" onclick="showScreen('home')">Home</div>
             <div class="nav-item" onclick="showScreen('study')">Study</div>
@@ -30,138 +16,310 @@
             <div class="nav-item" onclick="showScreen('diary')">Journal</div>
             <div class="nav-item" onclick="showScreen('goals')">Goals</div>
             <div class="nav-item" onclick="showScreen('stats')">Statistics</div>
-            <button class="btn reset-btn" onclick="resetAllSettings()">Reset All</button>
-            <button class="btn logout-btn" onclick="logout()">Logout</button>
+            <div class="nav-item" id="login-btn">Login</div>
+            <div class="nav-item" id="logout-btn" style="display: none;">Logout</div>
+            <button class="reset-btn" onclick="resetAllSettings()">Reset All Settings</button>
         </div>
-    </div>
+    </nav>
+    <div class="overlay hidden" onclick="closeDrawer()"></div>
 
-    <!-- 메인 콘텐츠 -->
     <main class="main-content">
         <div class="container">
-            <!-- 홈 화면 -->
-            <section id="homeScreen" class="hidden">
+            <section id="homeScreen">
                 <div class="dashboard">
-                    <div class="widget full-width" onclick="showScreen('diary')">
-                        <h3 id="calendarTitle"></h3>
-                        <div id="calendar" class="calendar-grid"></div>
+                    <div class="widget full-width">
+                        <h3>Calendar</h3>
+                        <div class="stats-calendar">
+                            <h4 id="calendarTitle"></h4>
+                            <div id="calendar" class="calendar-grid"></div>
+                        </div>
                         <div id="dayDetails" class="day-details hidden">
                             <h3 id="selectedDate"></h3>
-                            <p>Study Time: <span id="studyTimeDetail"></span></p>
+                            <p>Study Time: <span id="studyTimeDetail">0h 0m 0s</span></p>
                             <p id="memoDetail" class="memo-detail hidden"></p>
-                            <div id="dayImagePreview"></div>
+                            <div id="dayImagePreview" style="margin-top: 15px;"></div>
                         </div>
                     </div>
                     <div class="widget" onclick="showScreen('study')">
-                        <h3>Today's Study</h3>
-                        <div class="big-text" id="dashboardStudyTime">0h 0m 0s</div>
+                        <h3>Today's Study Time</h3>
+                        <div id="dashboardStudyTime" class="big-text">0h 0m 0s</div>
                     </div>
                     <div class="widget" onclick="showScreen('todo')">
-                        <h3>To-Do Preview</h3>
+                        <h3>To-Do List</h3>
                         <ul id="dashboardTodoPreview" class="todo-preview"></ul>
                     </div>
                     <div class="widget" onclick="showScreen('diary')">
                         <h3>Recent Journal</h3>
-                        <div id="dashboardDiary" class="diary-preview"></div>
+                        <div id="dashboardDiary" class="diary-preview">
+                            <p>No recent entries</p>
+                        </div>
                     </div>
-                    <div class="widget" onclick="showScreen('goals')">
+                    <div class="widget" onclick="showScreen('stats')">
                         <h3>Goal Progress</h3>
                         <div id="dashboardGoalProgress" class="goal-preview"></div>
                     </div>
                 </div>
             </section>
-
-            <!-- 공부 화면 -->
-            <section id="studyScreen" class="timer-section hidden">
-                <h2>Study Timer</h2>
-                <div id="timerDisplay" class="timer-display">00:00:00</div>
-                <input type="text" id="subjectInput" class="subject-input" placeholder="Add a subject">
-                <button class="btn subject-add-btn" onclick="addSubject()">Add</button>
-                <select id="subjectSelect" class="subject-select"></select>
-                <div class="timer-controls">
-                    <button class="btn timer-btn start-btn" onclick="startTimer()">Start</button>
-                    <button class="btn timer-btn pause-btn" onclick="pauseTimer()">Pause</button>
-                    <button class="btn timer-btn stop-btn" onclick="stopTimer()">Stop</button>
+            <section id="studyScreen" class="hidden">
+                <div class="timer-section">
+                    <div style="display: flex;">
+                        <label for="subjectInput" class="hidden-label">Add subject</label>
+                        <input type="text" class="subject-input" id="subjectInput" placeholder="Add subject">
+                        <button class="subject-add-btn btn" onclick="addSubject()">Add</button>
+                    </div>
+                    <select class="subject-select" id="subjectSelect">
+                        <option value="">Select a subject</option>
+                    </select>
+                    <div class="timer-display" id="timerDisplay">00:00:00</div>
+                    <div class="timer-controls">
+                        <button class="timer-btn start-btn btn" onclick="startTimer()">Start</button>
+                        <button class="timer-btn pause-btn btn" onclick="pauseTimer()">Pause</button>
+                        <button class="timer-btn stop-btn btn" onclick="stopTimer()">Stop</button>
+                    </div>
                 </div>
                 <div class="study-stats">
                     <h3>Today's Study Time</h3>
                     <div id="dailyStudyTime">0h 0m 0s</div>
-                    <div id="subjectTimes" class="subject-time"></div>
+                    <div id="subjectTimes"></div>
                 </div>
             </section>
-
-            <!-- 다이어리 화면 -->
-            <section id="diaryScreen" class="diary-section hidden">
-                <h2>Journal</h2>
-                <input type="date" id="diaryDate">
-                <div class="mood-beans">
-                    <div class="mood-bean happy" onclick="selectMood('happy')"><img src="very_happy.png" alt="Happy"></div>
-                    <div class="mood-bean calm" onclick="selectMood('calm')"><img src="happy.png" alt="Calm"></div>
-                    <div class="mood-bean neutral" onclick="selectMood('neutral')"><img src="calm.png" alt="Neutral"></div>
-                    <div class="mood-bean sad" onclick="selectMood('sad')"><img src="sad.png" alt="Sad"></div>
-                    <div class="mood-bean angry" onclick="selectMood('angry')"><img src="angry.png" alt="Angry"></div>
+            <section id="diaryScreen" class="hidden">
+                <div class="diary-section">
+                    <h3>Select Date</h3>
+                    <input type="date" id="diaryDate" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd; margin-top: 15px; font-size: 16px;">
                 </div>
-                <textarea id="memoInput" class="memo-input" placeholder="Write about your day..."></textarea>
-                <input type="file" id="diaryImage" accept="image/*" class="hidden">
-                <button class="btn image-upload-btn" onclick="triggerFileInput()">Upload Image</button>
-                <div id="imagePreview"></div>
-                <button class="btn save-button" onclick="saveDiary()">Save Entry</button>
-            </section>
-
-            <!-- 투두 화면 -->
-            <section id="todoScreen" class="todo-section hidden">
-                <h2>To-Do List</h2>
-                <input type="text" id="todoInput" class="todo-input" placeholder="Add a new task">
-                <button class="btn todo-add-btn" onclick="addTodo()">Add</button>
-                <div class="task-filters">
-                    <button class="filter-btn active" onclick="filterTasks('all')">All</button>
-                    <button class="filter-btn" onclick="filterTasks('active')">Active</button>
-                    <button class="filter-btn" onclick="filterTasks('completed')">Completed</button>
-                </div>
-                <ul id="todoList" class="todo-list"></ul>
-                <div class="todo-stats">
-                    <span id="todoCount">0 tasks remaining</span>
-                    <button class="clear-btn" onclick="clearCompleted()">Clear Completed</button>
-                </div>
-            </section>
-
-            <!-- 목표 화면 -->
-            <section id="goalsScreen" class="goals-section hidden">
-                <h2>Goals</h2>
-                <div class="goal-inputs">
-                    <div class="goal-period">
-                        <h4>Daily Goal:</h4>
-                        <input type="number" id="dailyGoal" min="0" placeholder="Hours">
-                        <button class="btn" onclick="saveGoal('daily')">Save</button>
-                    </div>
-                    <div class="goal-period">
-                        <h4>Weekly Goal:</h4>
-                        <input type="number" id="weeklyGoal" min="0" placeholder="Hours">
-                        <button class="btn" onclick="saveGoal('weekly')">Save</button>
+                <div class="diary-section">
+                    <h3>How was your mood today?</h3>
+                    <div class="mood-beans">
+                        <div class="mood-bean happy" onclick="selectMood('happy')"><img src="very_happy.png" alt="Happy" style="width:200%" loading="lazy"></div>
+                        <div class="mood-bean calm" onclick="selectMood('calm')"><img src="happy.png" alt="Calm" style="width:200%" loading="lazy"></div>
+                        <div class="mood-bean neutral" onclick="selectMood('neutral')"><img src="calm.png" alt="Neutral" style="width:200%" loading="lazy"></div>
+                        <div class="mood-bean sad" onclick="selectMood('sad')"><img src="sad.png" alt="Sad" style="width:200%" loading="lazy"></div>
+                        <div class="mood-bean angry" onclick="selectMood('angry')"><img src="angry.png" alt="Angry" style="width:200%" loading="lazy"></div>
                     </div>
                 </div>
-                <div id="goalProgress" class="goal-progress"></div>
-            </section>
-
-            <!-- 통계 화면 -->
-            <section id="statsScreen" class="stats-section hidden">
-                <h2>Statistics</h2>
-                <div class="week-controls">
-                    <button class="btn" onclick="changeWeek(-1)">Previous</button>
-                    <span id="weekRange"></span>
-                    <button class="btn" onclick="changeWeek(1)">Next</button>
+                <div class="diary-section">
+                    <h3>Upload Image</h3>
+                    <input type="file" id="diaryImage" accept="image/*" style="display: none;">
+                    <button class="image-upload-btn btn" onclick="triggerFileInput()">Upload</button>
+                    <div id="imagePreview" style="margin-top: 15px;"></div>
                 </div>
-                <div id="weekCalendar" class="week-calendar"></div>
-                <div id="statsDetails" class="stats-details hidden">
-                    <h3 id="statsSelectedDate"></h3>
-                    <div id="statsStudyTime"></div>
-                    <div id="statsSubjects"></div>
-                    <div id="statsDiary"></div>
+                <div class="diary-section">
+                    <h3>Daily Note</h3>
+                    <textarea class="memo-input" id="memoInput" placeholder="Write a brief note about your day..." rows="3"></textarea>
+                </div>
+                <button class="save-button btn" onclick="saveDiary()">Save Journal Entry</button>
+            </section>
+            <section id="todoScreen" class="hidden">
+                <div class="todo-section">
+                    <div style="display: flex;">
+                        <label for="todoInput" class="hidden-label">Add new task</label>
+                        <input type="text" class="todo-input" id="todoInput" placeholder="Add new task">
+                        <button class="todo-add-btn btn" onclick="addTodo()">Add</button>
+                    </div>
+                    <div class="task-filters">
+                        <button class="filter-btn active" onclick="filterTasks('all')">All</button>
+                        <button class="filter-btn" onclick="filterTasks('active')">Active</button>
+                        <button class="filter-btn" onclick="filterTasks('completed')">Completed</button>
+                    </div>
+                    <ul id="todoList" class="todo-list"></ul>
+                    <div class="todo-stats">
+                        <span id="todoCount">0 tasks remaining</span>
+                        <button class="clear-btn" onclick="clearCompleted()">Clear completed</button>
+                    </div>
+                </div>
+            </section>
+            <section id="goalsScreen" class="hidden">
+                <div class="goals-section">
+                    <h3>Set Your Goals</h3>
+                    <div class="goal-inputs">
+                        <div class="goal-period">
+                            <h4>Daily Goal</h4>
+                            <input type="number" id=" bulkyGoal" min="0" placeholder="Hours">
+                            <button class="btn" onclick="saveGoal('daily')">Save</button>
+                        </div>
+                        <div class="goal-period">
+                            <h4>Weekly Goal</h4>
+                            <input type="number" id="weeklyGoal" min="0" placeholder="Hours">
+                            <button class="btn" onclick="saveGoal('weekly')">Save</button>
+                        </div>
+                    </div>
+                    <div class="goal-progress">
+                        <h3>Progress</h3>
+                        <div id="goalProgress"></div>
+                    </div>
+                </div>
+            </section>
+            <section id="statsScreen" class="hidden">
+                <div class="stats-section">
+                    <h3>Weekly Statistics</h3>
+                    <div class="week-controls">
+                        <button class="btn" onclick="changeWeek(-1)">Previous Week</button>
+                        <span id="weekRange"></span>
+                        <button class="btn" onclick="changeWeek(1)">Next Week</button>
+                    </div>
+                    <div id="weekCalendar" class="week-calendar"></div>
+                    <div id="statsDetails" class="stats-details hidden">
+                        <h3 id="statsSelectedDate"></h3>
+                        <div id="statsStudyTime"></div>
+                        <div id="statsSubjects"></div>
+                        <div id="statsDiary" class="stats-diary"></div>
+                    </div>
                 </div>
             </section>
         </div>
     </main>
 
-    <!-- JavaScript 모듈 방식으로 불러오기 -->
-    <script type="module" src="script.js"></script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-storage.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDx_BBG73R3FReoFsRPuIKcDb754LAxTCI",
+            authDomain: "sean0157-92c62.firebaseapp.com",
+            projectId: "sean0157-92c62",
+            storageBucket: "sean0157-92c62.firebasestorage.app",
+            messagingSenderId: "1052880240716",
+            appId: "1:1052880240716:web:13289245ada3ff291174e9",
+            measurementId: "G-HRWSZ6MSNB"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const storage = getStorage(app);
+
+        const loginBtn = document.getElementById('login-btn');
+        const logoutBtn = document.getElementById('logout-btn');
+
+        window.auth = auth; // 전역 변수로 노출 (script.js에서 사용)
+        window.db = db;
+        window.storage = storage;
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                window.userUID = user.uid; // 전역 변수로 UID 설정
+                loginBtn.style.display = 'none';
+                logoutBtn.style.display = 'block';
+                console.log('Logged in as:', user.displayName, user.email);
+                syncDataFromFirestore(); // 데이터 동기화
+            } else {
+                window.userUID = null;
+                loginBtn.style.display = 'block';
+                logoutBtn.style.display = 'none';
+                console.log('Logged out');
+                resetLocalData(); // 로그아웃 시 로컬 데이터 초기화
+            }
+        });
+
+        loginBtn.addEventListener('click', () => {
+            const provider = new GoogleAuthProvider();
+            signInWithPopup(auth, provider)
+                .then((result) => {
+                    const user = result.user;
+                    console.log('Login successful:', user.displayName);
+                })
+                .catch((error) => {
+                    console.error('Login failed:', error.message);
+                });
+        });
+
+        logoutBtn.addEventListener('click', () => {
+            signOut(auth)
+                .then(() => {
+                    console.log('Logout successful');
+                })
+                .catch((error) => {
+                    console.error('Logout failed:', error.message);
+                });
+        });
+
+        function syncDataFromFirestore() {
+            if (!window.userUID) return;
+
+            const userDocRef = doc(db, "users", window.userUID);
+            getDoc(userDocRef).then((docSnap) => {
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    window.subjects = data.subjects || [];
+                    window.studyData = data.studyData || {};
+                    window.subjectStudyTime = data.subjectStudyTime || {};
+                    window.diaryData = data.diaryData || {};
+                    window.todos = data.todos || [];
+                    window.goals = data.goals || { daily: null, weekly: null };
+                    window.studySessions = data.studySessions || {};
+                } else {
+                    setDoc(userDocRef, {
+                        subjects: [],
+                        studyData: {},
+                        subjectStudyTime: {},
+                        diaryData: {},
+                        todos: [],
+                        goals: { daily: null, weekly: null },
+                        studySessions: {}
+                    });
+                    window.subjects = [];
+                    window.studyData = {};
+                    window.subjectStudyTime = {};
+                    window.diaryData = {};
+                    window.todos = [];
+                    window.goals = { daily: null, weekly: null };
+                    window.studySessions = {};
+                }
+                updateSubjectSelect();
+                updateSubjectTimes();
+                updateStudyTimeDisplay();
+                renderHome();
+                renderTodos();
+                updateGoalsProgress();
+            }).catch((error) => {
+                console.error("Error syncing data:", error);
+            });
+        }
+
+        function saveDataToFirestore() {
+            if (!window.userUID) return;
+
+            const userDocRef = doc(db, "users", window.userUID);
+            setDoc(userDocRef, {
+                subjects: window.subjects,
+                studyData: window.studyData,
+                subjectStudyTime: window.subjectStudyTime,
+                diaryData: window.diaryData,
+                todos: window.todos,
+                goals: window.goals,
+                studySessions: window.studySessions
+            }, { merge: true }).catch((error) => {
+                console.error("Error saving data:", error);
+            });
+        }
+
+        function resetLocalData() {
+            window.subjects = [];
+            window.studyData = {};
+            window.subjectStudyTime = {};
+            window.diaryData = {};
+            window.todos = [];
+            window.goals = { daily: null, weekly: null };
+            window.studySessions = {};
+            window.timerSeconds = 0;
+            if (window.timerInterval) clearInterval(window.timerInterval);
+            window.timerInterval = null;
+            updateSubjectSelect();
+            updateSubjectTimes();
+            updateStudyTimeDisplay();
+            updateTimerDisplay();
+            renderHome();
+            renderTodos();
+        }
+
+        window.syncDataFromFirestore = syncDataFromFirestore;
+        window.saveDataToFirestore = saveDataToFirestore;
+        window.resetLocalData = resetLocalData;
+    </script>
+
+    <script src="script.js"></script>
 </body>
 </html>

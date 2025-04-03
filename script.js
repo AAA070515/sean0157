@@ -1,25 +1,3 @@
-// Firebase SDK 임포트
-import { initializeApp } from 'firebase/app';
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from 'firebase/auth';
-import { getFirestore, doc, setDoc, getDoc } from 'firebase/firestore';
-
-// Firebase 설정
-const firebaseConfig = {
-  apiKey: "AIzaSyDHiMXnBYgYDV1d7K_aFEb3u9jLWNVNpxw",
-  authDomain: "yoonsarang0157.firebaseapp.com",
-  projectId: "yoonsarang0157",
-  storageBucket: "yoonsarang0157.firebasestorage.app",
-  messagingSenderId: "366190146125",
-  appId: "1:366190146125:web:d46bf198139ea1a6bae204",
-  measurementId: "G-1KLQLPFY0D"
-};
-
-// Firebase 초기화
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-
-// 전역 변수
 let timerSeconds = 0;
 let timerInterval = null;
 let subjects = [];
@@ -34,18 +12,13 @@ let selectedMood = null;
 let uploadedImage = null;
 let currentSelectedDate = null;
 let currentWeekOffset = 0;
-let currentUser = null;
 
 const today = new Date();
 let currentDate = today.toISOString().split('T')[0];
-
-// 유틸리티 함수
-function formatTime(seconds) {
-    const h = Math.floor(seconds / 3600);
-    const m = Math.floor((seconds % 3600) / 60);
-    const s = seconds % 60;
-    return `${h}h ${m}m ${s}s`;
-}
+updateStudyTimeDisplay();
+renderHome();
+renderTodos();
+updateGoalsProgress();
 
 function getMoodImage(mood) {
     const moodImages = {
@@ -58,119 +31,6 @@ function getMoodImage(mood) {
     return moodImages[mood] || 'very_happy.png';
 }
 
-// Firebase 데이터 로드 및 저장 함수
-async function loadUserData() {
-    if (!currentUser) return;
-    const userDocRef = doc(db, 'users', currentUser.uid);
-    const userDoc = await getDoc(userDocRef);
-    const data = userDoc.exists() ? userDoc.data() : {};
-    subjects = data.subjects || [];
-    studyData = data.studyData || {};
-    subjectStudyTime = data.subjectStudyTime || {};
-    diaryData = data.diaryData || {};
-    todos = data.todos || [];
-    goals = data.goals || { daily: null, weekly: null };
-    studySessions = data.studySessions || {};
-    updateStudyTimeDisplay();
-    renderHome();
-    renderTodos();
-    updateGoalsProgress();
-    updateSubjectSelect();
-    updateSubjectTimes();
-}
-
-async function saveUserData() {
-    if (!currentUser) return;
-    const userDocRef = doc(db, 'users', currentUser.uid);
-    await setDoc(userDocRef, {
-        subjects,
-        studyData,
-        subjectStudyTime,
-        diaryData,
-        todos,
-        goals,
-        studySessions
-    }, { merge: true });
-}
-
-// 로그인/회원가입 함수
-function login() {
-    const email = document.getElementById('usernameInput').value.trim();
-    const password = document.getElementById('passwordInput').value.trim();
-    const message = document.getElementById('loginMessage');
-
-    if (!email || !password) {
-        message.textContent = 'Please enter both email and password.';
-        return;
-    }
-
-    signInWithEmailAndPassword(auth, email, password)
-        .then(userCredential => {
-            currentUser = userCredential.user;
-            document.getElementById('loginScreen').classList.add('hidden');
-            document.querySelector('.nav-drawer').classList.remove('hidden');
-            loadUserData();
-            showScreen('home');
-            message.textContent = '';
-        })
-        .catch(error => {
-            message.textContent = error.message;
-        });
-}
-
-function register() {
-    const email = document.getElementById('usernameInput').value.trim();
-    const password = document.getElementById('passwordInput').value.trim();
-    const message = document.getElementById('loginMessage');
-
-    if (!email || !password) {
-        message.textContent = 'Please enter both email and password.';
-        return;
-    }
-
-    createUserWithEmailAndPassword(auth, email, password)
-        .then(userCredential => {
-            currentUser = userCredential.user;
-            document.getElementById('loginScreen').classList.add('hidden');
-            document.querySelector('.nav-drawer').classList.remove('hidden');
-            saveUserData();
-            showScreen('home');
-            message.textContent = '';
-        })
-        .catch(error => {
-            message.textContent = error.message;
-        });
-}
-
-function logout() {
-    signOut(auth).then(() => {
-        currentUser = null;
-        document.querySelector('.nav-drawer').classList.add('hidden');
-        document.getElementById('loginScreen').classList.remove('hidden');
-        showScreen('login');
-        if (timerInterval) clearInterval(timerInterval);
-        timerSeconds = 0;
-        updateTimerDisplay();
-    });
-}
-
-// 인증 상태 감지
-onAuthStateChanged(auth, user => {
-    if (user) {
-        currentUser = user;
-        document.getElementById('loginScreen').classList.add('hidden');
-        document.querySelector('.nav-drawer').classList.remove('hidden');
-        loadUserData();
-        showScreen('home');
-    } else {
-        currentUser = null;
-        document.querySelector('.nav-drawer').classList.add('hidden');
-        document.getElementById('loginScreen').classList.remove('hidden');
-        showScreen('login');
-    }
-});
-
-// 네비게이션 함수
 function toggleDrawer() {
     const drawerContent = document.querySelector('.drawer-content');
     const overlay = document.querySelector('.overlay');
@@ -190,11 +50,16 @@ function closeDrawer() {
 }
 
 function showScreen(screen) {
-    const screens = ['login', 'home', 'study', 'diary', 'todo', 'goals', 'stats'];
-    screens.forEach(s => document.getElementById(`${s}Screen`).classList.add('hidden'));
+    const screens = ['home', 'study', 'diary', 'todo', 'goals', 'stats'];
+    screens.forEach(s => {
+        const el = document.getElementById(`${s}Screen`);
+        el.classList.add('hidden');
+    });
 
     const targetScreen = document.getElementById(`${screen}Screen`);
-    setTimeout(() => targetScreen.classList.remove('hidden'), 50);
+    setTimeout(() => {
+        targetScreen.classList.remove('hidden');
+    }, 50);
 
     const navMapping = {
         'home': 'Home',
@@ -205,24 +70,33 @@ function showScreen(screen) {
         'stats': 'Statistics'
     };
 
-    if (screen !== 'login') {
-        document.querySelectorAll('.nav-item').forEach(btn => {
-            btn.classList.remove('active');
-            if (btn.textContent.trim() === navMapping[screen]) btn.classList.add('active');
-        });
-        closeDrawer();
-    }
-
+    document.querySelectorAll('.nav-item').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.textContent.trim() === navMapping[screen]) {
+            btn.classList.add('active');
+        }
+    });
+    
+    closeDrawer();
+    
     if (screen === 'home') renderHome();
     else if (screen === 'study') {
         updateStudyTimeDisplay();
         updateSubjectSelect();
         updateSubjectTimes();
-        if (timerInterval) clearInterval(timerInterval);
+        if (timerInterval) {
+            clearInterval(timerInterval);
+            timerInterval = null;
+        }
         timerSeconds = 0;
         updateTimerDisplay();
     } else if (screen === 'diary') {
         document.getElementById('diaryDate').value = currentDate;
+        document.getElementById('memoInput').value = '';
+        document.querySelectorAll('.mood-bean').forEach(bean => bean.classList.remove('selected'));
+        selectedMood = null;
+        uploadedImage = null;
+        document.getElementById('imagePreview').innerHTML = '';
         loadDiaryData(currentDate);
     } else if (screen === 'todo') renderTodos();
     else if (screen === 'goals') {
@@ -231,7 +105,6 @@ function showScreen(screen) {
     } else if (screen === 'stats') renderStats();
 }
 
-// 홈 화면 렌더링
 function renderHome() {
     const year = today.getFullYear();
     const month = today.getMonth();
@@ -242,62 +115,110 @@ function renderHome() {
     const calendar = document.getElementById('calendar');
     calendar.innerHTML = '';
 
-    for (let i = 0; i < firstDay; i++) calendar.innerHTML += `<div class="day-cell"></div>`;
-    for (let i = 1; i <= daysInMonth; i++) {
-        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
-        const hasDiary = diaryData[dateStr]?.mood;
-        const dayContent = hasDiary ? `<img src="${getMoodImage(diaryData[dateStr].mood)}" alt="${diaryData[dateStr].mood}" style="width: 100%; height: 100%; object-fit: contain;">` : i;
-        calendar.innerHTML += `<div class="day-cell ${hasDiary ? 'sticker' : ''}" onclick="toggleDayDetails('${dateStr}')">${dayContent}</div>`;
+    for (let i = 0; i < firstDay; i++) {
+        calendar.innerHTML += `<div class="day-cell"></div>`;
     }
 
-    document.getElementById('dashboardStudyTime').textContent = formatTime(studyData[currentDate] || 0);
+    for (let i = 1; i <= daysInMonth; i++) {
+        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+        const hasDiary = diaryData[dateStr]?.mood ? true : false;
+        let dayContent = i;
+        
+        if (hasDiary) {
+            const mood = diaryData[dateStr].mood;
+            dayContent = `<img src="${getMoodImage(mood)}" alt="${mood}" style="width: 100%; height: 100%; object-fit: contain;">`;
+        }
+        
+        calendar.innerHTML += `
+            <div class="day-cell ${hasDiary ? 'sticker' : ''}" onclick="toggleDayDetails('${dateStr}')">
+                ${dayContent}
+            </div>`;
+    }
+
+    const studyTime = studyData[currentDate] || 0;
+    const hours = Math.floor(studyTime / 3600);
+    const minutes = Math.floor((studyTime % 3600) / 60);
+    const seconds = studyTime % 60;
+    document.getElementById('dashboardStudyTime').textContent = `${hours}h ${minutes}m ${seconds}s`;
 
     const todoPreview = document.getElementById('dashboardTodoPreview');
     todoPreview.innerHTML = '';
-    const sortedTodos = [...todos.filter(t => !t.completed), ...todos.filter(t => t.completed)].slice(0, 5);
-    sortedTodos.forEach(todo => {
+    const activeTodos = todos.filter(todo => !todo.completed);
+    const completedTodos = todos.filter(todo => todo.completed);
+    const sortedTodos = [...activeTodos, ...completedTodos];
+    sortedTodos.slice(0, 5).forEach(todo => {
         const li = document.createElement('li');
         li.textContent = todo.text;
         if (todo.completed) li.classList.add('completed');
         todoPreview.appendChild(li);
     });
-    if (!sortedTodos.length) todoPreview.innerHTML = '<li>No tasks yet</li>';
+    if (sortedTodos.length === 0) {
+        todoPreview.innerHTML = '<li>No tasks yet</li>';
+    }
 
     const diaryPreview = document.getElementById('dashboardDiary');
     diaryPreview.innerHTML = '';
     const recentDates = Object.keys(diaryData).sort().reverse().slice(0, 1);
-    if (recentDates.length) {
+    if (recentDates.length > 0) {
         const date = recentDates[0];
         const entry = diaryData[date];
-        diaryPreview.innerHTML = `<p><strong>${date}</strong></p><p>Mood: ${entry.mood}</p><p>${entry.memo.substring(0, 50)}${entry.memo.length > 50 ? '...' : ''}</p>`;
+        diaryPreview.innerHTML = `
+            <p><strong>${date}</strong></p>
+            <p>Mood: ${entry.mood}</p>
+            <p>${entry.memo.substring(0, 50)}${entry.memo.length > 50 ? '...' : ''}</p>
+        `;
     } else {
         diaryPreview.innerHTML = '<p>No recent entries</p>';
     }
 
     const goalProgress = document.getElementById('dashboardGoalProgress');
     goalProgress.innerHTML = '';
-    const todayTodos = todos.filter(t => new Date(t.createdAt).toISOString().split('T')[0] === currentDate);
-    goalProgress.innerHTML += `<p>Today's Tasks: ${todayTodos.filter(t => t.completed).length}/${todayTodos.length} completed</p>`;
+    
+    const todayTodos = todos.filter(todo => 
+        new Date(todo.createdAt).toISOString().split('T')[0] === currentDate);
+    const completedTodayTodos = todayTodos.filter(todo => todo.completed).length;
+    const totalTodayTodos = todayTodos.length;
+    goalProgress.innerHTML += `
+        <p>Today's Tasks: ${completedTodayTodos}/${totalTodayTodos} completed</p>
+    `;
+
     if (goals.daily !== null) {
         const dailyTime = studyData[currentDate] || 0;
         const dailyPercentage = Math.min(Math.round((dailyTime / goals.daily) * 100), 100);
-        goalProgress.innerHTML += `<p>Daily Study: ${formatTime(dailyTime)} / ${formatTime(goals.daily)} (${dailyPercentage}%)</p><div class="progress-bar"><div class="progress-fill" style="width: ${dailyPercentage}%"></div></div>`;
+        const hours = Math.floor(dailyTime / 3600);
+        const minutes = Math.floor((dailyTime % 3600) / 60);
+        goalProgress.innerHTML += `
+            <p>Daily Study: ${hours}h ${minutes}m / ${Math.floor(goals.daily / 3600)}h (${dailyPercentage}%)</p>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: ${dailyPercentage}%"></div>
+            </div>
+        `;
     }
     if (goals.weekly !== null) {
         const weeklyTime = calculateWeeklyStudyTime();
         const weeklyPercentage = Math.min(Math.round((weeklyTime / goals.weekly) * 100), 100);
-        goalProgress.innerHTML += `<p>Weekly Study: ${formatTime(weeklyTime)} / ${formatTime(goals.weekly)} (${weeklyPercentage}%)</p><div class="progress-bar"><div class="progress-fill" style="width: ${weeklyPercentage}%"></div></div>`;
+        const hours = Math.floor(weeklyTime / 3600);
+        const minutes = Math.floor((weeklyTime % 3600) / 60);
+        goalProgress.innerHTML += `
+            <p>Weekly Study: ${hours}h ${minutes}m / ${Math.floor(goals.weekly / 3600)}h (${weeklyPercentage}%)</p>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: ${weeklyPercentage}%"></div>
+            </div>
+        `;
     }
-    if (!goals.daily && !goals.weekly && !todayTodos.length) goalProgress.innerHTML = '<p>No goals or tasks set</p>';
+    if (goals.daily === null && goals.weekly === null && totalTodayTodos === 0) {
+        goalProgress.innerHTML = '<p>No goals or tasks set</p>';
+    }
 }
 
-// 통계 화면 렌더링
 function renderStats() {
     const weekStart = getWeekStartDate(currentWeekOffset);
     const weekEnd = new Date(weekStart);
     weekEnd.setDate(weekStart.getDate() + 6);
 
-    document.getElementById('weekRange').textContent = `${weekStart.toLocaleDateString()} - ${weekEnd.toLocaleDateString()}`;
+    document.getElementById('weekRange').textContent = 
+        `${weekStart.toLocaleDateString()} - ${weekEnd.toLocaleDateString()}`;
+
     const weekCalendar = document.getElementById('weekCalendar');
     weekCalendar.innerHTML = '';
 
@@ -308,7 +229,13 @@ function renderStats() {
         const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
         const dayNum = date.getDate();
         const hasData = studyData[dateStr] || diaryData[dateStr];
-        weekCalendar.innerHTML += `<div class="week-day ${hasData ? 'sticker' : ''}" onclick="showStatsDetails('${dateStr}')"><div>${dayName}</div><div>${dayNum}</div></div>`;
+        
+        weekCalendar.innerHTML += `
+            <div class="week-day ${hasData ? 'sticker' : ''}" 
+                 onclick="showStatsDetails('${dateStr}')">
+                <div>${dayName}</div>
+                <div>${dayNum}</div>
+            </div>`;
     }
 
     document.getElementById('statsDetails').classList.add('hidden');
@@ -336,17 +263,41 @@ function showStatsDetails(dateStr) {
     currentSelectedDate = nextDateStr;
     const statsDetails = document.getElementById('statsDetails');
     document.getElementById('statsSelectedDate').textContent = nextDateStr;
-    document.getElementById('statsStudyTime').textContent = `Total Study Time: ${formatTime(studyData[nextDateStr] || 0)}`;
+
+    const studyTime = studyData[nextDateStr] || 0;
+    const hours = Math.floor(studyTime / 3600);
+    const minutes = Math.floor((studyTime % 3600) / 60);
+    const seconds = studyTime % 60;
+    document.getElementById('statsStudyTime').textContent = 
+        `Total Study Time: ${hours}h ${minutes}m ${seconds}s`;
 
     const statsSubjects = document.getElementById('statsSubjects');
-    statsSubjects.innerHTML = '<h4>To-Do Statistics</h4>';
-    const dayTodos = todos.filter(t => new Date(t.createdAt).toISOString().split('T')[0] === nextDateStr);
-    statsSubjects.innerHTML += `<div class="subject-stat"><span>Completed Tasks</span><span>${dayTodos.filter(t => t.completed).length}/${dayTodos.length}</span></div>`;
+    statsSubjects.innerHTML = '';
+
+    statsSubjects.innerHTML += '<h4>To-Do Statistics</h4>';
+    const dayTodos = todos.filter(todo => 
+        new Date(todo.createdAt).toISOString().split('T')[0] === nextDateStr);
+    const completedTodos = dayTodos.filter(todo => todo.completed).length;
+    const totalTodos = dayTodos.length;
+    statsSubjects.innerHTML += `
+        <div class="subject-stat">
+            <span>Completed Tasks</span>
+            <span>${completedTodos}/${totalTodos}</span>
+        </div>
+    `;
 
     const statsDiary = document.getElementById('statsDiary');
     statsDiary.innerHTML = '<h4>Journal Entry</h4>';
     const diaryEntry = diaryData[nextDateStr];
-    statsDiary.innerHTML += diaryEntry ? `<p>Mood: ${diaryEntry.mood}</p><p>${diaryEntry.memo}</p>${diaryEntry.image ? `<img src="${diaryEntry.image}" alt="Diary Image">` : ''}` : '<p>No journal entry for this day.</p>';
+    if (diaryEntry) {
+        statsDiary.innerHTML += `
+            <p>Mood: ${diaryEntry.mood}</p>
+            <p>${diaryEntry.memo}</p>
+            ${diaryEntry.image ? `<img src="${diaryEntry.image}" alt="Diary Image">` : ''}
+        `;
+    } else {
+        statsDiary.innerHTML += '<p>No journal entry for this day.</p>';
+    }
 
     statsDetails.classList.remove('hidden');
     document.querySelectorAll('.week-day').forEach(day => {
@@ -356,11 +307,14 @@ function showStatsDetails(dateStr) {
 }
 
 function getMonthName(month) {
-    return ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'][month];
+    const months = ['January', 'February', 'March', 'April', 'May', 'June', 
+                   'July', 'August', 'September', 'October', 'November', 'December'];
+    return months[month];
 }
 
 function toggleDayDetails(date) {
     const dayDetails = document.getElementById('dayDetails');
+    
     if (currentSelectedDate === date && !dayDetails.classList.contains('hidden')) {
         dayDetails.classList.add('hidden');
         currentSelectedDate = null;
@@ -368,56 +322,83 @@ function toggleDayDetails(date) {
     }
 
     currentSelectedDate = date;
+    const studyTime = studyData[date] || 0;
+    const hours = Math.floor(studyTime / 3600);
+    const minutes = Math.floor((studyTime % 3600) / 60);
+    const seconds = studyTime % 60;
+    const memo = diaryData[date]?.memo || '';
+    const image = diaryData[date]?.image || null;
+
     document.getElementById('selectedDate').textContent = date;
-    document.getElementById('studyTimeDetail').textContent = formatTime(studyData[date] || 0);
+    document.getElementById('studyTimeDetail').textContent = `${hours}h ${minutes}m ${seconds}s`;
     
     const memoDetail = document.getElementById('memoDetail');
-    const memo = diaryData[date]?.memo || '';
-    memo ? (memoDetail.textContent = `Memo: ${memo}`, memoDetail.classList.remove('hidden')) : memoDetail.classList.add('hidden');
+    if (memo) {
+        memoDetail.textContent = `Memo: ${memo}`;
+        memoDetail.classList.remove('hidden');
+    } else {
+        memoDetail.classList.add('hidden');
+    }
 
     const imagePreview = document.getElementById('dayImagePreview');
-    imagePreview.innerHTML = diaryData[date]?.image ? `<img src="${diaryData[date].image}" alt="Diary Image">` : '';
+    imagePreview.innerHTML = '';
+    if (image) {
+        imagePreview.innerHTML = `<img src="${image}" alt="Diary Image">`;
+    }
     
     dayDetails.classList.remove('hidden');
 }
 
-// 공부 타이머 함수
 function updateStudyTimeDisplay() {
     const studyTime = studyData[currentDate] || 0;
-    document.getElementById('dailyStudyTime').textContent = formatTime(studyTime);
-    if (document.getElementById('dashboardStudyTime')) document.getElementById('dashboardStudyTime').textContent = formatTime(studyTime);
+    const hours = Math.floor(studyTime / 3600);
+    const minutes = Math.floor((studyTime % 3600) / 60);
+    const seconds = studyTime % 60;
+    document.getElementById('dailyStudyTime').textContent = `${hours}h ${minutes}m ${seconds}s`;
+    if (document.getElementById('dashboardStudyTime')) {
+        document.getElementById('dashboardStudyTime').textContent = `${hours}h ${minutes}m ${seconds}s`;
+    }
 }
 
 function startTimer() {
-    const subjectSelect = document.getElementById('subjectSelect');
-    const selectedSubject = subjectSelect.value;
+    const selectedSubject = document.getElementById('subjectSelect').value;
     if (!selectedSubject) {
         alert('Please select a subject!');
-        subjectSelect.style.borderColor = '#EA4335';
-        setTimeout(() => subjectSelect.style.borderColor = '#ddd', 2000);
         return;
     }
-    if (timerInterval) clearInterval(timerInterval);
-    const startTime = new Date();
-    timerInterval = setInterval(() => {
-        timerSeconds++;
-        updateTimerDisplay();
-    }, 1000);
-    
-    if (!studySessions[currentDate]) studySessions[currentDate] = [];
-    studySessions[currentDate].push({ subject: selectedSubject, startTime: startTime.toISOString(), endTime: null, duration: 0 });
+    if (!timerInterval) {
+        const startTime = new Date();
+        timerInterval = setInterval(() => {
+            timerSeconds++;
+            updateTimerDisplay();
+        }, 1000);
+        
+        if (!studySessions[currentDate]) {
+            studySessions[currentDate] = [];
+        }
+        studySessions[currentDate].push({
+            subject: selectedSubject,
+            startTime: startTime.toISOString(),
+            endTime: null,
+            duration: 0
+        });
+    }
 }
 
 function stopTimer() {
     const selectedSubject = document.getElementById('subjectSelect').value;
-    if (!selectedSubject || !timerInterval) return;
+    if (!selectedSubject) return;
 
     clearInterval(timerInterval);
     timerInterval = null;
 
     studyData[currentDate] = (studyData[currentDate] || 0) + timerSeconds;
-    if (!subjectStudyTime[selectedSubject]) subjectStudyTime[selectedSubject] = {};
-    subjectStudyTime[selectedSubject][currentDate] = (subjectStudyTime[selectedSubject][currentDate] || 0) + timerSeconds;
+
+    if (!subjectStudyTime[selectedSubject]) {
+        subjectStudyTime[selectedSubject] = {};
+    }
+    subjectStudyTime[selectedSubject][currentDate] = 
+        (subjectStudyTime[selectedSubject][currentDate] || 0) + timerSeconds;
 
     const lastSession = studySessions[currentDate].slice(-1)[0];
     if (lastSession && lastSession.subject === selectedSubject && !lastSession.endTime) {
@@ -425,13 +406,13 @@ function stopTimer() {
         lastSession.duration = timerSeconds;
     }
 
+    saveDataToFirestore();
     timerSeconds = 0;
     updateTimerDisplay();
     updateStudyTimeDisplay();
     updateSubjectTimes();
     updateGoalsProgress();
     renderHome();
-    saveUserData();
 }
 
 function saveDiary() {
@@ -443,8 +424,12 @@ function saveDiary() {
         return;
     }
 
-    diaryData[date] = { mood: selectedMood, memo, image: uploadedImage || diaryData[date]?.image || null };
-    saveUserData();
+    diaryData[date] = { 
+        mood: selectedMood,
+        memo: memo, 
+        image: uploadedImage || diaryData[date]?.image || null 
+    };
+    saveDataToFirestore();
     renderHome();
     document.getElementById('memoInput').value = '';
     document.getElementById('diaryImage').value = '';
@@ -455,45 +440,58 @@ function saveDiary() {
     alert('Journal entry saved!');
 }
 
-// 투두 리스트 함수
 function renderTodos() {
     const todoList = document.getElementById('todoList');
     const todoCount = document.getElementById('todoCount');
     
-    const filteredTodos = currentFilter === 'all' ? todos : todos.filter(t => currentFilter === 'active' ? !t.completed : t.completed);
-    todoList.innerHTML = filteredTodos.map(todo => `
-        <li class="todo-item">
-            <input type="checkbox" class="todo-checkbox" ${todo.completed ? 'checked' : ''} onclick="toggleTodo(${todo.id})">
+    let filteredTodos = [];
+    if (currentFilter === 'all') filteredTodos = todos;
+    else if (currentFilter === 'active') filteredTodos = todos.filter(todo => !todo.completed);
+    else if (currentFilter === 'completed') filteredTodos = todos.filter(todo => todo.completed);
+
+    todoList.innerHTML = '';
+    
+    filteredTodos.forEach(todo => {
+        const todoItem = document.createElement('li');
+        todoItem.className = 'todo-item';
+        todoItem.innerHTML = `
+            <input type="checkbox" class="todo-checkbox" 
+                   ${todo.completed ? 'checked' : ''} 
+                   onclick="toggleTodo(${todo.id})">
             <span class="todo-text ${todo.completed ? 'completed' : ''}">${todo.text}</span>
             <button class="delete-todo" onclick="deleteTodo(${todo.id})">×</button>
-        </li>
-    `).join('');
+        `;
+        todoList.appendChild(todoItem);
+    });
     
-    const activeTodos = todos.filter(t => !t.completed);
+    const activeTodos = todos.filter(todo => !todo.completed);
     todoCount.textContent = `${activeTodos.length} task${activeTodos.length !== 1 ? 's' : ''} remaining`;
     renderHome();
 }
 
 function toggleTodo(id) {
-    todos = todos.map(t => t.id === id ? { ...t, completed: !t.completed } : t);
-    saveUserData();
+    todos = todos.map(todo => {
+        if (todo.id === id) return { ...todo, completed: !todo.completed };
+        return todo;
+    });
+    
+    saveDataToFirestore();
     renderTodos();
 }
 
 function deleteTodo(id) {
-    todos = todos.filter(t => t.id !== id);
-    saveUserData();
+    todos = todos.filter(todo => todo.id !== id);
+    saveDataToFirestore();
     renderTodos();
 }
 
-// 목표 설정 함수
 function saveGoal(type) {
     const input = document.getElementById(`${type}Goal`);
     const value = parseInt(input.value);
     
     if (!isNaN(value) && value >= 0) {
         goals[type] = value * 3600;
-        saveUserData();
+        saveDataToFirestore();
         updateGoalsProgress();
         renderHome();
         alert(`${type.charAt(0).toUpperCase() + type.slice(1)} goal saved!`);
@@ -502,7 +500,6 @@ function saveGoal(type) {
     }
 }
 
-// 과목 관리 함수
 function addSubject() {
     const subjectInput = document.getElementById('subjectInput');
     const subjectName = subjectInput.value.trim();
@@ -510,7 +507,7 @@ function addSubject() {
         subjects.push(subjectName);
         if (!subjectStudyTime[subjectName]) subjectStudyTime[subjectName] = {};
         subjectStudyTime[subjectName][currentDate] = subjectStudyTime[subjectName][currentDate] || 0;
-        saveUserData();
+        saveDataToFirestore();
         updateSubjectSelect();
         updateSubjectTimes();
         subjectInput.value = '';
@@ -518,34 +515,43 @@ function addSubject() {
 }
 
 function deleteSubject(subjectName) {
-    subjects = subjects.filter(s => s !== subjectName);
-    if (subjectStudyTime[subjectName]) delete subjectStudyTime[subjectName];
-    saveUserData();
-    updateSubjectSelect();
-    updateSubjectTimes();
+    if (subjects.includes(subjectName)) {
+        subjects = subjects.filter(subject => subject !== subjectName);
+        if (subjectStudyTime[subjectName]) delete subjectStudyTime[subjectName];
+        saveDataToFirestore();
+        updateSubjectSelect();
+        updateSubjectTimes();
+    }
 }
 
 function updateSubjectSelect() {
     const subjectSelect = document.getElementById('subjectSelect');
-    subjectSelect.innerHTML = '<option value="">Select a subject</option>' + subjects.map(s => `<option value="${s}">${s}</option>`).join('');
+    subjectSelect.innerHTML = '<option value="">Select a subject</option>';
+    subjects.forEach(subject => {
+        subjectSelect.innerHTML += `<option value="${subject}">${subject}</option>`;
+    });
 }
 
 function updateSubjectTimes() {
     const subjectTimesDiv = document.getElementById('subjectTimes');
-    subjectTimesDiv.innerHTML = subjects.map(s => `
-        <div class="subject-time">
-            ${s}: ${formatTime(subjectStudyTime[s][currentDate] || 0)}
-            <button class="delete-subject-btn" onclick="deleteSubject('${s}')" title="Delete Subject">×</button>
-        </div>
-    `).join('');
+    subjectTimesDiv.innerHTML = '';
+    subjects.forEach(subject => {
+        const time = subjectStudyTime[subject][currentDate] || 0;
+        const hours = Math.floor(time / 3600);
+        const minutes = Math.floor((time % 3600) / 60);
+        const seconds = time % 60;
+        subjectTimesDiv.innerHTML += `
+            <div class="subject-time">
+                ${subject}: ${hours}h ${minutes}m ${seconds}s
+                <button class="delete-subject-btn" onclick="deleteSubject('${subject}')" title="Delete Subject">×</button>
+            </div>
+        `;
+    });
 }
 
-// 타이머 관련 함수
 function pauseTimer() {
-    if (timerInterval) {
-        clearInterval(timerInterval);
-        timerInterval = null;
-    }
+    clearInterval(timerInterval);
+    timerInterval = null;
 }
 
 function updateTimerDisplay() {
@@ -553,57 +559,64 @@ function updateTimerDisplay() {
     const minutes = Math.floor((timerSeconds % 3600) / 60);
     const seconds = timerSeconds % 60;
     const timerDisplay = document.getElementById('timerDisplay');
-    timerDisplay.textContent = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    timerDisplay.textContent = 
+        `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    
     if (timerInterval) {
         timerDisplay.classList.add('pulse');
         setTimeout(() => timerDisplay.classList.remove('pulse'), 200);
     }
 }
 
-// 다이어리 관련 함수
 function selectMood(mood) {
-    document.querySelectorAll('.mood-bean').forEach(b => b.classList.remove('selected'));
+    document.querySelectorAll('.mood-bean').forEach(bean => bean.classList.remove('selected'));
     document.querySelector(`.mood-bean.${mood}`).classList.add('selected');
     selectedMood = mood;
 }
 
 function triggerFileInput() {
-    document.getElementById('diaryImage').click();
+    const fileInput = document.getElementById('diaryImage');
+    fileInput.click();
 }
 
-document.getElementById('diaryImage').addEventListener('change', uploadImage);
+document.getElementById('diaryImage').addEventListener('change', function() {
+    uploadImage();
+});
 
 function uploadImage() {
     const fileInput = document.getElementById('diaryImage');
     const file = fileInput.files[0];
     if (file) {
-        if (file.size > 5 * 1024 * 1024) {
-            alert('File size should be less than 5MB');
-            return;
-        }
-        const reader = new FileReader();
-        reader.onload = e => {
-            uploadedImage = e.target.result;
-            document.getElementById('imagePreview').innerHTML = `<img src="${uploadedImage}" alt="Uploaded Image">`;
-        };
-        reader.readAsDataURL(file);
-        fileInput.value = '';
+        const storageRef = ref(window.storage, `users/${window.userUID}/diaryImages/${Date.now()}_${file.name}`);
+        uploadBytes(storageRef, file).then((snapshot) => {
+            getDownloadURL(snapshot.ref).then((downloadURL) => {
+                uploadedImage = downloadURL;
+                const preview = document.getElementById('imagePreview');
+                preview.innerHTML = `<img src="${uploadedImage}" alt="Uploaded Image">`;
+                fileInput.value = '';
+            });
+        }).catch((error) => {
+            console.error("Image upload failed:", error);
+        });
     }
 }
 
 function loadDiaryData(selectedDate) {
     const diaryEntry = diaryData[selectedDate];
-    document.querySelectorAll('.mood-bean').forEach(b => b.classList.remove('selected'));
+    
+    document.querySelectorAll('.mood-bean').forEach(bean => bean.classList.remove('selected'));
     document.getElementById('memoInput').value = '';
     document.getElementById('imagePreview').innerHTML = '';
     selectedMood = null;
     uploadedImage = null;
     
     if (diaryEntry) {
-        if (diaryEntry.mood) {
-            document.querySelector(`.mood-bean.${diaryEntry.mood}`).classList.add('selected');
-            selectedMood = diaryEntry.mood;
+        const mood = diaryEntry.mood;
+        if (mood) {
+            document.querySelector(`.mood-bean.${mood}`).classList.add('selected');
+            selectedMood = mood;
         }
+        
         document.getElementById('memoInput').value = diaryEntry.memo || '';
         if (diaryEntry.image) {
             document.getElementById('imagePreview').innerHTML = `<img src="${diaryEntry.image}" alt="Diary Image">`;
@@ -612,13 +625,20 @@ function loadDiaryData(selectedDate) {
     }
 }
 
-// 투두 추가 및 필터링
 function addTodo() {
     const todoInput = document.getElementById('todoInput');
     const todoText = todoInput.value.trim();
+    
     if (todoText) {
-        todos.push({ id: Date.now(), text: todoText, completed: false, createdAt: new Date().toISOString() });
-        saveUserData();
+        const newTodo = {
+            id: Date.now(),
+            text: todoText,
+            completed: false,
+            createdAt: new Date().toISOString()
+        };
+        
+        todos.push(newTodo);
+        saveDataToFirestore();
         todoInput.value = '';
         renderTodos();
     }
@@ -626,18 +646,18 @@ function addTodo() {
 
 function filterTasks(filter) {
     currentFilter = filter;
-    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    
+    document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
     document.querySelector(`.filter-btn[onclick="filterTasks('${filter}')"]`).classList.add('active');
     renderTodos();
 }
 
 function clearCompleted() {
-    todos = todos.filter(t => !t.completed);
-    saveUserData();
+    todos = todos.filter(todo => !todo.completed);
+    saveDataToFirestore();
     renderTodos();
 }
 
-// 목표 진행 상황
 function updateGoalsInputs() {
     if (goals.daily !== null) document.getElementById('dailyGoal').value = Math.floor(goals.daily / 3600);
     if (goals.weekly !== null) document.getElementById('weeklyGoal').value = Math.floor(goals.weekly / 3600);
@@ -650,16 +670,36 @@ function updateGoalsProgress() {
     if (goals.daily !== null) {
         const dailyTime = studyData[currentDate] || 0;
         const dailyPercentage = Math.min(Math.round((dailyTime / goals.daily) * 100), 100);
-        progressDiv.innerHTML += `<h4>Daily Goal Progress (${formatTime(dailyTime)} of ${formatTime(goals.daily)})</h4><div class="progress-bar"><div class="progress-fill" style="width: ${dailyPercentage}%"></div></div><p>${dailyPercentage}% Complete</p>`;
+        const hours = Math.floor(dailyTime / 3600);
+        const minutes = Math.floor((dailyTime % 3600) / 60);
+        
+        progressDiv.innerHTML += `
+            <h4>Daily Goal Progress (${hours}h ${minutes}m of ${Math.floor(goals.daily / 3600)}h)</h4>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: ${dailyPercentage}%"></div>
+            </div>
+            <p>${dailyPercentage}% Complete</p>
+        `;
     }
     
     if (goals.weekly !== null) {
         const weeklyTime = calculateWeeklyStudyTime();
         const weeklyPercentage = Math.min(Math.round((weeklyTime / goals.weekly) * 100), 100);
-        progressDiv.innerHTML += `<h4 style="margin-top: 20px;">Weekly Goal Progress (${formatTime(weeklyTime)} of ${formatTime(goals.weekly)})</h4><div class="progress-bar"><div class="progress-fill" style="width: ${weeklyPercentage}%"></div></div><p>${weeklyPercentage}% Complete</p>`;
+        const hours = Math.floor(weeklyTime / 3600);
+        const minutes = Math.floor((weeklyTime % 3600) / 60);
+        
+        progressDiv.innerHTML += `
+            <h4 style="margin-top: 20px;">Weekly Goal Progress (${hours}h ${minutes}m of ${Math.floor(goals.weekly / 3600)}h)</h4>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: ${weeklyPercentage}%"></div>
+            </div>
+            <p>${weeklyPercentage}% Complete</p>
+        `;
     }
     
-    if (!goals.daily && !goals.weekly) progressDiv.innerHTML = '<p>No goals set yet. Set your daily and weekly goals above.</p>';
+    if (goals.daily === null && goals.weekly === null) {
+        progressDiv.innerHTML = '<p>No goals set yet. Set your daily and weekly goals above.</p>';
+    }
 }
 
 function calculateWeeklyStudyTime() {
@@ -672,12 +712,13 @@ function calculateWeeklyStudyTime() {
     for (let i = 0; i <= 6; i++) {
         const date = new Date(startDate);
         date.setDate(startDate.getDate() + i);
-        totalTime += studyData[date.toISOString().split('T')[0]] || 0;
+        const dateString = date.toISOString().split('T')[0];
+        totalTime += studyData[dateString] || 0;
     }
+    
     return totalTime;
 }
 
-// 리셋 함수
 function resetAllSettings() {
     if (confirm('Are you sure you want to reset all settings? This will clear all your data.')) {
         subjects = [];
@@ -692,9 +733,11 @@ function resetAllSettings() {
         uploadedImage = null;
         timerSeconds = 0;
         currentWeekOffset = 0;
-        if (timerInterval) clearInterval(timerInterval);
-        timerInterval = null;
-        saveUserData();
+        if (timerInterval) {
+            clearInterval(timerInterval);
+            timerInterval = null;
+        }
+        saveDataToFirestore();
         updateSubjectSelect();
         updateSubjectTimes();
         updateStudyTimeDisplay();
@@ -710,28 +753,63 @@ function resetAllSettings() {
         document.getElementById('memoInput').value = '';
         document.getElementById('diaryImage').value = '';
         document.getElementById('imagePreview').innerHTML = '';
-        document.querySelectorAll('.mood-bean').forEach(b => b.classList.remove('selected'));
+        document.querySelectorAll('.mood-bean').forEach(bean => bean.classList.remove('selected'));
         showScreen('home');
         alert('All settings have been reset.');
     }
 }
 
-// 이벤트 리스너
 document.getElementById('diaryDate').addEventListener('change', function() {
-    currentDate = this.value;
-    loadDiaryData(this.value);
+    const selectedDate = this.value;
+    loadDiaryData(selectedDate);
 });
 
-document.getElementById('subjectInput').addEventListener('keypress', e => e.key === 'Enter' && (e.preventDefault(), addSubject()));
-document.getElementById('todoInput').addEventListener('keypress', e => e.key === 'Enter' && (e.preventDefault(), addTodo()));
+document.getElementById('subjectInput').addEventListener('keypress', function(event) {
+    if (event.key === 'Enter') {
+        event.preventDefault();
+        addSubject();
+    }
+});
 
-// 동적 스타일 추가
+document.getElementById('todoInput').addEventListener('keypress', function(event) {
+    if (event.key === 'Enter') {
+        event.preventDefault();
+        addTodo();
+    }
+});
+
 const style = document.createElement('style');
 style.textContent = `
-    .delete-subject-btn { background: none; border: none; color: #EA4335; cursor: pointer; font-size: 16px; margin-left: 8px; padding: 2px 6px; border-radius: 50%; }
-    .delete-subject-btn:hover { background-color: rgba(234, 67, 53, 0.1); transform: scale(1.2); }
-    .subject-time { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; }
-    .pulse { animation: pulse 0.2s ease-in-out; }
-    @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+.delete-subject-btn {
+    background: none;
+    border: none;
+    color: #EA4335;
+    cursor: pointer;
+    font-size: 16px;
+    margin-left: 8px;
+    padding: 2px 6px;
+    border-radius: 50%;
+}
+.delete-subject-btn:hover {
+    background-color: rgba(234, 67, 53, 0.1);
+}
+.subject-time {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 0;
+}
+.pulse {
+    animation: pulse 0.2s ease-in-out;
+}
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
 `;
+
 document.head.appendChild(style);
+
+updateSubjectSelect();
+updateSubjectTimes();

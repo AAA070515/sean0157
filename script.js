@@ -424,6 +424,8 @@ function saveDiary() {
         return;
     }
 
+    console.log("Saving diary for date:", date, "Mood:", selectedMood, "Memo:", memo, "Image:", uploadedImage);
+
     diaryData[date] = { 
         mood: selectedMood,
         memo: memo, 

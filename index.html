@@ -206,7 +206,7 @@
                 loginBtn.style.display = 'block';
                 logoutBtn.style.display = 'none';
                 console.log('Logged out');
-                showScreen('home'); // 로그아웃 시 초기화하지 않고 홈 화면으로 이동
+                showScreen('home');
             }
         });
 
@@ -294,7 +294,6 @@
             try {
                 await setDoc(doc(db, "users", userId), dataToSave, { merge: true });
                 console.log("Data saved successfully!");
-                // 저장 후 Firestore에서 데이터 다시 불러오기
                 const userRef = doc(db, "users", userId);
                 const docSnap = await getDoc(userRef);
                 if (docSnap.exists()) {

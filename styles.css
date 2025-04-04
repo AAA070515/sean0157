@@ -1119,36 +1119,3 @@ body {
 .leave-btn:hover {
     background-color: #D32F2F;
 }
-
-.settings-actions {
-    margin-top: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    align-items: center;
-}
-
-.settings-actions .btn {
-    width: 100%;
-    max-width: 200px;
-    padding: 10px;
-    font-size: clamp(14px, 2.5vw, 16px);
-}
-
-#logout-btn {
-    background-color: #EA4335;
-    color: white;
-}
-
-#logout-btn:hover {
-    background-color: #D32F2F;
-}
-
-#reset-all-btn {
-    background-color: #4285F4;
-    color: white;
-}
-
-#reset-all-btn:hover {
-    background-color: #3367D6;
-}

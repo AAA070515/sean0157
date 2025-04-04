@@ -9,10 +9,6 @@ let currentWeekOffset = 0;
 const today = new Date();
 let currentDate = today.toISOString().split('T')[0];
 
-// 그룹 관련 데이터 (예시로 전역 변수로 관리)
-window.groups = window.groups || {}; // 그룹 데이터 {groupCode: {name: "그룹 이름", members: {uid: {studyTime: 초 단위}}}}
-window.userGroup = window.userGroup || null; // 현재 유저가 속한 그룹 코드
-
 updateStudyTimeDisplay();
 renderHome();
 renderTodos();
@@ -48,18 +44,16 @@ function closeDrawer() {
 }
 
 function showScreen(screen) {
-    const screens = ['home', 'study', 'diary', 'todo', 'goals', 'stats', 'settings', 'group'];
+    const screens = ['home', 'study', 'diary', 'todo', 'goals', 'stats', 'settings'];
     screens.forEach(s => {
         const el = document.getElementById(`${s}Screen`);
-        if (el) el.classList.add('hidden');
+        el.classList.add('hidden');
     });
 
     const targetScreen = document.getElementById(`${screen}Screen`);
-    if (targetScreen) {
-        setTimeout(() => {
-            targetScreen.classList.remove('hidden');
-        }, 50);
-    }
+    setTimeout(() => {
+        targetScreen.classList.remove('hidden');
+    }, 50);
 
     const navMapping = {
         'home': 'Home',
@@ -67,8 +61,8 @@ function showScreen(screen) {
         'todo': 'To-Do',
         'diary': 'Journal',
         'goals': 'Goals',
-        'stats': 'Statistics',
-        'group': 'Group'
+        'stats': 'Statistics'
+        // 'settings'는 버튼이므로 navMapping에서 제외
     };
 
     document.querySelectorAll('.nav-item').forEach(btn => {
@@ -106,8 +100,6 @@ function showScreen(screen) {
     } else if (screen === 'stats') renderStats();
     else if (screen === 'settings') {
         loadSettings();
-    } else if (screen === 'group') {
-        renderGroupScreen();
     }
 }
 
@@ -406,18 +398,6 @@ async function stopTimer() {
     if (lastSession && lastSession.subject === selectedSubject && !lastSession.endTime) {
         lastSession.endTime = new Date().toISOString();
         lastSession.duration = timerSeconds;
-    }
-
-    // 그룹에 공부 시간 업데이트
-    if (window.userGroup && window.currentUser) {
-        const group = window.groups[window.userGroup];
-        if (group) {
-            if (!group.members[window.currentUser.uid]) {
-                group.members[window.currentUser.uid] = {};
-            }
-            group.members[window.currentUser.uid].studyTime = 
-                (group.members[window.currentUser.uid].studyTime || 0) + timerSeconds;
-        }
     }
 
     timerSeconds = 0;
@@ -745,8 +725,7 @@ async function resetAllSettings() {
                     todos: [],
                     goals: { daily: null, weekly: null },
                     studySessions: {},
-                    nickname: window.nickname,
-                    group: null
+                    nickname: window.nickname
                 });
                 window.subjects = [];
                 window.studyData = {};
@@ -755,7 +734,6 @@ async function resetAllSettings() {
                 window.todos = [];
                 window.goals = { daily: null, weekly: null };
                 window.studySessions = {};
-                window.userGroup = null;
                 timerSeconds = 0;
                 if (timerInterval) clearInterval(timerInterval);
                 timerInterval = null;
@@ -825,157 +803,6 @@ async function changeNickname() {
     }
 }
 
-// 그룹 화면 렌더링
-function renderGroupScreen() {
-    const groupScreen = document.getElementById('groupScreen');
-    if (!window.currentUser) {
-        groupScreen.innerHTML = '<p>Please log in to use group features.</p>';
-        return;
-    }
-
-    if (!window.userGroup) {
-        groupScreen.innerHTML = `
-            <h2>Group</h2>
-            <button onclick="showCreateGroupForm()">Create Group</button>
-            <button onclick="showJoinGroupForm()">Join Group</button>
-            <div id="groupFormContainer"></div>
-        `;
-    } else {
-        const group = window.groups[window.userGroup];
-        groupScreen.innerHTML = `
-            <h2>${group.name} Dashboard</h2>
-            <h3>Group Code: ${window.userGroup}</h3>
-            <h4>Today's Study Time</h4>
-            <div id="groupDashboard"></div>
-            <button onclick="leaveGroup()">Leave Group</button>
-        `;
-        renderGroupDashboard();
-    }
-}
-
-// 그룹 생성 폼 표시
-function showCreateGroupForm() {
-    const container = document.getElementById('groupFormContainer');
-    container.innerHTML = `
-        <h3>Create a New Group</h3>
-        <input type="text" id="groupNameInput" placeholder="Enter group name">
-        <button onclick="createGroup()">Create</button>
-    `;
-}
-
-// 그룹 참여 폼 표시
-function showJoinGroupForm() {
-    const container = document.getElementById('groupFormContainer');
-    container.innerHTML = `
-        <h3>Join a Group</h3>
-        <input type="text" id="groupCodeInput" placeholder="Enter 6-digit group code">
-        <button onclick="joinGroup()">Join</button>
-    `;
-}
-
-// 그룹 생성
-async function createGroup() {
-    const groupName = document.getElementById('groupNameInput').value.trim();
-    if (!groupName) {
-        alert('Please enter a group name!');
-        return;
-    }
-
-    if (!window.currentUser) {
-        alert('You must be logged in to create a group!');
-        return;
-    }
-
-    // 6자리 랜덤 코드 생성
-    const groupCode = Math.random().toString(36).substr(2, 6).toUpperCase();
-    window.groups[groupCode] = {
-        name: groupName,
-        members: {
-            [window.currentUser.uid]: { studyTime: 0 }
-        }
-    };
-    window.userGroup = groupCode;
-
-    const userRef = doc(window.db, "users", window.currentUser.uid);
-    await setDoc(userRef, { group: groupCode }, { merge: true });
-    await saveGroupsData();
-
-    alert(`Group "${groupName}" created! Code: ${groupCode}`);
-    renderGroupScreen();
-}
-
-// 그룹 참여
-async function joinGroup() {
-    const groupCode = document.getElementById('groupCodeInput').value.trim().toUpperCase();
-    if (groupCode.length !== 6) {
-        alert('Please enter a valid 6-digit group code!');
-        return;
-    }
-
-    if (!window.currentUser) {
-        alert('You must be logged in to join a group!');
-        return;
-    }
-
-    if (!window.groups[groupCode]) {
-        alert('Group not found!');
-        return;
-    }
-
-    window.userGroup = groupCode;
-    window.groups[groupCode].members[window.currentUser.uid] = { studyTime: 0 };
-
-    const userRef = doc(window.db, "users", window.currentUser.uid);
-    await setDoc(userRef, { group: groupCode }, { merge: true });
-    await saveGroupsData();
-
-    alert(`Joined group "${window.groups[groupCode].name}"!`);
-    renderGroupScreen();
-}
-
-// 그룹 떠나기
-async function leaveGroup() {
-    if (!window.userGroup || !window.currentUser) return;
-
-    delete window.groups[window.userGroup].members[window.currentUser.uid];
-    if (Object.keys(window.groups[window.userGroup].members).length === 0) {
-        delete window.groups[window.userGroup];
-    }
-
-    const userRef = doc(window.db, "users", window.currentUser.uid);
-    await setDoc(userRef, { group: null }, { merge: true });
-    window.userGroup = null;
-    await saveGroupsData();
-
-    alert('You have left the group!');
-    renderGroupScreen();
-}
-
-// 그룹 데이터 저장 (Firebase에 별도 저장 필요 시)
-async function saveGroupsData() {
-    if (window.currentUser) {
-        const groupsRef = doc(window.db, "groups", "allGroups");
-        await setDoc(groupsRef, { groups: window.groups }, { merge: true });
-    }
-}
-
-// 그룹 대시보드 렌더링
-function renderGroupDashboard() {
-    const dashboard = document.getElementById('groupDashboard');
-    const group = window.groups[window.userGroup];
-    dashboard.innerHTML = '';
-
-    for (const [uid, data] of Object.entries(group.members)) {
-        const studyTime = data.studyTime || 0;
-        const hours = Math.floor(studyTime / 3600);
-        const minutes = Math.floor((studyTime % 3600) / 60);
-        const seconds = studyTime % 60;
-        dashboard.innerHTML += `
-            <p>User ${uid}: ${hours}h ${minutes}m ${seconds}s</p>
-        `;
-    }
-}
-
 document.getElementById('diaryDate').addEventListener('change', function() {
     const selectedDate = this.value;
     loadDiaryData(selectedDate);
@@ -1030,13 +857,6 @@ style.textContent = `
     0% { transform: scale(1); }
     50% { transform: scale(1.05); }
     100% { transform: scale(1); }
-}
-#groupFormContainer {
-    margin-top: 20px;
-}
-#groupFormContainer input {
-    margin-right: 10px;
-    padding: 5px;
 }
 `;
 

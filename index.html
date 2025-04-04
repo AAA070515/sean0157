@@ -194,6 +194,15 @@
         const loginBtn = document.getElementById('login-btn');
         const logoutBtn = document.getElementById('logout-btn');
 
+        // 전역 변수 초기화 방지
+        window.subjects = [];
+        window.studyData = {};
+        window.subjectStudyTime = {};
+        window.diaryData = {};
+        window.todos = [];
+        window.goals = { daily: null, weekly: null };
+        window.studySessions = {};
+
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 currentUser = user;
@@ -206,7 +215,8 @@
                 loginBtn.style.display = 'block';
                 logoutBtn.style.display = 'none';
                 console.log('Logged out');
-                showScreen('home'); // 로그아웃 시 초기화하지 않고 홈 화면으로 이동
+                // 로그아웃 시 데이터 초기화하지 않음
+                showScreen('home');
             }
         });
 
@@ -245,15 +255,11 @@
                     window.todos = data.todos || [];
                     window.goals = data.goals || { daily: null, weekly: null };
                     window.studySessions = data.studySessions || {};
+                    console.log("Data loaded from Firestore:", data);
                 } else {
-                    console.log("No data found for user, initializing with defaults.");
-                    window.subjects = [];
-                    window.studyData = {};
-                    window.subjectStudyTime = {};
-                    window.diaryData = {};
-                    window.todos = [];
-                    window.goals = { daily: null, weekly: null };
-                    window.studySessions = {};
+                    console.log("No data found, using defaults.");
+                    // 초기 데이터 저장
+                    saveUserData();
                 }
                 updateSubjectSelect();
                 updateSubjectTimes();
@@ -273,7 +279,15 @@
                 console.log("No user logged in, cannot save data!");
                 return;
             }
-            console.log("Saving data for user:", currentUser.uid);
+            console.log("Saving data:", {
+                subjects: window.subjects,
+                studyData: window.studyData,
+                subjectStudyTime: window.subjectStudyTime,
+                diaryData: window.diaryData,
+                todos: window.todos,
+                goals: window.goals,
+                studySessions: window.studySessions
+            });
             const userId = currentUser.uid;
             setDoc(doc(db, "users", userId), {
                 subjects: window.subjects,
@@ -284,13 +298,22 @@
                 goals: window.goals,
                 studySessions: window.studySessions
             }, { merge: true }).then(() => {
-                console.log("Data saved successfully!");
+                console.log("Data saved successfully to Firestore!");
             }).catch((error) => {
                 console.error("Save failed:", error.code, error.message);
             });
         }
 
         window.saveUserData = saveUserData;
+        window.loadUserData = loadUserData;
+
+        // 페이지 로드 시 로그인 상태 확인 및 데이터 로드
+        document.addEventListener('DOMContentLoaded', () => {
+            const user = auth.currentUser;
+            if (user) {
+                loadUserData(user.uid);
+            }
+        });
     </script>
 
     <script src="script.js"></script>

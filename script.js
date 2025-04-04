@@ -260,7 +260,9 @@ function showStatsDetails(dateStr) {
 
     const studyTime = (window.studyData && window.studyData[nextDayStr]) || 0;
     const hours = Math.floor(studyTime / 3600);
-    const minutes = Math.floor((studyTime % 3600) / 60);
+    const minutes = Math.floor((study 
+   
+Time % 3600) / 60);
     const seconds = studyTime % 60;
     document.getElementById('statsStudyTime').textContent = 
         `Total Study Time: ${hours}h ${minutes}m ${seconds}s`;
@@ -978,18 +980,20 @@ async function leaveGroup() {
     if (!groupDoc.exists()) return;
 
     const groupData = groupDoc.data();
-    delete groupData.members[window.currentUser.uid];
+    delete groupData.members[window.currentUser.uid]; // 현재 사용자 삭제
 
     if (Object.keys(groupData.members).length === 0) {
+        // 그룹에 멤버가 없으면 그룹 삭제
         await window.firestoreDeleteDoc(groupRef);
         console.log(`Group ${window.currentGroupCode} deleted as no members remain.`);
     } else {
+        // 멤버가 남아 있으면 업데이트
         await window.firestoreSetDoc(groupRef, { members: groupData.members }, { merge: true });
     }
 
     window.currentGroupCode = null;
     await window.saveUserData();
-    renderGroupDashboard();
+    renderGroupDashboard(); // 그룹 대시보드 새로고침
 }
 
 function renderGroupDashboard() {
@@ -1000,13 +1004,13 @@ function renderGroupDashboard() {
 
     if (!window.currentGroupCode) {
         dashboard.classList.add('hidden');
-        groupActions.classList.remove('hidden');
+        groupActions.classList.remove('hidden'); // 그룹에 속하지 않으면 참가/만들기 보이기
         document.getElementById('groupCodeDisplay').classList.add('hidden');
         return;
     }
 
     dashboard.classList.remove('hidden');
-    groupActions.classList.add('hidden');
+    groupActions.classList.add('hidden'); // 그룹에 속하면 참가/만들기 숨기기
     const groupRef = window.firestoreDoc(window.firestoreDb, "groups", window.currentGroupCode);
     window.firestoreOnSnapshot(groupRef, (doc) => {
         if (doc.exists()) {
@@ -1036,7 +1040,7 @@ function renderGroupDashboard() {
         } else {
             window.currentGroupCode = null;
             dashboard.classList.add('hidden');
-            groupActions.classList.remove('hidden');
+            groupActions.classList.remove('hidden'); // 그룹이 없어지면 참가/만들기 보이기
         }
     }, (error) => {
         console.error('Group dashboard render error:', error);

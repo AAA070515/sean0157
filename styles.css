@@ -215,16 +215,14 @@ body {
 }
 
 /* Settings와 Reset 버튼 스타일 (Login 버튼과 동일하게 수정) */
-.reset-btn.login-btn {
+.login-btn {
     background-color: #4285F4;
     color: white;
     font-size: 16px;
     padding: 12px 24px;
-    width: 100%;
-    margin-top: 20px;
 }
 
-.reset-btn.login-btn:hover {
+.login-btn:hover {
     background-color: #3367D6;
 }
 

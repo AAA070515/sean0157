@@ -496,7 +496,6 @@ async function addSubject() {
         window.subjects.push(subjectName);
         if (!window.subjectStudyTime[subjectName]) window.subjectStudyTime[subjectName] = {};
         window.subjectStudyTime[subjectName][currentDate] = window.subjectStudyTime[subjectName][currentDate] || 0;
-        console.log("After adding subject:", window.subjects); // 디버깅 로그 추가
         await window.saveUserData();
         updateSubjectSelect();
         updateSubjectTimes();
@@ -721,7 +720,8 @@ async function resetAllSettings() {
                     diaryData: {},
                     todos: [],
                     goals: { daily: null, weekly: null },
-                    studySessions: {}
+                    studySessions: {},
+                    nickname: window.nickname
                 });
                 window.subjects = [];
                 window.studyData = {};
@@ -758,40 +758,6 @@ async function resetAllSettings() {
             } catch (error) {
                 console.error('데이터 초기화 실패:', error.code, error.message);
             }
-        } else {
-            console.log("No user logged in, resetting locally only.");
-            window.subjects = [];
-            window.studyData = {};
-            window.subjectStudyTime = {};
-            window.diaryData = {};
-            window.todos = [];
-            window.goals = { daily: null, weekly: null };
-            window.studySessions = {};
-            timerSeconds = 0;
-            if (timerInterval) clearInterval(timerInterval);
-            timerInterval = null;
-            currentFilter = 'all';
-            selectedMood = null;
-            uploadedImage = null;
-            currentWeekOffset = 0;
-            updateSubjectSelect();
-            updateSubjectTimes();
-            updateStudyTimeDisplay();
-            updateTimerDisplay();
-            updateGoalsInputs();
-            updateGoalsProgress();
-            renderHome();
-            renderTodos();
-            document.getElementById('dayDetails').classList.add('hidden');
-            document.getElementById('subjectInput').value = '';
-            document.getElementById('todoInput').value = '';
-            document.getElementById('diaryDate').value = currentDate;
-            document.getElementById('memoInput').value = '';
-            document.getElementById('diaryImage').value = '';
-            document.getElementById('imagePreview').innerHTML = '';
-            document.querySelectorAll('.mood-bean').forEach(bean => bean.classList.remove('selected'));
-            showScreen('home');
-            alert('All settings have been reset locally.');
         }
     }
 }

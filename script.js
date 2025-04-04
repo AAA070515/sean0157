@@ -349,7 +349,7 @@ function toggleDayDetails(date) {
 }
 
 function updateStudyTimeDisplay() {
-    const studyTime = window.studyData[currentDate] || 0;
+    const studyTime = (window.studyData && window.studyData[currentDate]) || 0; // 안전하게 접근
     const hours = Math.floor(studyTime / 3600);
     const minutes = Math.floor((studyTime % 3600) / 60);
     const seconds = studyTime % 60;

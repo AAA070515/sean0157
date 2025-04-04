@@ -170,7 +170,6 @@ body {
     display: flex;
     flex-direction: column;
     transition: right 0.3s ease-in-out;
-    gap: 10px; /* 버튼과 nav-item 사이 간격 추가 */
 }
 
 .drawer-content.visible {
@@ -215,7 +214,38 @@ body {
     transform: translateX(5px);
 }
 
-#login-btn {
+.reset-btn {
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    border: none;
+    background-color: #4285F4;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+    margin-top: 20px;
+    transition: all 0.3s;
+}
+
+.reset-btn:hover {
+    background-color: #3367D6;
+}
+
+#login-btn, #logout-btn {
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    border: none;
+    background-color: #4285F4;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+    margin-top: 20px;
+    transition: all 0.3s;
+    text-align: center;
+}
+
+#settings-btn, #reset-all-btn {
     width: 100%;
     padding: 10px;
     border-radius: 8px;
@@ -878,7 +908,7 @@ body {
     padding: 5px 0;
 }
 
-.main-content . Anyone > section {
+.main-content .container > section {
     opacity: 0;
     transform: translateY(20px);
     transition: opacity 0.3s ease, transform 0.3s ease;
@@ -889,7 +919,7 @@ body {
     transform: translateY(0);
 }
 
-/* 설정 섹션 */
+/* 설정 섹션 추가 */
 .settings-section {
     background-color: white;
     border-radius: 12px;
@@ -914,61 +944,22 @@ body {
     margin-bottom: 15px;
 }
 
-.nickname-input-group {
-    display: flex;
-    align-items: center;
-    gap: 10px; /* 입력창과 버튼 사이 간격 */
-    flex-wrap: wrap; /* 작은 화면에서 줄바꿈 허용 */
-}
-
 #settingsNicknameInput {
-    flex: 1; /* 입력창이 남은 공간을 채우도록 */
-    min-width: 150px; /* 최소 너비 설정 */
+    width: 100%;
     padding: clamp(8px, 2vw, 12px);
     border-radius: 8px;
     border: 1px solid #ddd;
     font-size: clamp(14px, 2.5vw, 16px);
+    margin-bottom: 15px;
 }
 
-.save-nickname-btn {
+.nickname-section .btn {
     background-color: #4285F4;
     color: white;
-    padding: clamp(8px, 2vw, 12px) clamp(15px, 3vw, 20px);
-    border-radius: 8px;
     font-size: clamp(14px, 2.5vw, 16px);
 }
 
-.save-nickname-btn:hover {
-    background-color: #3367D6;
-}
-
-.settings-actions {
-    margin-top: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.settings-actions .btn {
-    width: 100%;
-    padding: clamp(10px, 2.5vw, 15px);
-    border-radius: 8px;
-    font-size: clamp(14px, 2.5vw, 16px);
-}
-
-#logout-btn {
-    background-color: #EA4335;
-}
-
-#logout-btn:hover {
-    background-color: #D32F2F;
-}
-
-#reset-all-btn {
-    background-color: #4285F4;
-}
-
-#reset-all-btn:hover {
+.nickname-section .btn:hover {
     background-color: #3367D6;
 }
 
@@ -995,6 +986,11 @@ body {
         font-size: 14px;
     }
     
+    .reset-btn {
+        padding: 8px;
+        font-size: 14px;
+    }
+    
     .dashboard {
         grid-template-columns: 1fr;
     }
@@ -1010,15 +1006,12 @@ body {
     .week-day {
         padding: 10px;
     }
-
-    .nickname-input-group {
-        flex-direction: column; /* 모바일에서 세로로 정렬 */
-        align-items: stretch;
-    }
-
-    .save-nickname-btn {
-        width: 100%; /* 모바일에서 버튼이 전체 너비를 차지하도록 */
-    }
+}
+.drawer-content {
+    /* 기존 스타일 유지 */
+    display: flex;
+    flex-direction: column;
+    gap: 10px; /* 버튼과 nav-item 사이 간격 추가 */
 }
 
 .groups-section {

@@ -7,22 +7,22 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <nav class="nav-drawer">
-        <div class="hamburger-icon" onclick="toggleDrawer()">☰</div>
-        <div class="drawer-content hidden">
-            <div class="nav-item active" onclick="showScreen('home')">Home</div>
-            <div class="nav-item" onclick="showScreen('study')">Study</div>
-            <div class="nav-item" onclick="showScreen('todo')">To-Do</div>
-            <div class="nav-item" onclick="showScreen('diary')">Journal</div>
-            <div class="nav-item" onclick="showScreen('goals')">Goals</div>
-            <div class="nav-item" onclick="showScreen('stats')">Statistics</div>
-            <div class="nav-item" onclick="showScreen('groups')">Groups</div>
-            <div class="nav-item" id="login-btn">Login</div>
-            <div class="nav-item" id="logout-btn" style="display: none;">Logout</div>
-            <button class="reset-btn" onclick="resetAllSettings()">Reset All Settings</button>
-        </div>
-    </nav>
-    <div class="overlay hidden" onclick="closeDrawer()"></div>
+<nav class="nav-drawer">
+    <div class="hamburger-icon" onclick="toggleDrawer()">☰</div>
+    <div class="drawer-content hidden">
+        <div class="nav-item" onclick="showScreen('home')">Home</div>
+        <div class="nav-item" onclick="showScreen('study')">Study</div>
+        <div class="nav-item" onclick="showScreen('todo')">To-Do</div>
+        <div class="nav-item" onclick="showScreen('diary')">Journal</div>
+        <div class="nav-item" onclick="showScreen('goals')">Goals</div>
+        <div class="nav-item" onclick="showScreen('stats')">Statistics</div>
+        <div class="nav-item" onclick="showScreen('groups')">Groups</div>
+        <div class="nav-item" id="login-btn">Login</div>
+        <div class="nav-item" id="logout-btn" style="display: none;">Logout</div>
+        <button class="reset-btn" onclick="resetAllSettings()">Reset All Settings</button>
+    </div>
+</nav>
+<div class="overlay hidden" onclick="closeDrawer()"></div>
 
     <main class="main-content">
         <div class="container">

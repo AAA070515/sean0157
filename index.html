@@ -186,26 +186,28 @@
             measurementId: "G-HRWSZ6MSNB"
         };
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        const storage = getStorage(app);
-
-        console.log("Firebase initialized:", app, auth, db, storage);
+        try {
+            const app = initializeApp(firebaseConfig);
+            const auth = getAuth(app);
+            const db = getFirestore(app);
+            const storage = getStorage(app);
+            console.log("Firebase initialized:", { app, auth, db, storage });
+            window.auth = auth;
+            window.db = db;
+            window.storage = storage;
+        } catch (error) {
+            console.error("Firebase initialization failed:", error);
+        }
 
         const loginBtn = document.getElementById('login-btn');
         const logoutBtn = document.getElementById('logout-btn');
-
-        window.auth = auth;
-        window.db = db;
-        window.storage = storage;
 
         let unsubscribe = null;
 
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 window.userUID = user.uid;
-                console.log("User UID set:", window.userUID);
+                console.log("User logged in:", user.displayName, "UID:", window.userUID);
                 loginBtn.style.display = 'none';
                 logoutBtn.style.display = 'block';
                 syncDataFromFirestore();
@@ -223,7 +225,7 @@
             const provider = new GoogleAuthProvider();
             signInWithPopup(auth, provider)
                 .then((result) => {
-                    console.log('Login successful:', result.user.displayName);
+                    console.log('Login successful:', result.user.displayName, "UID:", result.user.uid);
                 })
                 .catch((error) => {
                     console.error('Login failed:', error.message);
@@ -246,10 +248,12 @@
                 return;
             }
 
+            console.log("Starting data sync for UID:", window.userUID);
             const userDocRef = doc(db, "users", window.userUID);
             unsubscribe = onSnapshot(userDocRef, (docSnap) => {
                 if (docSnap.exists()) {
                     const data = docSnap.data();
+                    console.log("Data synced from Firestore:", data);
                     window.subjects = data.subjects || [];
                     window.studyData = data.studyData || {};
                     window.subjectStudyTime = data.subjectStudyTime || {};
@@ -257,7 +261,6 @@
                     window.todos = data.todos || [];
                     window.goals = data.goals || { daily: null, weekly: null };
                     window.studySessions = data.studySessions || {};
-                    console.log("Data synced from Firestore:", data);
                 } else {
                     console.log("No data exists for user, initializing...");
                     setDoc(userDocRef, {
@@ -268,6 +271,10 @@
                         todos: [],
                         goals: { daily: null, weekly: null },
                         studySessions: {}
+                    }, { merge: true }).then(() => {
+                        console.log("Initialized empty data for user");
+                    }).catch((error) => {
+                        console.error("Error initializing data:", error);
                     });
                     window.subjects = [];
                     window.studyData = {};
@@ -284,43 +291,44 @@
                 renderTodos();
                 updateGoalsProgress();
             }, (error) => {
-                console.error("Error syncing data:", error);
+                console.error("Error syncing data with onSnapshot:", error);
             });
         }
 
-        function saveDataToFirestore() {
+        async function saveDataToFirestore() {
             if (!window.userUID) {
                 console.error("No user UID available. User might not be logged in.");
+                alert("Please log in to save data.");
                 return;
             }
 
             console.log("Attempting to save data to Firestore for UID:", window.userUID);
-            console.log("Data to save:", {
-                subjects: window.subjects,
-                studyData: window.studyData,
-                subjectStudyTime: window.subjectStudyTime,
-                diaryData: window.diaryData,
-                todos: window.todos,
-                goals: window.goals,
-                studySessions: window.studySessions
-            });
+            const dataToSave = {
+                subjects: window.subjects || [],
+                studyData: window.studyData || {},
+                subjectStudyTime: window.subjectStudyTime || {},
+                diaryData: window.diaryData || {},
+                todos: window.todos || [],
+                goals: window.goals || { daily: null, weekly: null },
+                studySessions: window.studySessions || {}
+            };
+            console.log("Data to save:", dataToSave);
 
             const userDocRef = doc(db, "users", window.userUID);
-            setDoc(userDocRef, {
-                subjects: window.subjects,
-                studyData: window.studyData,
-                subjectStudyTime: window.subjectStudyTime,
-                diaryData: window.diaryData,
-                todos: window.todos,
-                goals: window.goals,
-                studySessions: window.studySessions
-            }, { merge: true })
-            .then(() => {
-                console.log("Data successfully saved to Firestore:", window.diaryData);
-            })
-            .catch((error) => {
+            try {
+                await setDoc(userDocRef, dataToSave, { merge: true });
+                console.log("Data successfully saved to Firestore:", dataToSave.diaryData);
+                const docSnap = await getDoc(userDocRef);
+                if (docSnap.exists()) {
+                    console.log("Data fetched after save:", docSnap.data());
+                } else {
+                    console.log("No data found after save");
+                }
+            } catch (error) {
                 console.error("Error saving data to Firestore:", error);
-            });
+                alert("Failed to save data. Check console for details.");
+                throw error;
+            }
         }
 
         function resetLocalData() {

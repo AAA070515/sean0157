@@ -358,97 +358,75 @@ function updateStudyTimeDisplay() {
 }
 
 function startTimer() {
-    if (timerInterval) {
-        clearInterval(timerInterval); // 기존 타이머 정리
-        console.log('Existing timer cleared');
-    }
-
-    const subject = document.getElementById('subjectSelect').value;
-    console.log('Selected subject:', subject);
-
-    if (!subject) {
-        alert('Please select a subject.');
-        console.log('No subject selected, timer not started');
+    const selectedSubject = document.getElementById('subjectSelect').value;
+    if (!selectedSubject) {
+        alert('Please select a subject!');
         return;
     }
-
-    console.log('Starting timer...');
-    timerInterval = setInterval(async () => {
-        window.timerSeconds++;
-        updateTimerDisplay();
-
-        // 오늘 날짜의 공부 시간 업데이트
-        if (!window.studyData) window.studyData = {};
-        if (!window.studyData[currentDate]) window.studyData[currentDate] = {};
-        if (!window.studyData[currentDate][subject]) window.studyData[currentDate][subject] = 0;
-        window.studyData[currentDate][subject]++;
-
-        const totalStudyTimeToday = Object.values(window.studyData[currentDate]).reduce((sum, time) => sum + time, 0);
-        updateStudyTimeDisplay();
-
-        // 그룹에 실시간으로 공부 시간 반영 (오류 처리 추가)
-        if (window.currentGroupCode && window.currentUser) {
-            const groupRef = window.firestoreDoc(window.firestoreDb, "groups", window.currentGroupCode);
-            try {
-                await window.firestoreSetDoc(groupRef, {
-                    members: {
-                        [window.currentUser.uid]: {
-                            nickname: window.nickname,
-                            studyTime: totalStudyTimeToday
-                        }
-                    }
-                }, { merge: true });
-                console.log('Firestore updated with study time:', totalStudyTimeToday);
-            } catch (error) {
-                console.error('Firestore update error:', error);
-            }
+    if (!timerInterval) {
+        const startTime = new Date();
+        timerInterval = setInterval(() => {
+            timerSeconds++;
+            updateTimerDisplay();
+        }, 1000);
+        
+        if (!window.studySessions[currentDate]) {
+            window.studySessions[currentDate] = [];
         }
-
-        try {
-            await window.saveUserData();
-            console.log('User data saved');
-        } catch (error) {
-            console.error('saveUserData error:', error);
-        }
-    }, 1000);
-
-    document.getElementById('startBtn').classList.add('hidden');
-    document.getElementById('pauseBtn').classList.remove('hidden');
-    document.getElementById('stopBtn').classList.remove('hidden');
-    console.log('Timer started, UI updated');
+        window.studySessions[currentDate].push({
+            subject: selectedSubject,
+            startTime: startTime.toISOString(),
+            endTime: null,
+            duration: 0
+        });
+    }
 }
 
 async function stopTimer() {
-    if (timerInterval) {
-        clearInterval(timerInterval);
-        timerInterval = null;
+    const selectedSubject = document.getElementById('subjectSelect').value;
+    if (!selectedSubject) return;
+
+    clearInterval(timerInterval);
+    timerInterval = null;
+
+    window.studyData[currentDate] = ((window.studyData && window.studyData[currentDate]) || 0) + timerSeconds;
+
+    if (!window.subjectStudyTime[selectedSubject]) {
+        window.subjectStudyTime[selectedSubject] = {};
+    }
+    window.subjectStudyTime[selectedSubject][currentDate] = 
+        (window.subjectStudyTime[selectedSubject][currentDate] || 0) + timerSeconds;
+
+    const lastSession = window.studySessions[currentDate]?.slice(-1)[0];
+    if (lastSession && lastSession.subject === selectedSubject && !lastSession.endTime) {
+        lastSession.endTime = new Date().toISOString();
+        lastSession.duration = timerSeconds;
     }
 
-    const subject = document.getElementById('subjectSelect').value;
-    if (window.studyData && window.studyData[currentDate] && window.studyData[currentDate][subject]) {
-        const totalStudyTimeToday = Object.values(window.studyData[currentDate]).reduce((sum, time) => sum + time, 0);
-
-        // 그룹에 최종 시간 반영
-        if (window.currentGroupCode && window.currentUser) {
-            const groupRef = window.firestoreDoc(window.firestoreDb, "groups", window.currentGroupCode);
+    if (window.currentGroupCode) {
+        const groupRef = window.firestoreDoc(window.firestoreDb, "groups", window.currentGroupCode);
+        const groupDoc = await window.firestoreGetDoc(groupRef);
+        if (groupDoc.exists()) {
+            const groupData = groupDoc.data();
             await window.firestoreSetDoc(groupRef, {
                 members: {
+                    ...groupData.members,
                     [window.currentUser.uid]: {
                         nickname: window.nickname,
-                        studyTime: totalStudyTimeToday
+                        studyTime: window.studyData[currentDate] || 0
                     }
                 }
             }, { merge: true });
         }
-
-        await window.saveUserData();
     }
 
-    window.timerSeconds = 0;
+    timerSeconds = 0;
+    await window.saveUserData();
     updateTimerDisplay();
-    document.getElementById('startBtn').classList.remove('hidden');
-    document.getElementById('pauseBtn').classList.add('hidden');
-    document.getElementById('stopBtn').classList.add('hidden');
+    updateStudyTimeDisplay();
+    updateSubjectTimes();
+    updateGoalsProgress();
+    renderHome();
 }
 
 async function saveDiary() {
@@ -589,20 +567,17 @@ function updateSubjectTimes() {
 }
 
 function pauseTimer() {
-    if (timerInterval) {
-        clearInterval(timerInterval);
-        timerInterval = null;
-    }
-    document.getElementById('startBtn').classList.remove('hidden');
-    document.getElementById('pauseBtn').classList.add('hidden');
+    clearInterval(timerInterval);
+    timerInterval = null;
 }
 
 function updateTimerDisplay() {
-    const hours = Math.floor(window.timerSeconds / 3600);
-    const minutes = Math.floor((window.timerSeconds % 3600) / 60);
-    const seconds = window.timerSeconds % 60;
-    document.getElementById('timerDisplay').textContent = `${hours}h ${minutes}m ${seconds}s`;
-    console.log('Timer display updated:', window.timerSeconds);
+    const hours = Math.floor(timerSeconds / 3600);
+    const minutes = Math.floor((timerSeconds % 3600) / 60);
+    const seconds = timerSeconds % 60;
+    const timerDisplay = document.getElementById('timerDisplay');
+    timerDisplay.textContent = 
+        `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 }
 
 function selectMood(mood) {
@@ -1096,10 +1071,10 @@ function renderGroupDashboard() {
                     uid,
                     nickname: data.nickname,
                     studyTime: data.studyTime || 0,
-                    rank: index + 1
+                    rank: index + 1 // 순위는 나중에 정렬 후 재조정
                 }))
-                .sort((a, b) => b.studyTime - a.studyTime)
-                .map((member, index) => ({ ...member, rank: index + 1 }));
+                .sort((a, b) => b.studyTime - a.studyTime) // 공부 시간 내림차순 정렬
+                .map((member, index) => ({ ...member, rank: index + 1 })); // 정렬 후 순위 재설정
 
             membersDiv.innerHTML = '';
             members.forEach(member => {

@@ -943,17 +943,24 @@ body {
     margin-bottom: 15px;
 }
 
+.nickname-section div {
+    display: flex;
+    gap: 10px;
+    align-items: center; /* 수직 정렬 추가 */
+}
+
 #settingsNicknameInput {
-    width: 70%;
+    flex: 1; /* 입력창이 남은 공간을 채우도록 */
     padding: clamp(8px, 2vw, 12px);
     border-radius: 8px;
     border: 1px solid #ddd;
     font-size: clamp(14px, 2.5vw, 16px);
-    margin-bottom: 15px;
+    height: clamp(36px, 4vw, 44px); /* 버튼과 높이 맞춤 */
+    box-sizing: border-box; /* 패딩 포함 크기 계산 */
 }
 
 .nickname-save-btn {
-    width: 25%;
+    width: 25%; /* 버튼 폭 유지 */
     background-color: #4285F4;
     color: white;
     font-size: clamp(14px, 2.5vw, 16px);
@@ -962,6 +969,8 @@ body {
     border: none;
     cursor: pointer;
     transition: transform 0.2s ease, background-color 0.3s ease;
+    height: clamp(36px, 4vw, 44px); /* 입력창과 높이 맞춤 */
+    box-sizing: border-box; /* 패딩 포함 크기 계산 */
 }
 
 .nickname-save-btn:hover {
@@ -987,7 +996,6 @@ body {
     background-color: #3367D6;
     transform: scale(1.05);
 }
-
 @media (max-width: 576px) {
     .hamburger-icon {
         font-size: 25px;

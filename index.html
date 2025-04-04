@@ -201,6 +201,34 @@
                     </div>
                 </div>
             </section>
+                <section id="groupsScreen" class="hidden">
+                    <div class="groups-section">
+                        <h3>Groups</h3>
+                        <div class="group-actions">
+                            <!-- 그룹 생성 -->
+                            <div class="group-create">
+                                <h4>Create a Group</h4>
+                                <input type="text" id="groupNameInput" placeholder="Enter group name" maxlength="50">
+                                <button class="btn" onclick="createGroup()">Create Group</button>
+                                <p id="groupCodeDisplay" class="hidden"></p>
+                                <p id="groupCreateError" class="error hidden"></p>
+                            </div>
+                            <!-- 그룹 참여 -->
+                            <div class="group-join">
+                                <h4>Join a Group</h4>
+                                <input type="text" id="groupCodeInput" placeholder="Enter 6-digit code" maxlength="6">
+                                <button class="btn" onclick="joinGroup()">Join Group</button>
+                                <p id="groupJoinError" class="error hidden"></p>
+                            </div>
+                        </div>
+                        <!-- 그룹 대시보드 -->
+                        <div id="groupDashboard" class="group-dashboard hidden">
+                            <h4 id="currentGroupName"></h4>
+                            <div id="groupMembers" class="group-members"></div>
+                            <button class="btn leave-btn" onclick="leaveGroup()">Leave Group</button>
+                        </div>
+                    </div>
+                </section>
         </div>
     </main>
 

@@ -713,8 +713,16 @@ function calculateWeeklyStudyTime() {
 function resetAllSettings() {
     if (confirm('Are you sure you want to reset all settings? This will clear all your data.')) {
         if (window.currentUser) {
-            const userRef = ref(window.db, `users/${window.currentUser.uid}`);
-            remove(userRef).then(() => {
+            const userRef = doc(window.db, "users", window.currentUser.uid);
+            setDoc(userRef, {
+                subjects: [],
+                studyData: {},
+                subjectStudyTime: {},
+                diaryData: {},
+                todos: [],
+                goals: { daily: null, weekly: null },
+                studySessions: {}
+            }).then(() => {
                 subjects = [];
                 studyData = {};
                 subjectStudyTime = {};
@@ -748,8 +756,42 @@ function resetAllSettings() {
                 showScreen('home');
                 alert('All settings have been reset.');
             }).catch((error) => {
-                console.error('데이터 초기화 실패:', error);
+                console.error('데이터 초기화 실패:', error.code, error.message);
             });
+        } else {
+            console.log("No user logged in, resetting locally only.");
+            subjects = [];
+            studyData = {};
+            subjectStudyTime = {};
+            diaryData = {};
+            todos = [];
+            goals = { daily: null, weekly: null };
+            studySessions = {};
+            timerSeconds = 0;
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = null;
+            currentFilter = 'all';
+            selectedMood = null;
+            uploadedImage = null;
+            currentWeekOffset = 0;
+            updateSubjectSelect();
+            updateSubjectTimes();
+            updateStudyTimeDisplay();
+            updateTimerDisplay();
+            updateGoalsInputs();
+            updateGoalsProgress();
+            renderHome();
+            renderTodos();
+            document.getElementById('dayDetails').classList.add('hidden');
+            document.getElementById('subjectInput').value = '';
+            document.getElementById('todoInput').value = '';
+            document.getElementById('diaryDate').value = currentDate;
+            document.getElementById('memoInput').value = '';
+            document.getElementById('diaryImage').value = '';
+            document.getElementById('imagePreview').innerHTML = '';
+            document.querySelectorAll('.mood-bean').forEach(bean => bean.classList.remove('selected'));
+            showScreen('home');
+            alert('All settings have been reset locally.');
         }
     }
 }

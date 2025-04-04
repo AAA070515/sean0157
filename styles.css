@@ -214,15 +214,20 @@ body {
     transform: translateX(5px);
 }
 
-/* Settings와 Reset 버튼 스타일 (Login 버튼과 동일하게 수정) */
-.login-btn {
+.reset-btn {
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    border: none;
     background-color: #4285F4;
     color: white;
     font-size: 16px;
-    padding: 12px 24px;
+    cursor: pointer;
+    margin-top: 20px;
+    transition: all 0.3s;
 }
 
-.login-btn:hover {
+.reset-btn:hover {
     background-color: #3367D6;
 }
 
@@ -967,8 +972,8 @@ body {
         font-size: 14px;
     }
     
-    .reset-btn.login-btn {
-        padding: 8px 16px; /* 모바일에서 패딩 조정 */
+    .reset-btn {
+        padding: 8px;
         font-size: 14px;
     }
     
@@ -988,7 +993,6 @@ body {
         padding: 10px;
     }
 }
-
 .drawer-content {
     /* 기존 스타일 유지 */
     display: flex;

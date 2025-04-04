@@ -381,7 +381,7 @@ function startTimer() {
     }
 }
 
-function stopTimer() {
+async function stopTimer() {
     const selectedSubject = document.getElementById('subjectSelect').value;
     if (!selectedSubject) return;
 
@@ -403,7 +403,7 @@ function stopTimer() {
     }
 
     timerSeconds = 0;
-    saveUserData();
+    await saveUserData();
     updateTimerDisplay();
     updateStudyTimeDisplay();
     updateSubjectTimes();
@@ -411,7 +411,7 @@ function stopTimer() {
     renderHome();
 }
 
-function saveDiary() {
+async function saveDiary() {
     const date = document.getElementById('diaryDate').value;
     const memo = document.getElementById('memoInput').value.trim();
     if (!date || !selectedMood || !memo) {
@@ -425,7 +425,7 @@ function saveDiary() {
         memo: memo, 
         image: uploadedImage || diaryData[date]?.image || null 
     };
-    saveUserData();
+    await saveUserData();
     renderHome();
     document.getElementById('memoInput').value = '';
     document.getElementById('diaryImage').value = '';
@@ -465,28 +465,28 @@ function renderTodos() {
     renderHome();
 }
 
-function toggleTodo(id) {
+async function toggleTodo(id) {
     todos = todos.map(todo => {
         if (todo.id === id) return { ...todo, completed: !todo.completed };
         return todo;
     });
-    saveUserData();
+    await saveUserData();
     renderTodos();
 }
 
-function deleteTodo(id) {
+async function deleteTodo(id) {
     todos = todos.filter(todo => todo.id !== id);
-    saveUserData();
+    await saveUserData();
     renderTodos();
 }
 
-function saveGoal(type) {
+async function saveGoal(type) {
     const input = document.getElementById(`${type}Goal`);
     const value = parseInt(input.value);
     
     if (!isNaN(value) && value >= 0) {
         goals[type] = value * 3600;
-        saveUserData();
+        await saveUserData();
         updateGoalsProgress();
         renderHome();
         alert(`${type.charAt(0).toUpperCase() + type.slice(1)} goal saved!`);
@@ -495,25 +495,25 @@ function saveGoal(type) {
     }
 }
 
-function addSubject() {
+async function addSubject() {
     const subjectInput = document.getElementById('subjectInput');
     const subjectName = subjectInput.value.trim();
     if (subjectName && !subjects.includes(subjectName)) {
         subjects.push(subjectName);
         if (!subjectStudyTime[subjectName]) subjectStudyTime[subjectName] = {};
         subjectStudyTime[subjectName][currentDate] = subjectStudyTime[subjectName][currentDate] || 0;
-        saveUserData();
+        await saveUserData();
         updateSubjectSelect();
         updateSubjectTimes();
         subjectInput.value = '';
     }
 }
 
-function deleteSubject(subjectName) {
+async function deleteSubject(subjectName) {
     if (subjects.includes(subjectName)) {
         subjects = subjects.filter(subject => subject !== subjectName);
         if (subjectStudyTime[subjectName]) delete subjectStudyTime[subjectName];
-        saveUserData();
+        await saveUserData();
         updateSubjectSelect();
         updateSubjectTimes();
     }
@@ -617,7 +617,7 @@ function loadDiaryData(selectedDate) {
     }
 }
 
-function addTodo() {
+async function addTodo() {
     const todoInput = document.getElementById('todoInput');
     const todoText = todoInput.value.trim();
     
@@ -629,7 +629,7 @@ function addTodo() {
             createdAt: new Date().toISOString()
         };
         todos.push(newTodo);
-        saveUserData();
+        await saveUserData();
         todoInput.value = '';
         renderTodos();
     }
@@ -643,9 +643,9 @@ function filterTasks(filter) {
     renderTodos();
 }
 
-function clearCompleted() {
+async function clearCompleted() {
     todos = todos.filter(todo => !todo.completed);
-    saveUserData();
+    await saveUserData();
     renderTodos();
 }
 
@@ -710,19 +710,20 @@ function calculateWeeklyStudyTime() {
     return totalTime;
 }
 
-function resetAllSettings() {
+async function resetAllSettings() {
     if (confirm('Are you sure you want to reset all settings? This will clear all your data.')) {
         if (window.currentUser) {
             const userRef = doc(window.db, "users", window.currentUser.uid);
-            setDoc(userRef, {
-                subjects: [],
-                studyData: {},
-                subjectStudyTime: {},
-                diaryData: {},
-                todos: [],
-                goals: { daily: null, weekly: null },
-                studySessions: {}
-            }).then(() => {
+            try {
+                await setDoc(userRef, {
+                    subjects: [],
+                    studyData: {},
+                    subjectStudyTime: {},
+                    diaryData: {},
+                    todos: [],
+                    goals: { daily: null, weekly: null },
+                    studySessions: {}
+                });
                 subjects = [];
                 studyData = {};
                 subjectStudyTime = {};
@@ -755,9 +756,9 @@ function resetAllSettings() {
                 document.querySelectorAll('.mood-bean').forEach(bean => bean.classList.remove('selected'));
                 showScreen('home');
                 alert('All settings have been reset.');
-            }).catch((error) => {
+            } catch (error) {
                 console.error('데이터 초기화 실패:', error.code, error.message);
-            });
+            }
         } else {
             console.log("No user logged in, resetting locally only.");
             subjects = [];

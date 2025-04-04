@@ -127,11 +127,6 @@ async function saveUserData() {
     try {
         await setDoc(doc(db, "users", userId), dataToSave, { merge: true });
         console.log("Data saved successfully!");
-        const userRef = doc(db, "users", userId);
-        const docSnap = await getDoc(userRef);
-        if (docSnap.exists()) {
-            console.log("Data after save:", docSnap.data());
-        }
     } catch (error) {
         console.error("Save failed:", error.code, error.message);
         alert("Failed to save data: " + error.message);
@@ -159,6 +154,10 @@ function getMoodImage(mood) {
 function toggleDrawer() {
     const drawerContent = document.querySelector('.drawer-content');
     const overlay = document.querySelector('.overlay');
+    if (!drawerContent || !overlay) {
+        console.error('Drawer elements not found!');
+        return;
+    }
     drawerContent.classList.toggle('hidden');
     drawerContent.classList.toggle('visible');
     overlay.classList.toggle('hidden');
@@ -168,6 +167,10 @@ function toggleDrawer() {
 function closeDrawer() {
     const drawerContent = document.querySelector('.drawer-content');
     const overlay = document.querySelector('.overlay');
+    if (!drawerContent || !overlay) {
+        console.error('Drawer elements not found!');
+        return;
+    }
     drawerContent.classList.add('hidden');
     drawerContent.classList.remove('visible');
     overlay.classList.add('hidden');
@@ -178,13 +181,16 @@ function showScreen(screen) {
     const screens = ['home', 'study', 'diary', 'todo', 'goals', 'stats', 'groups'];
     screens.forEach(s => {
         const el = document.getElementById(`${s}Screen`);
-        el.classList.add('hidden');
+        if (el) el.classList.add('hidden');
+        else console.warn(`Screen element #${s}Screen not found`);
     });
 
     const targetScreen = document.getElementById(`${screen}Screen`);
-    setTimeout(() => {
-        targetScreen.classList.remove('hidden');
-    }, 50);
+    if (!targetScreen) {
+        console.error(`Target screen #${screen}Screen not found`);
+        return;
+    }
+    setTimeout(() => targetScreen.classList.remove('hidden'), 50);
 
     const navMapping = {
         'home': 'Home',
@@ -1128,3 +1134,32 @@ async function leaveGroup() {
     window.groups = userGroups;
     renderGroups();
 }
+
+// 전역 함수로 등록
+window.toggleDrawer = toggleDrawer;
+window.closeDrawer = closeDrawer;
+window.showScreen = showScreen;
+window.toggleDayDetails = toggleDayDetails;
+window.startTimer = startTimer;
+window.stopTimer = stopTimer;
+window.pauseTimer = pauseTimer;
+window.saveDiary = saveDiary;
+window.toggleTodo = toggleTodo;
+window.deleteTodo = deleteTodo;
+window.saveGoal = saveGoal;
+window.addSubject = addSubject;
+window.deleteSubject = deleteSubject;
+window.selectMood = selectMood;
+window.triggerFileInput = triggerFileInput;
+window.uploadImage = uploadImage;
+window.addTodo = addTodo;
+window.filterTasks = filterTasks;
+window.clearCompleted = clearCompleted;
+window.changeWeek = changeWeek;
+window.showStatsDetails = showStatsDetails;
+window.resetAllSettings = resetAllSettings;
+window.renderGroups = renderGroups;
+window.createGroup = createGroup;
+window.joinGroup = joinGroup;
+window.showGroupDetails = showGroupDetails;
+window.leaveGroup = leaveGroup;

@@ -1237,3 +1237,43 @@ body {
 .leave-btn:hover {
     background-color: #D32F2F;
 }
+
+/* 기존 .btn 스타일 유지 */
+.btn {
+    padding: clamp(8px, 2vw, 12px);
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.2s ease, background-color 0.3s ease;
+}
+
+/* Logout 버튼 스타일 */
+#logout-btn {
+    background-color: #EA4335; /* 기존 빨간색 유지 */
+    color: #fff; /* 폰트 색상 흰색으로 변경 */
+    margin-top: 20px;
+}
+
+#logout-btn:hover {
+    background-color: #D32F2F; /* 호버 시 색상 변화 */
+    color: #fff; /* 호버 시에도 흰색 유지 */
+}
+
+/* Reset All Settings 버튼 스타일 */
+#reset-all-btn {
+    background-color: #4285F4; /* 기존 파란색 유지 */
+    color: #fff; /* 폰트 색상 흰색으로 변경 */
+    margin-top: 20px;
+}
+
+#reset-all-btn:hover {
+    background-color: #3367D6; /* 호버 시 색상 변화 */
+    color: #fff; /* 호버 시에도 흰색 유지 */
+}
+
+/* Settings 섹션 내 버튼 스타일 보완 */
+.settings-actions .btn {
+    width: 100%;
+    padding: clamp(10px, 2.5vw, 15px);
+    font-size: clamp(14px, 2.5vw, 16px);
+}

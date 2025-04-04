@@ -245,6 +245,20 @@ body {
     text-align: center;
 }
 
+#settings-btn, #reset-all-btn {
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    border: none;
+    background-color: #4285F4;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+    margin-top: 20px;
+    transition: all 0.3s;
+    text-align: center;
+}
+
 /* 메인 콘텐츠 */
 .main-content {
     flex: 1;

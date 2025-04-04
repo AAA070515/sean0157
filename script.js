@@ -870,9 +870,9 @@ function generateGroupCode() {
     return Math.random().toString(36).substr(2, 6).toUpperCase();
 }
 
-// 그룹 생성
 async function createGroup() {
-    if (!currentUser) {
+    console.log('createGroup called');  // 함수 호출 확인
+    if (!window.currentUser) {
         alert('You must be logged in to create a group.');
         return;
     }
@@ -881,6 +881,7 @@ async function createGroup() {
     const groupName = groupNameInput.value.trim();
     const error = document.getElementById('groupCreateError');
 
+    console.log('Group name:', groupName);  // 입력값 확인
     if (!groupName) {
         error.textContent = 'Please enter a group name.';
         error.classList.remove('hidden');
@@ -888,10 +889,12 @@ async function createGroup() {
     }
 
     const groupCode = generateGroupCode();
-    const groupRef = doc(db, "groups", groupCode);
+    console.log('Generated group code:', groupCode);  // 그룹 코드 확인
+    const groupRef = doc(window.firestoreDb, "groups", groupCode);
 
     try {
         const groupDoc = await getDoc(groupRef);
+        console.log('Group exists:', groupDoc.exists());  // 기존 그룹 확인
         if (groupDoc.exists()) {
             error.textContent = 'Group code already exists. Try again.';
             error.classList.remove('hidden');
@@ -901,20 +904,22 @@ async function createGroup() {
         await setDoc(groupRef, {
             name: groupName,
             members: {
-                [currentUser.uid]: {
+                [window.currentUser.uid]: {
                     nickname: window.nickname,
                     studyTime: window.studyData[currentDate] || 0
                 }
             },
             createdAt: new Date().toISOString()
         });
+        console.log('Group created successfully');  // 성공 확인
 
-        currentGroupCode = groupCode;
+        window.currentGroupCode = groupCode;
         groupNameInput.value = '';
         document.getElementById('groupCodeDisplay').textContent = `Group Code: ${groupCode}`;
         document.getElementById('groupCodeDisplay').classList.remove('hidden');
         error.classList.add('hidden');
         renderGroupDashboard();
+        await window.saveUserData();
     } catch (err) {
         error.textContent = `Error: ${err.message}`;
         error.classList.remove('hidden');
@@ -922,7 +927,6 @@ async function createGroup() {
     }
 }
 
-// 그룹 참여
 async function joinGroup() {
     if (!currentUser) {
         alert('You must be logged in to join a group.');
@@ -998,25 +1002,26 @@ function renderGroupDashboard() {
     const membersDiv = document.getElementById('groupMembers');
     const groupNameDiv = document.getElementById('currentGroupName');
 
-    if (!currentGroupCode) {
+    if (!window.currentGroupCode) {  // currentGroupCode -> window.currentGroupCode
         dashboard.classList.add('hidden');
         document.getElementById('groupCodeDisplay').classList.add('hidden');
         return;
     }
 
     dashboard.classList.remove('hidden');
-    const groupRef = doc(db, "groups", currentGroupCode);
+    const groupRef = doc(window.firestoreDb, "groups", window.currentGroupCode);  // db -> window.firestoreDb
     onSnapshot(groupRef, (doc) => {
         if (doc.exists()) {
             const groupData = doc.data();
-            groupNameDiv.textContent = `${groupData.name} (Code: ${currentGroupCode})`;
+            groupNameDiv.textContent = `${groupData.name} (Code: ${window.currentGroupCode})`;
 
-            // 멤버들을 공부 시간 내림차순으로 정렬
-            const members = Object.entries(groupData.members).map(([uid, data]) => ({
-                uid,
-                nickname: data.nickname,
-                studyTime: data.studyTime || 0
-            })).sort((a, b) => b.studyTime - a.studyTime);
+            const members = Object.entries(groupData.members)
+                .map(([uid, data]) => ({
+                    uid,
+                    nickname: data.nickname,
+                    studyTime: data.studyTime || 0
+                }))
+                .sort((a, b) => b.studyTime - a.studyTime);
 
             membersDiv.innerHTML = '';
             members.forEach(member => {
@@ -1031,9 +1036,11 @@ function renderGroupDashboard() {
                 `;
             });
         } else {
-            currentGroupCode = null;
+            window.currentGroupCode = null;  // currentGroupCode -> window.currentGroupCode
             dashboard.classList.add('hidden');
         }
+    }, (error) => {
+        console.error('Group dashboard render error:', error);
     });
 }
 

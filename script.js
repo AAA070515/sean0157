@@ -9,11 +9,6 @@ let currentWeekOffset = 0;
 const today = new Date();
 let currentDate = today.toISOString().split('T')[0];
 
-updateStudyTimeDisplay();
-renderHome();
-renderTodos();
-updateGoalsProgress();
-
 function getMoodImage(mood) {
     const moodImages = {
         'happy': 'very_happy.png',
@@ -44,7 +39,7 @@ function closeDrawer() {
 }
 
 function showScreen(screen) {
-    const screens = ['home', 'study', 'diary', 'todo', 'goals', 'stats', 'settings'];
+    const screens = ['home', 'study', 'diary', 'todo', 'goals', 'stats', 'settings', 'groups'];
     screens.forEach(s => {
         const el = document.getElementById(`${s}Screen`);
         el.classList.add('hidden');
@@ -61,8 +56,9 @@ function showScreen(screen) {
         'todo': 'To-Do',
         'diary': 'Journal',
         'goals': 'Goals',
-        'stats': 'Statistics'
-        // 'settings'는 버튼이므로 navMapping에서 제외
+        'stats': 'Statistics',
+        'settings': 'Settings',
+        'groups': 'Groups'
     };
 
     document.querySelectorAll('.nav-item').forEach(btn => {
@@ -71,9 +67,9 @@ function showScreen(screen) {
             btn.classList.add('active');
         }
     });
-    
+
     closeDrawer();
-    
+
     if (screen === 'home') renderHome();
     else if (screen === 'study') {
         updateStudyTimeDisplay();
@@ -98,8 +94,13 @@ function showScreen(screen) {
         updateGoalsInputs();
         updateGoalsProgress();
     } else if (screen === 'stats') renderStats();
-    else if (screen === 'settings') {
-        loadSettings();
+    else if (screen === 'settings') loadSettings();
+    else if (screen === 'groups') {
+        document.getElementById('groupNameInput').value = '';
+        document.getElementById('groupCodeInput').value = '';
+        document.getElementById('groupCreateError').classList.add('hidden');
+        document.getElementById('groupJoinError').classList.add('hidden');
+        renderGroupDashboard();
     }
 }
 
@@ -133,7 +134,7 @@ function renderHome() {
             </div>`;
     }
 
-    const studyTime = window.studyData[currentDate] || 0;
+    const studyTime = (window.studyData && window.studyData[currentDate]) || 0;
     const hours = Math.floor(studyTime / 3600);
     const minutes = Math.floor((studyTime % 3600) / 60);
     const seconds = studyTime % 60;
@@ -181,7 +182,7 @@ function renderHome() {
     `;
 
     if (window.goals.daily !== null) {
-        const dailyTime = window.studyData[currentDate] || 0;
+        const dailyTime = (window.studyData && window.studyData[currentDate]) || 0;
         const dailyPercentage = Math.min(Math.round((dailyTime / window.goals.daily) * 100), 100);
         const hours = Math.floor(dailyTime / 3600);
         const minutes = Math.floor((dailyTime % 3600) / 60);
@@ -226,7 +227,7 @@ function renderStats() {
         const dateStr = date.toISOString().split('T')[0];
         const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
         const dayNum = date.getDate();
-        const hasData = window.studyData[dateStr] || window.diaryData[dateStr];
+        const hasData = (window.studyData && window.studyData[dateStr]) || window.diaryData[dateStr];
         
         weekCalendar.innerHTML += `
             <div class="week-day ${hasData ? 'sticker' : ''}" 
@@ -254,7 +255,6 @@ function changeWeek(offset) {
 }
 
 function showStatsDetails(dateStr) {
-    // 선택한 날짜에 하루를 더함
     const selectedDate = new Date(dateStr);
     selectedDate.setDate(selectedDate.getDate() + 1);
     const nextDayStr = selectedDate.toISOString().split('T')[0];
@@ -263,7 +263,7 @@ function showStatsDetails(dateStr) {
     const statsDetails = document.getElementById('statsDetails');
     document.getElementById('statsSelectedDate').textContent = nextDayStr;
 
-    const studyTime = window.studyData[nextDayStr] || 0;
+    const studyTime = (window.studyData && window.studyData[nextDayStr]) || 0;
     const hours = Math.floor(studyTime / 3600);
     const minutes = Math.floor((studyTime % 3600) / 60);
     const seconds = studyTime % 60;
@@ -321,7 +321,7 @@ function toggleDayDetails(date) {
     }
 
     currentSelectedDate = date;
-    const studyTime = window.studyData[date] || 0;
+    const studyTime = (window.studyData && window.studyData[date]) || 0;
     const hours = Math.floor(studyTime / 3600);
     const minutes = Math.floor((studyTime % 3600) / 60);
     const seconds = studyTime % 60;
@@ -349,7 +349,7 @@ function toggleDayDetails(date) {
 }
 
 function updateStudyTimeDisplay() {
-    const studyTime = (window.studyData && window.studyData[currentDate]) || 0; // 안전하게 접근
+    const studyTime = (window.studyData && window.studyData[currentDate]) || 0;
     const hours = Math.floor(studyTime / 3600);
     const minutes = Math.floor((studyTime % 3600) / 60);
     const seconds = studyTime % 60;
@@ -391,7 +391,7 @@ async function stopTimer() {
     clearInterval(timerInterval);
     timerInterval = null;
 
-    window.studyData[currentDate] = (window.studyData[currentDate] || 0) + timerSeconds;
+    window.studyData[currentDate] = ((window.studyData && window.studyData[currentDate]) || 0) + timerSeconds;
 
     if (!window.subjectStudyTime[selectedSubject]) {
         window.subjectStudyTime[selectedSubject] = {};
@@ -403,6 +403,23 @@ async function stopTimer() {
     if (lastSession && lastSession.subject === selectedSubject && !lastSession.endTime) {
         lastSession.endTime = new Date().toISOString();
         lastSession.duration = timerSeconds;
+    }
+
+    if (window.currentGroupCode) {
+        const groupRef = window.firestoreDoc(window.firestoreDb, "groups", window.currentGroupCode);
+        const groupDoc = await window.firestoreGetDoc(groupRef);
+        if (groupDoc.exists()) {
+            const groupData = groupDoc.data();
+            await window.firestoreSetDoc(groupRef, {
+                members: {
+                    ...groupData.members,
+                    [window.currentUser.uid]: {
+                        nickname: window.nickname,
+                        studyTime: window.studyData[currentDate] || 0
+                    }
+                }
+            }, { merge: true });
+        }
     }
 
     timerSeconds = 0;
@@ -666,7 +683,7 @@ function updateGoalsProgress() {
     progressDiv.innerHTML = '';
     
     if (window.goals.daily !== null) {
-        const dailyTime = window.studyData[currentDate] || 0;
+        const dailyTime = (window.studyData && window.studyData[currentDate]) || 0;
         const dailyPercentage = Math.min(Math.round((dailyTime / window.goals.daily) * 100), 100);
         const hours = Math.floor(dailyTime / 3600);
         const minutes = Math.floor((dailyTime % 3600) / 60);
@@ -711,7 +728,7 @@ function calculateWeeklyStudyTime() {
         const date = new Date(startDate);
         date.setDate(startDate.getDate() + i);
         const dateString = date.toISOString().split('T')[0];
-        totalTime += window.studyData[dateString] || 0;
+        totalTime += (window.studyData && window.studyData[dateString]) || 0;
     }
     
     return totalTime;
@@ -720,9 +737,9 @@ function calculateWeeklyStudyTime() {
 async function resetAllSettings() {
     if (confirm('Are you sure you want to reset all settings? This will clear all your data.')) {
         if (window.currentUser) {
-            const userRef = doc(window.db, "users", window.currentUser.uid);
+            const userRef = window.firestoreDoc(window.firestoreDb, "users", window.currentUser.uid);
             try {
-                await setDoc(userRef, {
+                await window.firestoreSetDoc(userRef, {
                     subjects: [],
                     studyData: {},
                     subjectStudyTime: {},
@@ -796,8 +813,8 @@ async function changeNickname() {
     }
 
     try {
-        const userRef = doc(window.db, "users", window.currentUser.uid);
-        await setDoc(userRef, { nickname: newNickname }, { merge: true });
+        const userRef = window.firestoreDoc(window.firestoreDb, "users", window.currentUser.uid);
+        await window.firestoreSetDoc(userRef, { nickname: newNickname }, { merge: true });
         window.nickname = newNickname;
         error.classList.add('hidden');
         alert(`Nickname changed to "${newNickname}"!`);
@@ -865,13 +882,12 @@ style.textContent = `
 }
 `;
 
-// 랜덤 6자리 코드 생성 함수
 function generateGroupCode() {
     return Math.random().toString(36).substr(2, 6).toUpperCase();
 }
 
 async function createGroup() {
-    console.log('createGroup called');  // 함수 호출 확인
+    console.log('createGroup called');
     if (!window.currentUser) {
         alert('You must be logged in to create a group.');
         return;
@@ -881,7 +897,7 @@ async function createGroup() {
     const groupName = groupNameInput.value.trim();
     const error = document.getElementById('groupCreateError');
 
-    console.log('Group name:', groupName);  // 입력값 확인
+    console.log('Group name:', groupName);
     if (!groupName) {
         error.textContent = 'Please enter a group name.';
         error.classList.remove('hidden');
@@ -889,30 +905,30 @@ async function createGroup() {
     }
 
     const groupCode = generateGroupCode();
-    console.log('Generated group code:', groupCode);  // 그룹 코드 확인
-    const groupRef = doc(window.firestoreDb, "groups", groupCode);
+    console.log('Generated group code:', groupCode);
+    const groupRef = window.firestoreDoc(window.firestoreDb, "groups", groupCode);
 
     try {
-        const groupDoc = await getDoc(groupRef);
-        console.log('Group exists:', groupDoc.exists());  // 기존 그룹 확인
+        const groupDoc = await window.firestoreGetDoc(groupRef);
+        console.log('Group exists:', groupDoc.exists());
         if (groupDoc.exists()) {
             error.textContent = 'Group code already exists. Try again.';
             error.classList.remove('hidden');
             return;
         }
 
-        await setDoc(groupRef, {
+        await window.firestoreSetDoc(groupRef, {
             name: groupName,
             members: {
                 [window.currentUser.uid]: {
                     nickname: window.nickname,
-                    studyTime: window.studyData[currentDate] || 0
+                    studyTime: (window.studyData && window.studyData[currentDate]) || 0
                 }
             },
             createdAt: new Date().toISOString()
         });
-        console.log('Group created successfully');  // 성공 확인
 
+        console.log('Group created successfully');
         window.currentGroupCode = groupCode;
         groupNameInput.value = '';
         document.getElementById('groupCodeDisplay').textContent = `Group Code: ${groupCode}`;
@@ -928,7 +944,7 @@ async function createGroup() {
 }
 
 async function joinGroup() {
-    if (!currentUser) {
+    if (!window.currentUser) {
         alert('You must be logged in to join a group.');
         return;
     }
@@ -943,9 +959,9 @@ async function joinGroup() {
         return;
     }
 
-    const groupRef = doc(db, "groups", groupCode);
+    const groupRef = window.firestoreDoc(window.firestoreDb, "groups", groupCode);
     try {
-        const groupDoc = await getDoc(groupRef);
+        const groupDoc = await window.firestoreGetDoc(groupRef);
         if (!groupDoc.exists()) {
             error.textContent = 'Group not found.';
             error.classList.remove('hidden');
@@ -953,23 +969,23 @@ async function joinGroup() {
         }
 
         const groupData = groupDoc.data();
-        if (groupData.members[currentUser.uid]) {
+        if (groupData.members[window.currentUser.uid]) {
             error.textContent = 'You are already in this group.';
             error.classList.remove('hidden');
             return;
         }
 
-        await setDoc(groupRef, {
+        await window.firestoreSetDoc(groupRef, {
             members: {
                 ...groupData.members,
-                [currentUser.uid]: {
+                [window.currentUser.uid]: {
                     nickname: window.nickname,
-                    studyTime: window.studyData[currentDate] || 0
+                    studyTime: (window.studyData && window.studyData[currentDate]) || 0
                 }
             }
         }, { merge: true });
 
-        currentGroupCode = groupCode;
+        window.currentGroupCode = groupCode;
         groupCodeInput.value = '';
         error.classList.add('hidden');
         renderGroupDashboard();
@@ -980,37 +996,35 @@ async function joinGroup() {
     }
 }
 
-// 그룹 나가기
 async function leaveGroup() {
-    if (!currentUser || !currentGroupCode) return;
+    if (!window.currentUser || !window.currentGroupCode) return;
 
-    const groupRef = doc(db, "groups", currentGroupCode);
-    const groupDoc = await getDoc(groupRef);
+    const groupRef = window.firestoreDoc(window.firestoreDb, "groups", window.currentGroupCode);
+    const groupDoc = await window.firestoreGetDoc(groupRef);
     if (!groupDoc.exists()) return;
 
     const groupData = groupDoc.data();
-    delete groupData.members[currentUser.uid];
+    delete groupData.members[window.currentUser.uid];
 
-    await setDoc(groupRef, { members: groupData.members }, { merge: true });
-    currentGroupCode = null;
+    await window.firestoreSetDoc(groupRef, { members: groupData.members }, { merge: true });
+    window.currentGroupCode = null;
     renderGroupDashboard();
 }
 
-// 그룹 대시보드 렌더링
 function renderGroupDashboard() {
     const dashboard = document.getElementById('groupDashboard');
     const membersDiv = document.getElementById('groupMembers');
     const groupNameDiv = document.getElementById('currentGroupName');
 
-    if (!window.currentGroupCode) {  // currentGroupCode -> window.currentGroupCode
+    if (!window.currentGroupCode) {
         dashboard.classList.add('hidden');
         document.getElementById('groupCodeDisplay').classList.add('hidden');
         return;
     }
 
     dashboard.classList.remove('hidden');
-    const groupRef = doc(window.firestoreDb, "groups", window.currentGroupCode);  // db -> window.firestoreDb
-    onSnapshot(groupRef, (doc) => {
+    const groupRef = window.firestoreDoc(window.firestoreDb, "groups", window.currentGroupCode);
+    window.firestoreOnSnapshot(groupRef, (doc) => {
         if (doc.exists()) {
             const groupData = doc.data();
             groupNameDiv.textContent = `${groupData.name} (Code: ${window.currentGroupCode})`;
@@ -1036,7 +1050,7 @@ function renderGroupDashboard() {
                 `;
             });
         } else {
-            window.currentGroupCode = null;  // currentGroupCode -> window.currentGroupCode
+            window.currentGroupCode = null;
             dashboard.classList.add('hidden');
         }
     }, (error) => {
@@ -1044,186 +1058,6 @@ function renderGroupDashboard() {
     });
 }
 
-// showScreen 함수에 Groups 추가
-function showScreen(screen) {
-    const screens = ['home', 'study', 'diary', 'todo', 'goals', 'stats', 'settings', 'groups'];
-    screens.forEach(s => {
-        const el = document.getElementById(`${s}Screen`);
-        el.classList.add('hidden');
-    });
-
-    const targetScreen = document.getElementById(`${screen}Screen`);
-    setTimeout(() => {
-        targetScreen.classList.remove('hidden');
-    }, 50);
-
-    const navMapping = {
-        'home': 'Home',
-        'study': 'Study',
-        'todo': 'To-Do',
-        'diary': 'Journal',
-        'goals': 'Goals',
-        'stats': 'Statistics',
-        'settings': 'Settings',
-        'groups': 'Groups'
-    };
-
-    document.querySelectorAll('.nav-item').forEach(btn => {
-        btn.classList.remove('active');
-        if (navMapping[screen] && btn.textContent.trim() === navMapping[screen]) {
-            btn.classList.add('active');
-        }
-    });
-
-    closeDrawer();
-
-    if (screen === 'home') renderHome();
-    else if (screen === 'study') {
-        updateStudyTimeDisplay();
-        updateSubjectSelect();
-        updateSubjectTimes();
-        if (timerInterval) {
-            clearInterval(timerInterval);
-            timerInterval = null;
-        }
-        timerSeconds = 0;
-        updateTimerDisplay();
-    } else if (screen === 'diary') {
-        document.getElementById('diaryDate').value = currentDate;
-        document.getElementById('memoInput').value = '';
-        document.querySelectorAll('.mood-bean').forEach(bean => bean.classList.remove('selected'));
-        selectedMood = null;
-        uploadedImage = null;
-        document.getElementById('imagePreview').innerHTML = '';
-        loadDiaryData(currentDate);
-    } else if (screen === 'todo') renderTodos();
-    else if (screen === 'goals') {
-        updateGoalsInputs();
-        updateGoalsProgress();
-    } else if (screen === 'stats') renderStats();
-    else if (screen === 'settings') loadSettings();
-    else if (screen === 'groups') {
-        document.getElementById('groupNameInput').value = '';
-        document.getElementById('groupCodeInput').value = '';
-        document.getElementById('groupCreateError').classList.add('hidden');
-        document.getElementById('groupJoinError').classList.add('hidden');
-        renderGroupDashboard();
-    }
-}
-
-// 공부 시간 저장 시 그룹 데이터 업데이트
-async function stopTimer() {
-    const selectedSubject = document.getElementById('subjectSelect').value;
-    if (!selectedSubject) return;
-
-    clearInterval(timerInterval);
-    timerInterval = null;
-
-    window.studyData[currentDate] = (window.studyData[currentDate] || 0) + timerSeconds;
-
-    if (!window.subjectStudyTime[selectedSubject]) {
-        window.subjectStudyTime[selectedSubject] = {};
-    }
-    window.subjectStudyTime[selectedSubject][currentDate] = 
-        (window.subjectStudyTime[selectedSubject][currentDate] || 0) + timerSeconds;
-
-    const lastSession = window.studySessions[currentDate]?.slice(-1)[0];
-    if (lastSession && lastSession.subject === selectedSubject && !lastSession.endTime) {
-        lastSession.endTime = new Date().toISOString();
-        lastSession.duration = timerSeconds;
-    }
-
-    // 그룹에 공부 시간 업데이트
-    if (currentGroupCode) {
-        const groupRef = doc(db, "groups", currentGroupCode);
-        const groupDoc = await getDoc(groupRef);
-        if (groupDoc.exists()) {
-            const groupData = groupDoc.data();
-            await setDoc(groupRef, {
-                members: {
-                    ...groupData.members,
-                    [currentUser.uid]: {
-                        nickname: window.nickname,
-                        studyTime: window.studyData[currentDate] || 0
-                    }
-                }
-            }, { merge: true });
-        }
-    }
-
-    timerSeconds = 0;
-    await window.saveUserData();
-    updateTimerDisplay();
-    updateStudyTimeDisplay();
-    updateSubjectTimes();
-    updateGoalsProgress();
-    renderHome();
-}
-
-// 사용자 데이터 로드 시 그룹 정보 확인
-async function loadUserData(userId) {
-    const userRef = doc(db, "users", userId);
-    onSnapshot(userRef, async (doc) => {
-        if (doc.exists()) {
-            const data = doc.data();
-            window.subjects = data.subjects || [];
-            window.studyData = data.studyData || {};
-            window.subjectStudyTime = data.subjectStudyTime || {};
-            window.diaryData = data.diaryData || {};
-            window.todos = data.todos || [];
-            window.goals = data.goals || { daily: null, weekly: null };
-            window.studySessions = data.studySessions || {};
-            window.nickname = data.nickname || 'User';
-            currentGroupCode = data.groupCode || null; // 그룹 코드 로드
-            console.log("Loaded data with nickname:", window.nickname);
-        } else {
-            window.subjects = [];
-            window.studyData = {};
-            window.subjectStudyTime = {};
-            window.diaryData = {};
-            window.todos = [];
-            window.goals = { daily: null, weekly: null };
-            window.studySessions = {};
-            currentGroupCode = null;
-        }
-        updateSubjectSelect();
-        updateSubjectTimes();
-        updateStudyTimeDisplay();
-        updateGoalsInputs();
-        updateGoalsProgress();
-        renderHome();
-        renderTodos();
-        renderGroupDashboard();
-    }, (error) => {
-        console.error("Load failed:", error.code, error.message);
-    });
-}
-
-// 사용자 데이터 저장 시 그룹 코드 저장
-async function saveUserData() {
-    if (!currentUser) return;
-    const userId = currentUser.uid;
-    const dataToSave = {
-        subjects: window.subjects || [],
-        studyData: window.studyData || {},
-        subjectStudyTime: window.subjectStudyTime || {},
-        diaryData: window.diaryData || {},
-        todos: window.todos || [],
-        goals: window.goals || { daily: null, weekly: null },
-        studySessions: window.studySessions || {},
-        nickname: window.nickname || 'User',
-        groupCode: currentGroupCode || null // 그룹 코드 저장
-    };
-    try {
-        await setDoc(doc(db, "users", userId), dataToSave, { merge: true });
-        console.log("Data saved successfully!");
-    } catch (error) {
-        console.error("Save failed:", error.code, error.message);
-        alert("Failed to save data: " + error.message);
-    }
-}
-
-// 키보드 입력 이벤트 추가
 document.getElementById('groupNameInput').addEventListener('keypress', function(event) {
     if (event.key === 'Enter') {
         event.preventDefault();

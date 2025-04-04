@@ -1,855 +1,836 @@
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-    font-family: 'Arial', sans-serif;
-}
-
-body {
-    background-color: #f5f5f5;
-    color: #333;
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-    overflow-x: hidden;
-}
-
-.btn {
-    padding: clamp(8px, 2vw, 12px);
-    border-radius: 8px;
-    border: none;
-    cursor: pointer;
-    transition: transform 0.2s ease, background-color 0.3s ease;
-}
-
-.btn:hover {
-    transform: scale(1.05);
-}
-
-.hidden-label {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    border: 0;
-}
-
-/* Navigation Drawer 스타일 */
-.nav-drawer {
-    position: fixed;
-    top: 10px;
-    right: 10px;
-    z-index: 1000;
-}
-
-.hamburger-icon {
-    font-size: 30px;
-    cursor: pointer;
-    color: #4285F4;
-    padding: 5px;
-    transition: transform 0.3s ease;
-}
-
-.drawer-content {
-    position: fixed;
-    top: 0;
-    right: -250px;
-    width: 250px;
-    height: 100%;
-    background-color: #fff;
-    box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    transition: right 0.3s ease-in-out;
-}
-
-.drawer-content.visible {
-    right: 0;
-}
-
-.overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.2);
-    z-index: 999;
-    opacity: 0;
-    transition: opacity 0.3s ease-in-out;
-    pointer-events: none;
-}
-
-.overlay.visible {
-    opacity: 1;
-    pointer-events: auto;
-}
-
-.nav-item {
-    padding: 15px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    border-left: 4px solid transparent;
-    font-size: 16px;
-}
-
-.nav-item.active {
-    border-left-color: #4285F4;
-    background-color: rgba(66, 133, 244, 0.1);
-    color: #4285F4;
-    font-weight: bold;
-}
-
-.nav-item:hover {
-    background-color: rgba(66, 133, 244, 0.05);
-    transform: translateX(5px);
-}
-
-.reset-btn {
-    width: 100%;
-    padding: 10px;
-    border-radius: 8px;
-    border: none;
-    background-color: #4285F4;
-    color: white;
-    font-size: 16px;
-    cursor: pointer;
-    margin-top: 20px;
-    transition: all 0.3s;
-}
-
-.reset-btn:hover {
-    background-color: #3367D6;
-}
-
-.main-content {
-    flex: 1;
-    width: 100%;
-}
-
-.container {
-    max-width: min(90%, 1200px);
-    margin: 0 auto;
-    padding: 20px;
-}
-
-.dashboard {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 20px;
-    padding: 20px 0;
-}
-
-.widget {
-    background-color: #fff;
-    border-radius: 12px;
-    padding: 20px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    cursor: pointer;
-}
-
-.widget.full-width {
-    grid-column: 1 / -1;
-    cursor: default;
-}
-
-.widget:hover {
-    transform: translateY(-5px) scale(1.02);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
-}
-
-.widget h3 {
-    font-size: 18px;
-    margin-bottom: 15px;
-    color: #4285F4;
-}
-
-.big-text {
-    font-size: 32px;
-    font-weight: bold;
-    color: #333;
-}
-
-.todo-preview {
-    list-style: none;
-    margin-top: 10px;
-    max-height: 150px;
-    overflow-y: auto;
-}
-
-.todo-preview::-webkit-scrollbar {
-    width: 8px;
-}
-
-.todo-preview::-webkit-scrollbar-thumb {
-    background: #4285F4;
-    border-radius: 4px;
-}
-
-.todo-preview li {
-    font-size: 14px;
-    padding: 5px 0;
-    color: #666;
-    display: flex;
-    align-items: center;
-}
-
-.todo-preview li.completed {
-    text-decoration: line-through;
-    color: #999;
-}
-
-.diary-preview {
-    font-size: 14px;
-    color: #666;
-}
-
-.diary-preview p {
-    margin: 5px 0;
-}
-
-.goal-preview {
-    margin-top: 10px;
-}
-
-.calendar-grid {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: min(1vw, 5px);
-    margin-top: 15px;
-}
-
-.day-cell {
-    aspect-ratio: 1;
-    border-radius: 5px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: clamp(10px, 2vw, 12px);
-    background-color: #fff;
-    border: 1px solid #eee;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-}
-
-.day-cell:hover {
-    background-color: #f0f0f0;
-}
-
-.day-cell.sticker {
-    background-color: rgba(66, 133, 244, 0.2);
-    font-size: clamp(16px, 3vw, 20px);
-}
-
-.day-cell.sticker:hover {
-    background-color: rgba(66, 133, 244, 0.3);
-}
-
-.day-details {
-    background-color: white;
-    border-radius: 12px;
-    padding: 4%;
-    margin-top: 20px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-    text-align: center;
-    font-size: clamp(14px, 2.5vw, 16px);
-}
-
-.day-details h3 {
-    font-size: clamp(16px, 3vw, 18px);
-    margin-bottom: 10px;
-}
-
-.memo-detail {
-    margin: 10px 0;
-}
-
-#dayImagePreview img {
-    max-width: 100%;
-    max-height: 200px;
-    border-radius: 8px;
-    margin-top: 10px;
-    object-fit: contain;
-}
-
-.stats-section {
-    background-color: white;
-    border-radius: 12px;
-    padding: 4%;
-    margin-bottom: 20px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-}
-
-.week-controls {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-}
-
-.week-controls button {
-    background-color: #4285F4;
-    color: white;
-}
-
-.week-controls button:hover {
-    background-color: #3367D6;
-}
-
-.week-controls span {
-    font-size: 16px;
-    font-weight: bold;
-}
-
-.week-calendar {
-    display: flex;
-    justify-content: space-between;
-    gap: 10px;
-    margin-bottom: 20px;
-}
-
-.week-day {
-    flex: 1;
-    padding: 15px;
-    background-color: #fff;
-    border: 1px solid #eee;
-    border-radius: 8px;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.3s;
-}
-
-.week-day:hover {
-    background-color: #f0f0f0;
-}
-
-.week-day.selected {
-    background-color: rgba(66, 133, 244, 0.2);
-    border-color: #4285F4;
-}
-
-.stats-details {
-    background-color: white;
-    border-radius: 12px;
-    padding: 20px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-    text-align: center;
-}
-
-.stats-details h3 {
-    font-size: 18px;
-    margin-bottom: 15px;
-}
-
-#statsStudyTime {
-    font-size: 16px;
-    margin-bottom: 15px;
-}
-
-#statsSubjects {
-    margin-bottom: 15px;
-}
-
-.subject-stat {
-    display: flex;
-    justify-content: space-between;
-    padding: 5px 0;
-    font-size: 14px;
-}
-
-#statsDiary {
-    font-size: 14px;
-    color: #666;
-}
-
-#statsDiary p {
-    margin: 5px 0;
-}
-
-#statsDiary img {
-    max-width: 100%;
-    max-height: 200px;
-    border-radius: 8px;
-    margin-top: 10px;
-    object-fit: contain;
-}
-
-/* 나머지 스타일 */
-.timer-section {
-    background-color: white;
-    border-radius: 12px;
-    padding: 4%;
-    margin-bottom: 20px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-    text-align: center;
-}
-
-.timer-display {
-    font-size: clamp(32px, 6vw, 48px);
-    font-weight: bold;
-    margin: 20px 0;
-    color: #4285F4;
-}
-
-.subject-input {
-    width: 70%;
-    padding: clamp(8px, 2vw, 12px);
-    border-radius: 8px;
-    border: 1px solid #ddd;
-    margin-bottom: 15px;
-    font-size: clamp(14px, 2.5vw, 16px);
-}
-
-.subject-add-btn {
-    width: 25%;
-    background-color: #4285F4;
-    color: white;
-    font-size: clamp(14px, 2.5vw, 16px);
-    margin-left: 5%;
-    margin-bottom: 15px;
-}
-
-.subject-select {
-    width: 100%;
-    padding: clamp(8px, 2vw, 12px);
-    border-radius: 8px;
-    border: 1px solid #ddd;
-    margin-bottom: 15px;
-    font-size: clamp(14px, 2.5vw, 16px);
-}
-
-.timer-controls {
-    display: flex;
-    justify-content: center;
-    gap: clamp(10px, 2vw, 15px);
-    flex-wrap: wrap;
-}
-
-.timer-btn {
-    padding: clamp(8px, 2vw, 12px) clamp(15px, 3vw, 25px);
-    border-radius: 25px;
-    font-size: clamp(14px, 2.5vw, 16px);
-    font-weight: bold;
-    margin: 5px;
-}
-
-.start-btn { background-color: #4285F4; color: white; }
-.start-btn:hover { background-color: #3367D6; }
-.pause-btn { background-color: #FBBC05; color: #333; }
-.pause-btn:hover { background-color: #F9A825; }
-.stop-btn { background-color: #EA4335; color: white; }
-.stop-btn:hover { background-color: #D32F2F; }
-
-.study-stats {
-    background-color: white;
-    border-radius: 12px;
-    padding: 4%;
-    margin-bottom: 20px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-    text-align: center;
-}
-
-.study-stats h3 {
-    font-size: clamp(16px, 3vw, 18px);
-    margin-bottom: 10px;
-}
-
-#dailyStudyTime {
-    font-size: clamp(16px, 3vw, 18px);
-    margin: 10px 0;
-}
-
-.subject-time {
-    margin-top: 10px;
-    font-size: clamp(12px, 2.2vw, 14px);
-}
-
-.diary-section {
-    background-color: white;
-    border-radius: 12px;
-    padding: 4%;
-    margin-bottom: 20px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-    text-align: center;
-}
-
-.diary-section h3 {
-    font-size: clamp(16px, 3vw, 18px);
-    margin-bottom: 10px;
-}
-
-.mood-beans {
-    display: flex;
-    justify-content: space-between;
-    margin: 20px 0;
-    flex-wrap: wrap;
-}
-
-.mood-bean {
-    width: clamp(40px, 10vw, 60px);
-    height: clamp(40px, 10vw, 60px);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: transform 0.3s ease, border-color 0.3s ease;
-    border: 3px solid transparent;
-    margin: 5px auto;
-}
-
-.mood-bean img {
-    width: 185%;
-    height: 185%;
-    object-fit: contain;
-}
-
-.mood-bean:hover {
-    transform: scale(1.1);
-}
-
-.mood-bean.selected {
-    transform: scale(1.2);
-}
-
-.memo-input {
-    width: 100%;
-    padding: clamp(10px, 2.5vw, 15px);
-    border-radius: 8px;
-    border: 1px solid #ddd;
-    margin-top: 15px;
-    font-size: clamp(14px, 2.5vw, 16px);
-    resize: none;
-}
-
-.image-upload-btn {
-    width: 100%;
-    background-color: #4285F4;
-    color: white;
-    font-size: clamp(14px, 2.5vw, 16px);
-}
-
-.image-upload-btn:hover {
-    background-color: #3367D6;
-}
-
-#imagePreview img {
-    max-width: 100%;
-    max-height: 200px;
-    border-radius: 8px;
-    margin-top: 10px;
-    object-fit: contain;
-}
-
-.save-button {
-    width: 100%;
-    padding: clamp(10px, 2.5vw, 15px);
-    border-radius: 25px;
-    background-color: #4285F4;
-    color: white;
-    font-size: clamp(14px, 2.5vw, 16px);
-    font-weight: bold;
-    margin-top: 20px;
-}
-
-.save-button:hover {
-    background-color: #3367D6;
-}
-
-.todo-section {
-    background-color: white;
-    border-radius: 12px;
-    padding: 4%;
-    margin-bottom: 20px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-}
-
-.todo-input {
-    width: 70%;
-    padding: clamp(8px, 2vw, 12px);
-    border-radius: 8px;
-    border: 1px solid #ddd;
-    margin-bottom: 15px;
-    font-size: clamp(14px, 2.5vw, 16px);
-}
-
-.todo-add-btn {
-    width: 25%;
-    background-color: #4285F4;
-    color: white;
-    font-size: clamp(14px, 2.5vw, 16px);
-    margin-left: 5%;
-    margin-bottom: 15px;
-}
-
-.task-filters {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-    margin-bottom: 15px;
-    flex-wrap: wrap;
-}
-
-.filter-btn {
-    padding: clamp(6px, 1.5vw, 8px) clamp(10px, 2.5vw, 15px);
-    border-radius: 20px;
-    border: 1px solid #E0E0E0;
-    background-color: white;
-    font-size: clamp(12px, 2.2vw, 14px);
-    cursor: pointer;
-    transition: all 0.3s;
-    margin: 5px;
-}
-
-.filter-btn.active {
-    background-color: #4285F4;
-    color: white;
-    border-color: #4285F4;
-}
-
-.todo-list {
-    list-style: none;
-    margin-top: 15px;
-}
-
-.todo-item {
-    display: flex;
-    align-items: center;
-    padding: 12px 0;
-    border-bottom: 1px solid #eee;
-}
-
-.todo-checkbox {
-    margin-right: 10px;
-    min-width: 20px;
-    height: 20px;
-    cursor: pointer;
-}
-
-.todo-text {
-    flex: 1;
-    font-size: clamp(14px, 2.5vw, 16px);
-    word-break: break-word;
-}
-
-.todo-text.completed {
-    text-decoration: line-through;
-    color: #999;
-}
-
-.delete-todo {
-    color: #EA4335;
-    background: none;
-    border: none;
-    font-size: clamp(16px, 3vw, 18px);
-    cursor: pointer;
-    padding: 0 10px;
-    transition: transform 0.2s ease;
-}
-
-.delete-todo:hover {
-    transform: scale(1.2);
-}
-
-.todo-stats {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 15px;
-    font-size: clamp(12px, 2.2vw, 14px);
-    color: #777;
-    flex-wrap: wrap;
-    gap: 10px;
-}
-
-.clear-btn {
-    background: none;
-    border: none;
-    color: #4285F4;
-    cursor: pointer;
-    font-size: clamp(12px, 2.2vw, 14px);
-    transition: transform 0.2s ease;
-}
-
-.clear-btn:hover {
-    transform: scale(1.05);
-}
-
-.hidden {
-    display: none !important;
-}
-
-.goals-section {
-    background-color: white;
-    border-radius: 12px;
-    padding: 4%;
-    margin-bottom: 20px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-}
-
-.goals-section h3 {
-    font-size: clamp(16px, 3vw, 18px);
-    margin-bottom: 10px;
-}
-
-.goal-inputs {
-    margin: 20px 0;
-}
-
-.goal-period {
-    display: flex;
-    align-items: center;
-    margin: 15px 0;
-    gap: 10px;
-    flex-wrap: wrap;
-}
-
-.goal-period h4 {
-    width: 100px;
-    font-size: clamp(14px, 2.5vw, 16px);
-}
-
-.goal-period input {
-    width: clamp(80px, 20vw, 100px);
-    padding: 8px;
-    border-radius: 8px;
-    border: 1px solid #ddd;
-    font-size: clamp(14px, 2.5vw, 16px);
-}
-
-.goal-period button {
-    background-color: #4285F4;
-    color: white;
-    font-size: clamp(12px, 2.2vw, 14px);
-}
-
-.goal-period button:hover {
-    background-color: #3367D6;
-}
-
-.goal-progress {
-    margin-top: 20px;
-}
-
-.progress-bar {
-    width: 100%;
-    height: clamp(15px, 3vw, 20px);
-    background-color: #eee;
-    border-radius: 10px;
-    overflow: hidden;
-    margin: 10px 0;
-}
-
-.progress-fill {
-    height: 100%;
-    background-color: #4285F4;
-    transition: width 0.5s ease-in-out;
-}
-
-.delete-subject-btn {
-    background: none;
-    border: none;
-    color: #EA4335;
-    cursor: pointer;
-    font-size: clamp(14px, 2.5vw, 16px);
-    margin-left: 8px;
-    padding: 2px 6px;
-    border-radius: 50%;
-    transition: transform 0.2s ease;
-}
-
-.delete-subject-btn:hover {
-    background-color: rgba(234, 67, 53, 0.1);
-    transform: scale(1.2);
-}
-
-.subject-time {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 5px 0;
-}
-
-.main-content .container > section {
-    opacity: 0;
-    transform: translateY(20px);
-    transition: opacity 0.3s ease, transform 0.3s ease;
-}
-
-.main-content .container > section:not(.hidden) {
-    opacity: 1;
-    transform: translateY(0);
-}
-
-@media (max-width: 576px) {
-    .hamburger-icon {
-        font-size: 25px;
+let timerSeconds = 0;
+let timerInterval = null;
+let subjects = [];
+let studyData = {};
+let subjectStudyTime = {};
+let diaryData = {};
+let todos = [];
+let goals = { daily: null, weekly: null };
+let studySessions = {};
+let currentFilter = 'all';
+let selectedMood = null;
+let uploadedImage = null;
+let currentSelectedDate = null;
+let currentWeekOffset = 0;
+
+const today = new Date();
+let currentDate = today.toISOString().split('T')[0];
+updateStudyTimeDisplay();
+renderHome();
+renderTodos();
+updateGoalsProgress();
+
+function getMoodImage(mood) {
+    const moodImages = {
+        'happy': 'very_happy.png',
+        'calm': 'happy.png',
+        'neutral': 'calm.png',
+        'sad': 'sad.png',
+        'angry': 'angry.png'
+    };
+    return moodImages[mood] || 'very_happy.png';
+}
+
+function toggleDrawer() {
+    const drawerContent = document.querySelector('.drawer-content');
+    const overlay = document.querySelector('.overlay');
+    drawerContent.classList.toggle('hidden');
+    drawerContent.classList.toggle('visible');
+    overlay.classList.toggle('hidden');
+    overlay.classList.toggle('visible');
+}
+
+function closeDrawer() {
+    const drawerContent = document.querySelector('.drawer-content');
+    const overlay = document.querySelector('.overlay');
+    drawerContent.classList.add('hidden');
+    drawerContent.classList.remove('visible');
+    overlay.classList.add('hidden');
+    overlay.classList.remove('visible');
+}
+
+function showScreen(screen) {
+    const screens = ['home', 'study', 'diary', 'todo', 'goals', 'stats'];
+    screens.forEach(s => {
+        const el = document.getElementById(`${s}Screen`);
+        el.classList.add('hidden');
+    });
+
+    const targetScreen = document.getElementById(`${screen}Screen`);
+    setTimeout(() => {
+        targetScreen.classList.remove('hidden');
+    }, 50);
+
+    const navMapping = {
+        'home': 'Home',
+        'study': 'Study',
+        'todo': 'To-Do',
+        'diary': 'Journal',
+        'goals': 'Goals',
+        'stats': 'Statistics'
+    };
+
+    document.querySelectorAll('.nav-item').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.textContent.trim() === navMapping[screen]) {
+            btn.classList.add('active');
+        }
+    });
+    
+    closeDrawer();
+    
+    if (screen === 'home') renderHome();
+    else if (screen === 'study') {
+        updateStudyTimeDisplay();
+        updateSubjectSelect();
+        updateSubjectTimes();
+        if (timerInterval) {
+            clearInterval(timerInterval);
+            timerInterval = null;
+        }
+        timerSeconds = 0;
+        updateTimerDisplay();
+    } else if (screen === 'diary') {
+        document.getElementById('diaryDate').value = currentDate;
+        document.getElementById('memoInput').value = '';
+        document.querySelectorAll('.mood-bean').forEach(bean => bean.classList.remove('selected'));
+        selectedMood = null;
+        uploadedImage = null;
+        document.getElementById('imagePreview').innerHTML = '';
+        loadDiaryData(currentDate);
+    } else if (screen === 'todo') renderTodos();
+    else if (screen === 'goals') {
+        updateGoalsInputs();
+        updateGoalsProgress();
+    } else if (screen === 'stats') renderStats();
+}
+
+function renderHome() {
+    const year = today.getFullYear();
+    const month = today.getMonth();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const firstDay = new Date(year, month, 1).getDay();
+
+    document.getElementById('calendarTitle').textContent = `${year} ${getMonthName(month)} Records`;
+    const calendar = document.getElementById('calendar');
+    calendar.innerHTML = '';
+
+    for (let i = 0; i < firstDay; i++) {
+        calendar.innerHTML += `<div class="day-cell"></div>`;
+    }
+
+    for (let i = 1; i <= daysInMonth; i++) {
+        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+        const hasDiary = diaryData[dateStr]?.mood ? true : false;
+        let dayContent = i;
+        
+        if (hasDiary) {
+            const mood = diaryData[dateStr].mood;
+            dayContent = `<img src="${getMoodImage(mood)}" alt="${mood}" style="width: 100%; height: 100%; object-fit: contain;">`;
+        }
+        
+        calendar.innerHTML += `
+            <div class="day-cell ${hasDiary ? 'sticker' : ''}" onclick="toggleDayDetails('${dateStr}')">
+                ${dayContent}
+            </div>`;
+    }
+
+    const studyTime = studyData[currentDate] || 0;
+    const hours = Math.floor(studyTime / 3600);
+    const minutes = Math.floor((studyTime % 3600) / 60);
+    const seconds = studyTime % 60;
+    document.getElementById('dashboardStudyTime').textContent = `${hours}h ${minutes}m ${seconds}s`;
+
+    const todoPreview = document.getElementById('dashboardTodoPreview');
+    todoPreview.innerHTML = '';
+    const activeTodos = todos.filter(todo => !todo.completed);
+    const completedTodos = todos.filter(todo => todo.completed);
+    const sortedTodos = [...activeTodos, ...completedTodos];
+    sortedTodos.slice(0, 5).forEach(todo => {
+        const li = document.createElement('li');
+        li.textContent = todo.text;
+        if (todo.completed) li.classList.add('completed');
+        todoPreview.appendChild(li);
+    });
+    if (sortedTodos.length === 0) {
+        todoPreview.innerHTML = '<li>No tasks yet</li>';
+    }
+
+    const diaryPreview = document.getElementById('dashboardDiary');
+    diaryPreview.innerHTML = '';
+    const recentDates = Object.keys(diaryData).sort().reverse().slice(0, 1);
+    if (recentDates.length > 0) {
+        const date = recentDates[0];
+        const entry = diaryData[date];
+        diaryPreview.innerHTML = `
+            <p><strong>${date}</strong></p>
+            <p>Mood: ${entry.mood}</p>
+            <p>${entry.memo.substring(0, 50)}${entry.memo.length > 50 ? '...' : ''}</p>
+        `;
+    } else {
+        diaryPreview.innerHTML = '<p>No recent entries</p>';
+    }
+
+    const goalProgress = document.getElementById('dashboardGoalProgress');
+    goalProgress.innerHTML = '';
+    
+    const todayTodos = todos.filter(todo => 
+        new Date(todo.createdAt).toISOString().split('T')[0] === currentDate);
+    const completedTodayTodos = todayTodos.filter(todo => todo.completed).length;
+    const totalTodayTodos = todayTodos.length;
+    goalProgress.innerHTML += `
+        <p>Today's Tasks: ${completedTodayTodos}/${totalTodayTodos} completed</p>
+    `;
+
+    if (goals.daily !== null) {
+        const dailyTime = studyData[currentDate] || 0;
+        const dailyPercentage = Math.min(Math.round((dailyTime / goals.daily) * 100), 100);
+        const hours = Math.floor(dailyTime / 3600);
+        const minutes = Math.floor((dailyTime % 3600) / 60);
+        goalProgress.innerHTML += `
+            <p>Daily Study: ${hours}h ${minutes}m / ${Math.floor(goals.daily / 3600)}h (${dailyPercentage}%)</p>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: ${dailyPercentage}%"></div>
+            </div>
+        `;
+    }
+    if (goals.weekly !== null) {
+        const weeklyTime = calculateWeeklyStudyTime();
+        const weeklyPercentage = Math.min(Math.round((weeklyTime / goals.weekly) * 100), 100);
+        const hours = Math.floor(weeklyTime / 3600);
+        const minutes = Math.floor((weeklyTime % 3600) / 60);
+        goalProgress.innerHTML += `
+            <p>Weekly Study: ${hours}h ${minutes}m / ${Math.floor(goals.weekly / 3600)}h (${weeklyPercentage}%)</p>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: ${weeklyPercentage}%"></div>
+            </div>
+        `;
+    }
+    if (goals.daily === null && goals.weekly === null && totalTodayTodos === 0) {
+        goalProgress.innerHTML = '<p>No goals or tasks set</p>';
+    }
+}
+
+function renderStats() {
+    const weekStart = getWeekStartDate(currentWeekOffset);
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekStart.getDate() + 6);
+
+    document.getElementById('weekRange').textContent = 
+        `${weekStart.toLocaleDateString()} - ${weekEnd.toLocaleDateString()}`;
+
+    const weekCalendar = document.getElementById('weekCalendar');
+    weekCalendar.innerHTML = '';
+
+    for (let i = 0; i < 7; i++) {
+        const date = new Date(weekStart);
+        date.setDate(weekStart.getDate() + i);
+        const dateStr = date.toISOString().split('T')[0];
+        const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+        const dayNum = date.getDate();
+        const hasData = studyData[dateStr] || diaryData[dateStr];
+        
+        weekCalendar.innerHTML += `
+            <div class="week-day ${hasData ? 'sticker' : ''}" 
+                 onclick="showStatsDetails('${dateStr}')">
+                <div>${dayName}</div>
+                <div>${dayNum}</div>
+            </div>`;
+    }
+
+    document.getElementById('statsDetails').classList.add('hidden');
+}
+
+function getWeekStartDate(offset) {
+    const today = new Date();
+    const dayOfWeek = today.getDay();
+    const diff = today.getDate() - dayOfWeek + (offset * 7);
+    const weekStart = new Date(today.getFullYear(), today.getMonth(), diff);
+    weekStart.setHours(0, 0, 0, 0);
+    return weekStart;
+}
+
+function changeWeek(offset) {
+    currentWeekOffset += offset;
+    renderStats();
+}
+
+function showStatsDetails(dateStr) {
+    const selectedDate = new Date(dateStr);
+    selectedDate.setDate(selectedDate.getDate() + 1);
+    const nextDateStr = selectedDate.toISOString().split('T')[0];
+    
+    currentSelectedDate = nextDateStr;
+    const statsDetails = document.getElementById('statsDetails');
+    document.getElementById('statsSelectedDate').textContent = nextDateStr;
+
+    const studyTime = studyData[nextDateStr] || 0;
+    const hours = Math.floor(studyTime / 3600);
+    const minutes = Math.floor((studyTime % 3600) / 60);
+    const seconds = studyTime % 60;
+    document.getElementById('statsStudyTime').textContent = 
+        `Total Study Time: ${hours}h ${minutes}m ${seconds}s`;
+
+    const statsSubjects = document.getElementById('statsSubjects');
+    statsSubjects.innerHTML = '';
+
+    statsSubjects.innerHTML += '<h4>To-Do Statistics</h4>';
+    const dayTodos = todos.filter(todo => 
+        new Date(todo.createdAt).toISOString().split('T')[0] === nextDateStr);
+    const completedTodos = dayTodos.filter(todo => todo.completed).length;
+    const totalTodos = dayTodos.length;
+    statsSubjects.innerHTML += `
+        <div class="subject-stat">
+            <span>Completed Tasks</span>
+            <span>${completedTodos}/${totalTodos}</span>
+        </div>
+    `;
+
+    const statsDiary = document.getElementById('statsDiary');
+    statsDiary.innerHTML = '<h4>Journal Entry</h4>';
+    const diaryEntry = diaryData[nextDateStr];
+    if (diaryEntry) {
+        statsDiary.innerHTML += `
+            <p>Mood: ${diaryEntry.mood}</p>
+            <p>${diaryEntry.memo}</p>
+            ${diaryEntry.image ? `<img src="${diaryEntry.image}" alt="Diary Image">` : ''}
+        `;
+    } else {
+        statsDiary.innerHTML += '<p>No journal entry for this day.</p>';
+    }
+
+    statsDetails.classList.remove('hidden');
+    document.querySelectorAll('.week-day').forEach(day => {
+        day.classList.remove('selected');
+        if (day.onclick.toString().includes(`'${dateStr}'`)) day.classList.add('selected');
+    });
+}
+
+function getMonthName(month) {
+    const months = ['January', 'February', 'March', 'April', 'May', 'June', 
+                   'July', 'August', 'September', 'October', 'November', 'December'];
+    return months[month];
+}
+
+function toggleDayDetails(date) {
+    const dayDetails = document.getElementById('dayDetails');
+    
+    if (currentSelectedDate === date && !dayDetails.classList.contains('hidden')) {
+        dayDetails.classList.add('hidden');
+        currentSelectedDate = null;
+        return;
+    }
+
+    currentSelectedDate = date;
+    const studyTime = studyData[date] || 0;
+    const hours = Math.floor(studyTime / 3600);
+    const minutes = Math.floor((studyTime % 3600) / 60);
+    const seconds = studyTime % 60;
+    const memo = diaryData[date]?.memo || '';
+    const image = diaryData[date]?.image || null;
+
+    document.getElementById('selectedDate').textContent = date;
+    document.getElementById('studyTimeDetail').textContent = `${hours}h ${minutes}m ${seconds}s`;
+    
+    const memoDetail = document.getElementById('memoDetail');
+    if (memo) {
+        memoDetail.textContent = `Memo: ${memo}`;
+        memoDetail.classList.remove('hidden');
+    } else {
+        memoDetail.classList.add('hidden');
+    }
+
+    const imagePreview = document.getElementById('dayImagePreview');
+    imagePreview.innerHTML = '';
+    if (image) {
+        imagePreview.innerHTML = `<img src="${image}" alt="Diary Image">`;
     }
     
-    .drawer-content {
-        width: 200px;
-        right: -200px;
-    }
-    
-    .drawer-content.visible {
-        right: 0;
-    }
-    
-    .overlay {
-        width: 100%;
-    }
-    
-    .nav-item {
-        padding: 10px;
-        font-size: 14px;
-    }
-    
-    .reset-btn {
-        padding: 8px;
-        font-size: 14px;
-    }
-    
-    .dashboard {
-        grid-template-columns: 1fr;
-    }
-    
-    .big-text {
-        font-size: 24px;
-    }
-    
-    .week-calendar {
-        flex-direction: column;
-    }
-    
-    .week-day {
-        padding: 10px;
-    }
-}
-.nav-item {
-    padding: 10px;
-    cursor: pointer;
-    transition: background-color 0.3s;
+    dayDetails.classList.remove('hidden');
 }
 
-.nav-item:hover {
-    background-color: #e0e0e0;
+function updateStudyTimeDisplay() {
+    const studyTime = studyData[currentDate] || 0;
+    const hours = Math.floor(studyTime / 3600);
+    const minutes = Math.floor((studyTime % 3600) / 60);
+    const seconds = studyTime % 60;
+    document.getElementById('dailyStudyTime').textContent = `${hours}h ${minutes}m ${seconds}s`;
+    if (document.getElementById('dashboardStudyTime')) {
+        document.getElementById('dashboardStudyTime').textContent = `${hours}h ${minutes}m ${seconds}s`;
+    }
 }
 
-#login-btn, #logout-btn {
-    width: 100%;
-    padding: 10px;
-    border-radius: 8px;
-    border: none;
-    background-color: #4285F4;
-    color: white;
-    font-size: 16px;
-    cursor: pointer;
-    margin-top: 20px;
-    transition: all 0.3s;
-    text-align: center;
+function startTimer() {
+    const selectedSubject = document.getElementById('subjectSelect').value;
+    if (!selectedSubject) {
+        alert('Please select a subject!');
+        return;
+    }
+    if (!timerInterval) {
+        const startTime = new Date();
+        timerInterval = setInterval(() => {
+            timerSeconds++;
+            updateTimerDisplay();
+        }, 1000);
+        
+        if (!studySessions[currentDate]) {
+            studySessions[currentDate] = [];
+        }
+        studySessions[currentDate].push({
+            subject: selectedSubject,
+            startTime: startTime.toISOString(),
+            endTime: null,
+            duration: 0
+        });
+    }
 }
+
+function stopTimer() {
+    const selectedSubject = document.getElementById('subjectSelect').value;
+    if (!selectedSubject) return;
+
+    clearInterval(timerInterval);
+    timerInterval = null;
+
+    studyData[currentDate] = (studyData[currentDate] || 0) + timerSeconds;
+
+    if (!subjectStudyTime[selectedSubject]) {
+        subjectStudyTime[selectedSubject] = {};
+    }
+    subjectStudyTime[selectedSubject][currentDate] = 
+        (subjectStudyTime[selectedSubject][currentDate] || 0) + timerSeconds;
+
+    const lastSession = studySessions[currentDate].slice(-1)[0];
+    if (lastSession && lastSession.subject === selectedSubject && !lastSession.endTime) {
+        lastSession.endTime = new Date().toISOString();
+        lastSession.duration = timerSeconds;
+    }
+
+    saveDataToFirestore().then(() => {
+        timerSeconds = 0;
+        updateTimerDisplay();
+        updateStudyTimeDisplay();
+        updateSubjectTimes();
+        updateGoalsProgress();
+        renderHome();
+    }).catch((error) => {
+        console.error("Failed to save timer data:", error);
+    });
+}
+
+async function saveDiary() {
+    console.log("saveDiary() called");
+    const date = document.getElementById('diaryDate').value;
+    const memo = document.getElementById('memoInput').value.trim();
+    console.log("Date:", date, "Mood:", selectedMood, "Memo:", memo, "Image:", uploadedImage);
+
+    if (!date || !selectedMood || !memo) {
+        if (!date) console.log("Validation failed: Date is missing");
+        if (!selectedMood) {
+            console.log("Validation failed: Mood is missing");
+            alert('Please select your mood for today!');
+        }
+        if (!memo) {
+            console.log("Validation failed: Memo is missing");
+            alert('Please write a memo for your journal entry!');
+        }
+        return;
+    }
+
+    if (!window.diaryData) window.diaryData = {};
+    window.diaryData[date] = { 
+        mood: selectedMood,
+        memo: memo, 
+        image: uploadedImage || window.diaryData[date]?.image || null 
+    };
+    console.log("Updated diaryData before saving:", window.diaryData);
+
+    try {
+        await saveDataToFirestore();
+        console.log("Diary data saved successfully:", window.diaryData[date]);
+        if (window.syncDataFromFirestore) {
+            syncDataFromFirestore();
+        }
+        renderHome();
+        document.getElementById('memoInput').value = '';
+        document.getElementById('diaryImage').value = '';
+        document.querySelectorAll('.mood-bean').forEach(bean => bean.classList.remove('selected'));
+        selectedMood = null;
+        uploadedImage = null;
+        document.getElementById('imagePreview').innerHTML = '';
+        alert('Journal entry saved!');
+    } catch (error) {
+        console.error("Failed to save diary:", error);
+        alert("Failed to save journal entry. Check console for details.");
+    }
+}
+
+function renderTodos() {
+    const todoList = document.getElementById('todoList');
+    const todoCount = document.getElementById('todoCount');
+    
+    let filteredTodos = [];
+    if (currentFilter === 'all') filteredTodos = todos;
+    else if (currentFilter === 'active') filteredTodos = todos.filter(todo => !todo.completed);
+    else if (currentFilter === 'completed') filteredTodos = todos.filter(todo => todo.completed);
+
+    todoList.innerHTML = '';
+    
+    filteredTodos.forEach(todo => {
+        const todoItem = document.createElement('li');
+        todoItem.className = 'todo-item';
+        todoItem.innerHTML = `
+            <input type="checkbox" class="todo-checkbox" 
+                   ${todo.completed ? 'checked' : ''} 
+                   onclick="toggleTodo(${todo.id})">
+            <span class="todo-text ${todo.completed ? 'completed' : ''}">${todo.text}</span>
+            <button class="delete-todo" onclick="deleteTodo(${todo.id})">×</button>
+        `;
+        todoList.appendChild(todoItem);
+    });
+    
+    const activeTodos = todos.filter(todo => !todo.completed);
+    todoCount.textContent = `${activeTodos.length} task${activeTodos.length !== 1 ? 's' : ''} remaining`;
+    renderHome();
+}
+
+function toggleTodo(id) {
+    todos = todos.map(todo => {
+        if (todo.id === id) return { ...todo, completed: !todo.completed };
+        return todo;
+    });
+    
+    saveDataToFirestore().then(() => {
+        renderTodos();
+    }).catch((error) => {
+        console.error("Failed to save todo toggle:", error);
+    });
+}
+
+function deleteTodo(id) {
+    todos = todos.filter(todo => todo.id !== id);
+    saveDataToFirestore().then(() => {
+        renderTodos();
+    }).catch((error) => {
+        console.error("Failed to save todo deletion:", error);
+    });
+}
+
+function saveGoal(type) {
+    const input = document.getElementById(`${type}Goal`);
+    const value = parseInt(input.value);
+    
+    if (!isNaN(value) && value >= 0) {
+        goals[type] = value * 3600;
+        saveDataToFirestore().then(() => {
+            updateGoalsProgress();
+            renderHome();
+            alert(`${type.charAt(0).toUpperCase() + type.slice(1)} goal saved!`);
+        }).catch((error) => {
+            console.error("Failed to save goal:", error);
+        });
+    } else {
+        alert('Please enter a valid number of hours.');
+    }
+}
+
+function addSubject() {
+    const subjectInput = document.getElementById('subjectInput');
+    const subjectName = subjectInput.value.trim();
+    if (subjectName && !subjects.includes(subjectName)) {
+        subjects.push(subjectName);
+        if (!subjectStudyTime[subjectName]) subjectStudyTime[subjectName] = {};
+        subjectStudyTime[subjectName][currentDate] = subjectStudyTime[subjectName][currentDate] || 0;
+        saveDataToFirestore().then(() => {
+            updateSubjectSelect();
+            updateSubjectTimes();
+            subjectInput.value = '';
+        }).catch((error) => {
+            console.error("Failed to save subject:", error);
+        });
+    }
+}
+
+function deleteSubject(subjectName) {
+    if (subjects.includes(subjectName)) {
+        subjects = subjects.filter(subject => subject !== subjectName);
+        if (subjectStudyTime[subjectName]) delete subjectStudyTime[subjectName];
+        saveDataToFirestore().then(() => {
+            updateSubjectSelect();
+            updateSubjectTimes();
+        }).catch((error) => {
+            console.error("Failed to delete subject:", error);
+        });
+    }
+}
+
+function updateSubjectSelect() {
+    const subjectSelect = document.getElementById('subjectSelect');
+    subjectSelect.innerHTML = '<option value="">Select a subject</option>';
+    subjects.forEach(subject => {
+        subjectSelect.innerHTML += `<option value="${subject}">${subject}</option>`;
+    });
+}
+
+function updateSubjectTimes() {
+    const subjectTimesDiv = document.getElementById('subjectTimes');
+    subjectTimesDiv.innerHTML = '';
+    subjects.forEach(subject => {
+        const time = subjectStudyTime[subject][currentDate] || 0;
+        const hours = Math.floor(time / 3600);
+        const minutes = Math.floor((time % 3600) / 60);
+        const seconds = time % 60;
+        subjectTimesDiv.innerHTML += `
+            <div class="subject-time">
+                ${subject}: ${hours}h ${minutes}m ${seconds}s
+                <button class="delete-subject-btn" onclick="deleteSubject('${subject}')" title="Delete Subject">×</button>
+            </div>
+        `;
+    });
+}
+
+function pauseTimer() {
+    clearInterval(timerInterval);
+    timerInterval = null;
+}
+
+function updateTimerDisplay() {
+    const hours = Math.floor(timerSeconds / 3600);
+    const minutes = Math.floor((timerSeconds % 3600) / 60);
+    const seconds = timerSeconds % 60;
+    const timerDisplay = document.getElementById('timerDisplay');
+    timerDisplay.textContent = 
+        `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    
+    if (timerInterval) {
+        timerDisplay.classList.add('pulse');
+        setTimeout(() => timerDisplay.classList.remove('pulse'), 200);
+    }
+}
+
+function selectMood(mood) {
+    document.querySelectorAll('.mood-bean').forEach(bean => bean.classList.remove('selected'));
+    document.querySelector(`.mood-bean.${mood}`).classList.add('selected');
+    selectedMood = mood;
+    console.log("Mood selected:", mood);
+}
+
+function triggerFileInput() {
+    const fileInput = document.getElementById('diaryImage');
+    fileInput.click();
+}
+
+document.getElementById('diaryImage').addEventListener('change', function() {
+    uploadImage();
+});
+
+function uploadImage() {
+    const fileInput = document.getElementById('diaryImage');
+    const file = fileInput.files[0];
+    if (file) {
+        if (!window.userUID) {
+            console.error("Cannot upload image: No user UID available");
+            alert("Please log in to upload an image.");
+            return;
+        }
+        const storageRef = ref(window.storage, `users/${window.userUID}/diaryImages/${Date.now()}_${file.name}`);
+        uploadBytes(storageRef, file).then((snapshot) => {
+            getDownloadURL(snapshot.ref).then((downloadURL) => {
+                uploadedImage = downloadURL;
+                const preview = document.getElementById('imagePreview');
+                preview.innerHTML = `<img src="${uploadedImage}" alt="Uploaded Image">`;
+                fileInput.value = '';
+            }).catch((error) => {
+                console.error("Failed to get download URL:", error);
+            });
+        }).catch((error) => {
+            console.error("Image upload failed:", error);
+        });
+    }
+}
+
+function loadDiaryData(selectedDate) {
+    const diaryEntry = diaryData[selectedDate];
+    
+    document.querySelectorAll('.mood-bean').forEach(bean => bean.classList.remove('selected'));
+    document.getElementById('memoInput').value = '';
+    document.getElementById('imagePreview').innerHTML = '';
+    selectedMood = null;
+    uploadedImage = null;
+    
+    if (diaryEntry) {
+        const mood = diaryEntry.mood;
+        if (mood) {
+            document.querySelector(`.mood-bean.${mood}`).classList.add('selected');
+            selectedMood = mood;
+        }
+        
+        document.getElementById('memoInput').value = diaryEntry.memo || '';
+        if (diaryEntry.image) {
+            document.getElementById('imagePreview').innerHTML = `<img src="${diaryEntry.image}" alt="Diary Image">`;
+            uploadedImage = diaryEntry.image;
+        }
+    }
+}
+
+function addTodo() {
+    const todoInput = document.getElementById('todoInput');
+    const todoText = todoInput.value.trim();
+    
+    if (todoText) {
+        const newTodo = {
+            id: Date.now(),
+            text: todoText,
+            completed: false,
+            createdAt: new Date().toISOString()
+        };
+        
+        todos.push(newTodo);
+        saveDataToFirestore().then(() => {
+            todoInput.value = '';
+            renderTodos();
+        }).catch((error) => {
+            console.error("Failed to save todo:", error);
+        });
+    }
+}
+
+function filterTasks(filter) {
+    currentFilter = filter;
+    
+    document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelector(`.filter-btn[onclick="filterTasks('${filter}')"]`).classList.add('active');
+    renderTodos();
+}
+
+function clearCompleted() {
+    todos = todos.filter(todo => !todo.completed);
+    saveDataToFirestore().then(() => {
+        renderTodos();
+    }).catch((error) => {
+        console.error("Failed to clear completed todos:", error);
+    });
+}
+
+function updateGoalsInputs() {
+    if (goals.daily !== null) document.getElementById('dailyGoal').value = Math.floor(goals.daily / 3600);
+    if (goals.weekly !== null) document.getElementById('weeklyGoal').value = Math.floor(goals.weekly / 3600);
+}
+
+function updateGoalsProgress() {
+    const progressDiv = document.getElementById('goalProgress');
+    progressDiv.innerHTML = '';
+    
+    if (goals.daily !== null) {
+        const dailyTime = studyData[currentDate] || 0;
+        const dailyPercentage = Math.min(Math.round((dailyTime / goals.daily) * 100), 100);
+        const hours = Math.floor(dailyTime / 3600);
+        const minutes = Math.floor((dailyTime % 3600) / 60);
+        
+        progressDiv.innerHTML += `
+            <h4>Daily Goal Progress (${hours}h ${minutes}m of ${Math.floor(goals.daily / 3600)}h)</h4>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: ${dailyPercentage}%"></div>
+            </div>
+            <p>${dailyPercentage}% Complete</p>
+        `;
+    }
+    
+    if (goals.weekly !== null) {
+        const weeklyTime = calculateWeeklyStudyTime();
+        const weeklyPercentage = Math.min(Math.round((weeklyTime / goals.weekly) * 100), 100);
+        const hours = Math.floor(weeklyTime / 3600);
+        const minutes = Math.floor((weeklyTime % 3600) / 60);
+        
+        progressDiv.innerHTML += `
+            <h4 style="margin-top: 20px;">Weekly Goal Progress (${hours}h ${minutes}m of ${Math.floor(goals.weekly / 3600)}h)</h4>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: ${weeklyPercentage}%"></div>
+            </div>
+            <p>${weeklyPercentage}% Complete</p>
+        `;
+    }
+    
+    if (goals.daily === null && goals.weekly === null) {
+        progressDiv.innerHTML = '<p>No goals set yet. Set your daily and weekly goals above.</p>';
+    }
+}
+
+function calculateWeeklyStudyTime() {
+    const currentDay = new Date(currentDate);
+    let totalTime = 0;
+    const dayOfWeek = currentDay.getDay();
+    const startDate = new Date(currentDay);
+    startDate.setDate(currentDay.getDate() - dayOfWeek);
+    
+    for (let i = 0; i <= 6; i++) {
+        const date = new Date(startDate);
+        date.setDate(startDate.getDate() + i);
+        const dateString = date.toISOString().split('T')[0];
+        totalTime += studyData[dateString] || 0;
+    }
+    
+    return totalTime;
+}
+
+function resetAllSettings() {
+    if (confirm('Are you sure you want to reset all settings? This will clear all your data.')) {
+        subjects = [];
+        studyData = {};
+        subjectStudyTime = {};
+        diaryData = {};
+        todos = [];
+        goals = { daily: null, weekly: null };
+        studySessions = {};
+        currentFilter = 'all';
+        selectedMood = null;
+        uploadedImage = null;
+        timerSeconds = 0;
+        currentWeekOffset = 0;
+        if (timerInterval) {
+            clearInterval(timerInterval);
+            timerInterval = null;
+        }
+        saveDataToFirestore().then(() => {
+            updateSubjectSelect();
+            updateSubjectTimes();
+            updateStudyTimeDisplay();
+            updateTimerDisplay();
+            updateGoalsInputs();
+            updateGoalsProgress();
+            renderHome();
+            renderTodos();
+            document.getElementById('dayDetails').classList.add('hidden');
+            document.getElementById('subjectInput').value = '';
+            document.getElementById('todoInput').value = '';
+            document.getElementById('diaryDate').value = currentDate;
+            document.getElementById('memoInput').value = '';
+            document.getElementById('diaryImage').value = '';
+            document.getElementById('imagePreview').innerHTML = '';
+            document.querySelectorAll('.mood-bean').forEach(bean => bean.classList.remove('selected'));
+            showScreen('home');
+            alert('All settings have been reset.');
+        }).catch((error) => {
+            console.error("Failed to reset settings:", error);
+        });
+    }
+}
+
+document.getElementById('diaryDate').addEventListener('change', function() {
+    const selectedDate = this.value;
+    loadDiaryData(selectedDate);
+});
+
+document.getElementById('subjectInput').addEventListener('keypress', function(event) {
+    if (event.key === 'Enter') {
+        event.preventDefault();
+        addSubject();
+    }
+});
+
+document.getElementById('todoInput').addEventListener('keypress', function(event) {
+    if (event.key === 'Enter') {
+        event.preventDefault();
+        addTodo();
+    }
+});

@@ -173,7 +173,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDx_BBG73R3FReoFsRPuIKcDb754LAxTCI",
@@ -206,7 +206,7 @@
                 loginBtn.style.display = 'block';
                 logoutBtn.style.display = 'none';
                 console.log('Logged out');
-                showScreen('home'); // 로그아웃 시 초기화하지 않고 홈 화면으로 이동
+                showScreen('home');
             }
         });
 
@@ -245,6 +245,14 @@
                     window.todos = data.todos || [];
                     window.goals = data.goals || { daily: null, weekly: null };
                     window.studySessions = data.studySessions || {};
+                    console.log("Loaded data from Firestore:", {
+                        subjects: window.subjects,
+                        studyData: window.studyData,
+                        diaryData: window.diaryData,
+                        todos: window.todos,
+                        goals: window.goals,
+                        studySessions: window.studySessions
+                    });
                 } else {
                     console.log("No data found for user, initializing with defaults.");
                     window.subjects = [];
@@ -268,26 +276,37 @@
             });
         }
 
-        function saveUserData() {
+        async function saveUserData() {
             if (!currentUser) {
                 console.log("No user logged in, cannot save data!");
                 return;
             }
-            console.log("Saving data for user:", currentUser.uid);
             const userId = currentUser.uid;
-            setDoc(doc(db, "users", userId), {
-                subjects: window.subjects,
-                studyData: window.studyData,
-                subjectStudyTime: window.subjectStudyTime,
-                diaryData: window.diaryData,
-                todos: window.todos,
-                goals: window.goals,
-                studySessions: window.studySessions
-            }, { merge: true }).then(() => {
+            const dataToSave = {
+                subjects: window.subjects || [],
+                studyData: window.studyData || {},
+                subjectStudyTime: window.subjectStudyTime || {},
+                diaryData: window.diaryData || {},
+                todos: window.todos || [],
+                goals: window.goals || { daily: null, weekly: null },
+                studySessions: window.studySessions || {}
+            };
+            console.log("Data to save:", JSON.stringify(dataToSave, null, 2));
+            try {
+                await setDoc(doc(db, "users", userId), dataToSave, { merge: true });
                 console.log("Data saved successfully!");
-            }).catch((error) => {
+                // 저장 후 Firestore에서 데이터 다시 불러오기
+                const userRef = doc(db, "users", userId);
+                const docSnap = await getDoc(userRef);
+                if (docSnap.exists()) {
+                    console.log("Data after save:", docSnap.data());
+                } else {
+                    console.log("No data found after save.");
+                }
+            } catch (error) {
                 console.error("Save failed:", error.code, error.message);
-            });
+                alert("Failed to save data: " + error.message);
+            }
         }
 
         window.saveUserData = saveUserData;

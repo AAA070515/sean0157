@@ -35,8 +35,10 @@
             <div class="nav-item" onclick="showScreen('goals')">Goals</div>
             <div class="nav-item" onclick="showScreen('groups')">Groups</div>
             <div class="nav-item" onclick="showScreen('stats')">Statistics</div>
-            <div class="nav-item" onclick="showScreen('settings')">Settings</div>
+            <div class="nav-item" id="settings-btn" onclick="showScreen('settings')">Settings</div>
             <div class="nav-item" id="login-btn">Login</div>
+            <div class="nav-item" id="logout-btn" style="display: none;">Logout</div>
+            <div class="nav-item" id="reset-all-btn" onclick="resetAllSettings()">Reset All Settings</div>
         </div>
     </nav>
     <div class="overlay hidden" onclick="closeDrawer()"></div>
@@ -190,14 +192,10 @@
                     <h3>Settings</h3>
                     <div class="nickname-section">
                         <h4>Change Nickname</h4>
-                        <div style="display: flex; gap: 10px;">
-                            <input type="text" class="subject-input" id="settingsNicknameInput" placeholder="Enter new nickname" maxlength="20">
-                            <button class="subject-add-btn btn" onclick="changeNickname()">Save</button>
-                        </div>
+                        <input type="text" id="settingsNicknameInput" placeholder="Enter new nickname" maxlength="20">
+                        <button class="btn" onclick="changeNickname()">Save</button>
                         <p id="settingsNicknameError" class="error hidden"></p>
                     </div>
-                    <button class="save-button btn" id="logout-btn" onclick="signOut(window.firebaseAuth)">Logout</button>
-                    <button class="save-button btn" id="reset-all-btn" onclick="resetAllSettings()">Reset All Settings</button>
                 </div>
             </section>
             <section id="groupsScreen" class="hidden">

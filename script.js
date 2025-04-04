@@ -1003,10 +1003,10 @@ async function leaveGroup() {
 }
 
 function renderGroupDashboard() {
-    const dashboard = document.querySelector('.group-dashboard-section');
+    const dashboard = document.querySelector('.group-dashboard');
     const membersDiv = document.getElementById('groupMembers');
     const groupNameDiv = document.getElementById('currentGroupName');
-    const groupActions = document.querySelector('.group-actions-section');
+    const groupActions = document.querySelector('.group-actions');
 
     if (!window.currentGroupCode) {
         dashboard.classList.add('hidden');

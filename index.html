@@ -37,7 +37,7 @@
             <div class="nav-item" onclick="showScreen('diary')">Journal</div>
             <div class="nav-item" onclick="showScreen('goals')">Goals</div>
             <div class="nav-item" onclick="showScreen('stats')">Statistics</div>
-            <!-- Settings를 버튼으로 변경 -->
+            <div class="nav-item" onclick="showScreen('groups')">Groups</div> <!-- 새로 추가 -->
             <button class="reset-btn" onclick="showScreen('settings')">Settings</button>
             <div class="nav-item" id="login-btn">Login</div>
             <div class="nav-item" id="logout-btn" style="display: none;">Logout</div>
@@ -191,7 +191,7 @@
                     </div>
                 </div>
             </section>
-            <section id="settingsScreen" class="hidden"> <!-- 새로 추가 -->
+            <section id="settingsScreen" class="hidden">
                 <div class="settings-section">
                     <h3>Settings</h3>
                     <div class="nickname-section">
@@ -202,13 +202,39 @@
                     </div>
                 </div>
             </section>
+            <section id="groupsScreen" class="hidden">
+                <div class="groups-section">
+                    <h3>Groups</h3>
+                    <div id="groupOptions" class="group-options">
+                        <button class="btn" onclick="showCreateGroup()">Create Group</button>
+                        <button class="btn" onclick="showJoinGroup()">Join Group</button>
+                    </div>
+                    <div id="createGroupForm" class="hidden">
+                        <h4>Create a Group</h4>
+                        <input type="text" id="groupNameInput" placeholder="Enter group name" maxlength="20">
+                        <button class="btn" onclick="createGroup()">Create</button>
+                        <p id="groupCodeDisplay" class="hidden"></p>
+                        <p id="createGroupError" class="error hidden"></p>
+                    </div>
+                    <div id="joinGroupForm" class="hidden">
+                        <h4>Join a Group</h4>
+                        <input type="text" id="groupCodeInput" placeholder="Enter 6-digit group code">
+                        <button class="btn" onclick="joinGroup()">Join</button>
+                        <p id="joinGroupError" class="error hidden"></p>
+                    </div>
+                    <div id="groupDashboard" class="group-dashboard hidden">
+                        <h4>Your Group: <span id="currentGroupName"></span></h4>
+                        <div id="groupMembersStudyTime"></div>
+                    </div>
+                </div>
+            </section>
         </div>
     </main>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, onSnapshot, getDoc, collection, addDoc, getDocs, query, where, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDx_BBG73R3FReoFsRPuIKcDb754LAxTCI",
@@ -338,6 +364,7 @@
                     window.goals = data.goals || { daily: null, weekly: null };
                     window.studySessions = data.studySessions || {};
                     window.nickname = data.nickname || 'User';
+                    window.currentGroupId = data.groupId || null; // 그룹 ID 로드
                     console.log("Loaded data with nickname:", window.nickname);
                 } else {
                     window.subjects = [];
@@ -347,6 +374,7 @@
                     window.todos = [];
                     window.goals = { daily: null, weekly: null };
                     window.studySessions = {};
+                    window.currentGroupId = null;
                 }
                 updateSubjectSelect();
                 updateSubjectTimes();
@@ -355,6 +383,9 @@
                 updateGoalsProgress();
                 renderHome();
                 renderTodos();
+                if (document.getElementById('groupsScreen') && !document.getElementById('groupsScreen').classList.contains('hidden')) {
+                    renderGroups();
+                }
             }, (error) => {
                 console.error("Load failed:", error.code, error.message);
             });
@@ -371,7 +402,8 @@
                 todos: window.todos || [],
                 goals: window.goals || { daily: null, weekly: null },
                 studySessions: window.studySessions || {},
-                nickname: window.nickname || 'User'
+                nickname: window.nickname || 'User',
+                groupId: window.currentGroupId || null
             };
             try {
                 await setDoc(doc(db, "users", userId), dataToSave, { merge: true });

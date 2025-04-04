@@ -36,6 +36,9 @@
             <div class="nav-item" onclick="showScreen('groups')">Groups</div>
             <div class="nav-item" onclick="showScreen('stats')">Statistics</div>
             <div class="nav-item" id="settings-btn" onclick="showScreen('settings')">Settings</div>
+            <div class="nav-item" id="login-btn">Login</div>
+            <div class="nav-item" id="logout-btn" style="display: none;">Logout</div>
+            <div class="nav-item" id="reset-all-btn" onclick="resetAllSettings()">Reset All Settings</div>
         </div>
     </nav>
     <div class="overlay hidden" onclick="closeDrawer()"></div>
@@ -192,11 +195,6 @@
                         <input type="text" id="settingsNicknameInput" placeholder="Enter new nickname" maxlength="20">
                         <button class="btn" onclick="changeNickname()">Save</button>
                         <p id="settingsNicknameError" class="error hidden"></p>
-                    </div>
-                    <!-- Logout과 Reset 버튼 추가 -->
-                    <div class="settings-actions">
-                        <button id="logout-btn" class="btn" style="display: none;" onclick="signOut(window.firebaseAuth)">Logout</button>
-                        <button id="reset-all-btn" class="btn" onclick="resetAllSettings()">Reset All Settings</button>
                     </div>
                 </div>
             </section>

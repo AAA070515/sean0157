@@ -1,12 +1,6 @@
+// 로컬 변수 선언 제거, window 객체 사용
 let timerSeconds = 0;
 let timerInterval = null;
-let subjects = [];
-let studyData = {};
-let subjectStudyTime = {};
-let diaryData = {};
-let todos = [];
-let goals = { daily: null, weekly: null };
-let studySessions = {};
 let currentFilter = 'all';
 let selectedMood = null;
 let uploadedImage = null;
@@ -15,6 +9,8 @@ let currentWeekOffset = 0;
 
 const today = new Date();
 let currentDate = today.toISOString().split('T')[0];
+
+// 초기화는 loadUserData()에서 처리하므로 여기서 하지 않음
 updateStudyTimeDisplay();
 renderHome();
 renderTodos();
@@ -121,11 +117,11 @@ function renderHome() {
 
     for (let i = 1; i <= daysInMonth; i++) {
         const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
-        const hasDiary = diaryData[dateStr]?.mood ? true : false;
+        const hasDiary = window.diaryData[dateStr]?.mood ? true : false;
         let dayContent = i;
         
         if (hasDiary) {
-            const mood = diaryData[dateStr].mood;
+            const mood = window.diaryData[dateStr].mood;
             dayContent = `<img src="${getMoodImage(mood)}" alt="${mood}" style="width: 100%; height: 100%; object-fit: contain;">`;
         }
         
@@ -135,7 +131,7 @@ function renderHome() {
             </div>`;
     }
 
-    const studyTime = studyData[currentDate] || 0;
+    const studyTime = window.studyData[currentDate] || 0;
     const hours = Math.floor(studyTime / 3600);
     const minutes = Math.floor((studyTime % 3600) / 60);
     const seconds = studyTime % 60;
@@ -143,8 +139,8 @@ function renderHome() {
 
     const todoPreview = document.getElementById('dashboardTodoPreview');
     todoPreview.innerHTML = '';
-    const activeTodos = todos.filter(todo => !todo.completed);
-    const completedTodos = todos.filter(todo => todo.completed);
+    const activeTodos = window.todos.filter(todo => !todo.completed);
+    const completedTodos = window.todos.filter(todo => todo.completed);
     const sortedTodos = [...activeTodos, ...completedTodos];
     sortedTodos.slice(0, 5).forEach(todo => {
         const li = document.createElement('li');
@@ -158,10 +154,10 @@ function renderHome() {
 
     const diaryPreview = document.getElementById('dashboardDiary');
     diaryPreview.innerHTML = '';
-    const recentDates = Object.keys(diaryData).sort().reverse().slice(0, 1);
+    const recentDates = Object.keys(window.diaryData).sort().reverse().slice(0, 1);
     if (recentDates.length > 0) {
         const date = recentDates[0];
-        const entry = diaryData[date];
+        const entry = window.diaryData[date];
         diaryPreview.innerHTML = `
             <p><strong>${date}</strong></p>
             <p>Mood: ${entry.mood}</p>
@@ -174,7 +170,7 @@ function renderHome() {
     const goalProgress = document.getElementById('dashboardGoalProgress');
     goalProgress.innerHTML = '';
     
-    const todayTodos = todos.filter(todo => 
+    const todayTodos = window.todos.filter(todo => 
         new Date(todo.createdAt).toISOString().split('T')[0] === currentDate);
     const completedTodayTodos = todayTodos.filter(todo => todo.completed).length;
     const totalTodayTodos = todayTodos.length;
@@ -182,31 +178,31 @@ function renderHome() {
         <p>Today's Tasks: ${completedTodayTodos}/${totalTodayTodos} completed</p>
     `;
 
-    if (goals.daily !== null) {
-        const dailyTime = studyData[currentDate] || 0;
-        const dailyPercentage = Math.min(Math.round((dailyTime / goals.daily) * 100), 100);
+    if (window.goals.daily !== null) {
+        const dailyTime = window.studyData[currentDate] || 0;
+        const dailyPercentage = Math.min(Math.round((dailyTime / window.goals.daily) * 100), 100);
         const hours = Math.floor(dailyTime / 3600);
         const minutes = Math.floor((dailyTime % 3600) / 60);
         goalProgress.innerHTML += `
-            <p>Daily Study: ${hours}h ${minutes}m / ${Math.floor(goals.daily / 3600)}h (${dailyPercentage}%)</p>
+            <p>Daily Study: ${hours}h ${minutes}m / ${Math.floor(window.goals.daily / 3600)}h (${dailyPercentage}%)</p>
             <div class="progress-bar">
                 <div class="progress-fill" style="width: ${dailyPercentage}%"></div>
             </div>
         `;
     }
-    if (goals.weekly !== null) {
+    if (window.goals.weekly !== null) {
         const weeklyTime = calculateWeeklyStudyTime();
-        const weeklyPercentage = Math.min(Math.round((weeklyTime / goals.weekly) * 100), 100);
+        const weeklyPercentage = Math.min(Math.round((weeklyTime / window.goals.weekly) * 100), 100);
         const hours = Math.floor(weeklyTime / 3600);
         const minutes = Math.floor((weeklyTime % 3600) / 60);
         goalProgress.innerHTML += `
-            <p>Weekly Study: ${hours}h ${minutes}m / ${Math.floor(goals.weekly / 3600)}h (${weeklyPercentage}%)</p>
+            <p>Weekly Study: ${hours}h ${minutes}m / ${Math.floor(window.goals.weekly / 3600)}h (${weeklyPercentage}%)</p>
             <div class="progress-bar">
                 <div class="progress-fill" style="width: ${weeklyPercentage}%"></div>
             </div>
         `;
     }
-    if (goals.daily === null && goals.weekly === null && totalTodayTodos === 0) {
+    if (window.goals.daily === null && window.goals.weekly === null && totalTodayTodos === 0) {
         goalProgress.innerHTML = '<p>No goals or tasks set</p>';
     }
 }
@@ -228,7 +224,7 @@ function renderStats() {
         const dateStr = date.toISOString().split('T')[0];
         const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
         const dayNum = date.getDate();
-        const hasData = studyData[dateStr] || diaryData[dateStr];
+        const hasData = window.studyData[dateStr] || window.diaryData[dateStr];
         
         weekCalendar.innerHTML += `
             <div class="week-day ${hasData ? 'sticker' : ''}" 
@@ -260,7 +256,7 @@ function showStatsDetails(dateStr) {
     const statsDetails = document.getElementById('statsDetails');
     document.getElementById('statsSelectedDate').textContent = dateStr;
 
-    const studyTime = studyData[dateStr] || 0;
+    const studyTime = window.studyData[dateStr] || 0;
     const hours = Math.floor(studyTime / 3600);
     const minutes = Math.floor((studyTime % 3600) / 60);
     const seconds = studyTime % 60;
@@ -271,7 +267,7 @@ function showStatsDetails(dateStr) {
     statsSubjects.innerHTML = '';
 
     statsSubjects.innerHTML += '<h4>To-Do Statistics</h4>';
-    const dayTodos = todos.filter(todo => 
+    const dayTodos = window.todos.filter(todo => 
         new Date(todo.createdAt).toISOString().split('T')[0] === dateStr);
     const completedTodos = dayTodos.filter(todo => todo.completed).length;
     const totalTodos = dayTodos.length;
@@ -284,7 +280,7 @@ function showStatsDetails(dateStr) {
 
     const statsDiary = document.getElementById('statsDiary');
     statsDiary.innerHTML = '<h4>Journal Entry</h4>';
-    const diaryEntry = diaryData[dateStr];
+    const diaryEntry = window.diaryData[dateStr];
     if (diaryEntry) {
         statsDiary.innerHTML += `
             <p>Mood: ${diaryEntry.mood}</p>
@@ -318,12 +314,12 @@ function toggleDayDetails(date) {
     }
 
     currentSelectedDate = date;
-    const studyTime = studyData[date] || 0;
+    const studyTime = window.studyData[date] || 0;
     const hours = Math.floor(studyTime / 3600);
     const minutes = Math.floor((studyTime % 3600) / 60);
     const seconds = studyTime % 60;
-    const memo = diaryData[date]?.memo || '';
-    const image = diaryData[date]?.image || null;
+    const memo = window.diaryData[date]?.memo || '';
+    const image = window.diaryData[date]?.image || null;
 
     document.getElementById('selectedDate').textContent = date;
     document.getElementById('studyTimeDetail').textContent = `${hours}h ${minutes}m ${seconds}s`;
@@ -346,7 +342,7 @@ function toggleDayDetails(date) {
 }
 
 function updateStudyTimeDisplay() {
-    const studyTime = studyData[currentDate] || 0;
+    const studyTime = window.studyData[currentDate] || 0;
     const hours = Math.floor(studyTime / 3600);
     const minutes = Math.floor((studyTime % 3600) / 60);
     const seconds = studyTime % 60;
@@ -369,10 +365,10 @@ function startTimer() {
             updateTimerDisplay();
         }, 1000);
         
-        if (!studySessions[currentDate]) {
-            studySessions[currentDate] = [];
+        if (!window.studySessions[currentDate]) {
+            window.studySessions[currentDate] = [];
         }
-        studySessions[currentDate].push({
+        window.studySessions[currentDate].push({
             subject: selectedSubject,
             startTime: startTime.toISOString(),
             endTime: null,
@@ -388,22 +384,22 @@ async function stopTimer() {
     clearInterval(timerInterval);
     timerInterval = null;
 
-    studyData[currentDate] = (studyData[currentDate] || 0) + timerSeconds;
+    window.studyData[currentDate] = (window.studyData[currentDate] || 0) + timerSeconds;
 
-    if (!subjectStudyTime[selectedSubject]) {
-        subjectStudyTime[selectedSubject] = {};
+    if (!window.subjectStudyTime[selectedSubject]) {
+        window.subjectStudyTime[selectedSubject] = {};
     }
-    subjectStudyTime[selectedSubject][currentDate] = 
-        (subjectStudyTime[selectedSubject][currentDate] || 0) + timerSeconds;
+    window.subjectStudyTime[selectedSubject][currentDate] = 
+        (window.subjectStudyTime[selectedSubject][currentDate] || 0) + timerSeconds;
 
-    const lastSession = studySessions[currentDate]?.slice(-1)[0];
+    const lastSession = window.studySessions[currentDate]?.slice(-1)[0];
     if (lastSession && lastSession.subject === selectedSubject && !lastSession.endTime) {
         lastSession.endTime = new Date().toISOString();
         lastSession.duration = timerSeconds;
     }
 
     timerSeconds = 0;
-    await saveUserData();
+    await window.saveUserData();
     updateTimerDisplay();
     updateStudyTimeDisplay();
     updateSubjectTimes();
@@ -420,12 +416,12 @@ async function saveDiary() {
         return;
     }
 
-    diaryData[date] = { 
+    window.diaryData[date] = { 
         mood: selectedMood,
         memo: memo, 
-        image: uploadedImage || diaryData[date]?.image || null 
+        image: uploadedImage || window.diaryData[date]?.image || null 
     };
-    await saveUserData();
+    await window.saveUserData();
     renderHome();
     document.getElementById('memoInput').value = '';
     document.getElementById('diaryImage').value = '';
@@ -441,9 +437,9 @@ function renderTodos() {
     const todoCount = document.getElementById('todoCount');
     
     let filteredTodos = [];
-    if (currentFilter === 'all') filteredTodos = todos;
-    else if (currentFilter === 'active') filteredTodos = todos.filter(todo => !todo.completed);
-    else if (currentFilter === 'completed') filteredTodos = todos.filter(todo => todo.completed);
+    if (currentFilter === 'all') filteredTodos = window.todos;
+    else if (currentFilter === 'active') filteredTodos = window.todos.filter(todo => !todo.completed);
+    else if (currentFilter === 'completed') filteredTodos = window.todos.filter(todo => todo.completed);
 
     todoList.innerHTML = '';
     
@@ -460,23 +456,23 @@ function renderTodos() {
         todoList.appendChild(todoItem);
     });
     
-    const activeTodos = todos.filter(todo => !todo.completed);
+    const activeTodos = window.todos.filter(todo => !todo.completed);
     todoCount.textContent = `${activeTodos.length} task${activeTodos.length !== 1 ? 's' : ''} remaining`;
     renderHome();
 }
 
 async function toggleTodo(id) {
-    todos = todos.map(todo => {
+    window.todos = window.todos.map(todo => {
         if (todo.id === id) return { ...todo, completed: !todo.completed };
         return todo;
     });
-    await saveUserData();
+    await window.saveUserData();
     renderTodos();
 }
 
 async function deleteTodo(id) {
-    todos = todos.filter(todo => todo.id !== id);
-    await saveUserData();
+    window.todos = window.todos.filter(todo => todo.id !== id);
+    await window.saveUserData();
     renderTodos();
 }
 
@@ -485,8 +481,8 @@ async function saveGoal(type) {
     const value = parseInt(input.value);
     
     if (!isNaN(value) && value >= 0) {
-        goals[type] = value * 3600;
-        await saveUserData();
+        window.goals[type] = value * 3600;
+        await window.saveUserData();
         updateGoalsProgress();
         renderHome();
         alert(`${type.charAt(0).toUpperCase() + type.slice(1)} goal saved!`);
@@ -498,22 +494,27 @@ async function saveGoal(type) {
 async function addSubject() {
     const subjectInput = document.getElementById('subjectInput');
     const subjectName = subjectInput.value.trim();
-    if (subjectName && !subjects.includes(subjectName)) {
-        subjects.push(subjectName);
-        if (!subjectStudyTime[subjectName]) subjectStudyTime[subjectName] = {};
-        subjectStudyTime[subjectName][currentDate] = subjectStudyTime[subjectName][currentDate] || 0;
-        await saveUserData();
+    if (subjectName && !window.subjects.includes(subjectName)) {
+        window.subjects.push(subjectName);
+        if (!window.subjectStudyTime[subjectName]) window.subjectStudyTime[subjectName] = {};
+        window.subjectStudyTime[subjectName][currentDate] = window.subjectStudyTime[subjectName][currentDate] || 0;
+        console.log("After adding subject:", window.subjects); // 디버깅 로그 추가
+        await window.saveUserData();
         updateSubjectSelect();
         updateSubjectTimes();
         subjectInput.value = '';
+    } else if (window.subjects.includes(subjectName)) {
+        alert('Subject already exists!');
+    } else {
+        alert('Please enter a valid subject name!');
     }
 }
 
 async function deleteSubject(subjectName) {
-    if (subjects.includes(subjectName)) {
-        subjects = subjects.filter(subject => subject !== subjectName);
-        if (subjectStudyTime[subjectName]) delete subjectStudyTime[subjectName];
-        await saveUserData();
+    if (window.subjects.includes(subjectName)) {
+        window.subjects = window.subjects.filter(subject => subject !== subjectName);
+        if (window.subjectStudyTime[subjectName]) delete window.subjectStudyTime[subjectName];
+        await window.saveUserData();
         updateSubjectSelect();
         updateSubjectTimes();
     }
@@ -522,7 +523,7 @@ async function deleteSubject(subjectName) {
 function updateSubjectSelect() {
     const subjectSelect = document.getElementById('subjectSelect');
     subjectSelect.innerHTML = '<option value="">Select a subject</option>';
-    subjects.forEach(subject => {
+    window.subjects.forEach(subject => {
         subjectSelect.innerHTML += `<option value="${subject}">${subject}</option>`;
     });
 }
@@ -530,8 +531,8 @@ function updateSubjectSelect() {
 function updateSubjectTimes() {
     const subjectTimesDiv = document.getElementById('subjectTimes');
     subjectTimesDiv.innerHTML = '';
-    subjects.forEach(subject => {
-        const time = subjectStudyTime[subject][currentDate] || 0;
+    window.subjects.forEach(subject => {
+        const time = window.subjectStudyTime[subject][currentDate] || 0;
         const hours = Math.floor(time / 3600);
         const minutes = Math.floor((time % 3600) / 60);
         const seconds = time % 60;
@@ -594,7 +595,7 @@ function uploadImage() {
 }
 
 function loadDiaryData(selectedDate) {
-    const diaryEntry = diaryData[selectedDate];
+    const diaryEntry = window.diaryData[selectedDate];
     
     document.querySelectorAll('.mood-bean').forEach(bean => bean.classList.remove('selected'));
     document.getElementById('memoInput').value = '';
@@ -628,8 +629,8 @@ async function addTodo() {
             completed: false,
             createdAt: new Date().toISOString()
         };
-        todos.push(newTodo);
-        await saveUserData();
+        window.todos.push(newTodo);
+        await window.saveUserData();
         todoInput.value = '';
         renderTodos();
     }
@@ -644,28 +645,28 @@ function filterTasks(filter) {
 }
 
 async function clearCompleted() {
-    todos = todos.filter(todo => !todo.completed);
-    await saveUserData();
+    window.todos = window.todos.filter(todo => !todo.completed);
+    await window.saveUserData();
     renderTodos();
 }
 
 function updateGoalsInputs() {
-    if (goals.daily !== null) document.getElementById('dailyGoal').value = Math.floor(goals.daily / 3600);
-    if (goals.weekly !== null) document.getElementById('weeklyGoal').value = Math.floor(goals.weekly / 3600);
+    if (window.goals.daily !== null) document.getElementById('dailyGoal').value = Math.floor(window.goals.daily / 3600);
+    if (window.goals.weekly !== null) document.getElementById('weeklyGoal').value = Math.floor(window.goals.weekly / 3600);
 }
 
 function updateGoalsProgress() {
     const progressDiv = document.getElementById('goalProgress');
     progressDiv.innerHTML = '';
     
-    if (goals.daily !== null) {
-        const dailyTime = studyData[currentDate] || 0;
-        const dailyPercentage = Math.min(Math.round((dailyTime / goals.daily) * 100), 100);
+    if (window.goals.daily !== null) {
+        const dailyTime = window.studyData[currentDate] || 0;
+        const dailyPercentage = Math.min(Math.round((dailyTime / window.goals.daily) * 100), 100);
         const hours = Math.floor(dailyTime / 3600);
         const minutes = Math.floor((dailyTime % 3600) / 60);
         
         progressDiv.innerHTML += `
-            <h4>Daily Goal Progress (${hours}h ${minutes}m of ${Math.floor(goals.daily / 3600)}h)</h4>
+            <h4>Daily Goal Progress (${hours}h ${minutes}m of ${Math.floor(window.goals.daily / 3600)}h)</h4>
             <div class="progress-bar">
                 <div class="progress-fill" style="width: ${dailyPercentage}%"></div>
             </div>
@@ -673,14 +674,14 @@ function updateGoalsProgress() {
         `;
     }
     
-    if (goals.weekly !== null) {
+    if (window.goals.weekly !== null) {
         const weeklyTime = calculateWeeklyStudyTime();
-        const weeklyPercentage = Math.min(Math.round((weeklyTime / goals.weekly) * 100), 100);
+        const weeklyPercentage = Math.min(Math.round((weeklyTime / window.goals.weekly) * 100), 100);
         const hours = Math.floor(weeklyTime / 3600);
         const minutes = Math.floor((weeklyTime % 3600) / 60);
         
         progressDiv.innerHTML += `
-            <h4 style="margin-top: 20px;">Weekly Goal Progress (${hours}h ${minutes}m of ${Math.floor(goals.weekly / 3600)}h)</h4>
+            <h4 style="margin-top: 20px;">Weekly Goal Progress (${hours}h ${minutes}m of ${Math.floor(window.goals.weekly / 3600)}h)</h4>
             <div class="progress-bar">
                 <div class="progress-fill" style="width: ${weeklyPercentage}%"></div>
             </div>
@@ -688,7 +689,7 @@ function updateGoalsProgress() {
         `;
     }
     
-    if (goals.daily === null && goals.weekly === null) {
+    if (window.goals.daily === null && window.goals.weekly === null) {
         progressDiv.innerHTML = '<p>No goals set yet. Set your daily and weekly goals above.</p>';
     }
 }
@@ -704,7 +705,7 @@ function calculateWeeklyStudyTime() {
         const date = new Date(startDate);
         date.setDate(startDate.getDate() + i);
         const dateString = date.toISOString().split('T')[0];
-        totalTime += studyData[dateString] || 0;
+        totalTime += window.studyData[dateString] || 0;
     }
     
     return totalTime;
@@ -724,13 +725,13 @@ async function resetAllSettings() {
                     goals: { daily: null, weekly: null },
                     studySessions: {}
                 });
-                subjects = [];
-                studyData = {};
-                subjectStudyTime = {};
-                diaryData = {};
-                todos = [];
-                goals = { daily: null, weekly: null };
-                studySessions = {};
+                window.subjects = [];
+                window.studyData = {};
+                window.subjectStudyTime = {};
+                window.diaryData = {};
+                window.todos = [];
+                window.goals = { daily: null, weekly: null };
+                window.studySessions = {};
                 timerSeconds = 0;
                 if (timerInterval) clearInterval(timerInterval);
                 timerInterval = null;
@@ -761,13 +762,13 @@ async function resetAllSettings() {
             }
         } else {
             console.log("No user logged in, resetting locally only.");
-            subjects = [];
-            studyData = {};
-            subjectStudyTime = {};
-            diaryData = {};
-            todos = [];
-            goals = { daily: null, weekly: null };
-            studySessions = {};
+            window.subjects = [];
+            window.studyData = {};
+            window.subjectStudyTime = {};
+            window.diaryData = {};
+            window.todos = [];
+            window.goals = { daily: null, weekly: null };
+            window.studySessions = {};
             timerSeconds = 0;
             if (timerInterval) clearInterval(timerInterval);
             timerInterval = null;

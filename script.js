@@ -989,6 +989,7 @@ async function joinGroup() {
         groupCodeInput.value = '';
         error.classList.add('hidden');
         renderGroupDashboard();
+        await window.saveUserData();
     } catch (err) {
         error.textContent = `Error: ${err.message}`;
         error.classList.remove('hidden');
@@ -1008,6 +1009,7 @@ async function leaveGroup() {
 
     await window.firestoreSetDoc(groupRef, { members: groupData.members }, { merge: true });
     window.currentGroupCode = null;
+    await window.saveUserData();
     renderGroupDashboard();
 }
 
@@ -1015,14 +1017,17 @@ function renderGroupDashboard() {
     const dashboard = document.getElementById('groupDashboard');
     const membersDiv = document.getElementById('groupMembers');
     const groupNameDiv = document.getElementById('currentGroupName');
+    const groupActions = document.getElementById('groupActions');
 
     if (!window.currentGroupCode) {
         dashboard.classList.add('hidden');
         document.getElementById('groupCodeDisplay').classList.add('hidden');
+        groupActions.classList.remove('hidden');
         return;
     }
 
     dashboard.classList.remove('hidden');
+    groupActions.classList.add('hidden');
     const groupRef = window.firestoreDoc(window.firestoreDb, "groups", window.currentGroupCode);
     window.firestoreOnSnapshot(groupRef, (doc) => {
         if (doc.exists()) {
@@ -1052,6 +1057,7 @@ function renderGroupDashboard() {
         } else {
             window.currentGroupCode = null;
             dashboard.classList.add('hidden');
+            groupActions.classList.remove('hidden');
         }
     }, (error) => {
         console.error('Group dashboard render error:', error);

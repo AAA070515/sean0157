@@ -978,20 +978,18 @@ async function leaveGroup() {
     if (!groupDoc.exists()) return;
 
     const groupData = groupDoc.data();
-    delete groupData.members[window.currentUser.uid]; // 현재 유저 삭제
+    delete groupData.members[window.currentUser.uid];
 
     if (Object.keys(groupData.members).length === 0) {
-        // 멤버가 0명일 경우 그룹 문서 삭제
         await window.firestoreDeleteDoc(groupRef);
         console.log(`Group ${window.currentGroupCode} deleted as no members remain.`);
     } else {
-        // 멤버가 남아있으면 업데이트된 멤버 데이터만 저장
         await window.firestoreSetDoc(groupRef, { members: groupData.members }, { merge: true });
     }
 
     window.currentGroupCode = null;
     await window.saveUserData();
-    renderGroupDashboard(); // UI 갱신
+    renderGroupDashboard();
 }
 
 function renderGroupDashboard() {
@@ -1002,13 +1000,13 @@ function renderGroupDashboard() {
 
     if (!window.currentGroupCode) {
         dashboard.classList.add('hidden');
-        groupActions.classList.remove('hidden'); // 그룹에 없으면 '참가/만들기' 보임
+        groupActions.classList.remove('hidden');
         document.getElementById('groupCodeDisplay').classList.add('hidden');
         return;
     }
 
     dashboard.classList.remove('hidden');
-    groupActions.classList.add('hidden'); // 그룹에 있으면 '참가/만들기' 숨김
+    groupActions.classList.add('hidden');
     const groupRef = window.firestoreDoc(window.firestoreDb, "groups", window.currentGroupCode);
     window.firestoreOnSnapshot(groupRef, (doc) => {
         if (doc.exists()) {
@@ -1038,7 +1036,7 @@ function renderGroupDashboard() {
         } else {
             window.currentGroupCode = null;
             dashboard.classList.add('hidden');
-            groupActions.classList.remove('hidden'); // 그룹이 삭제되면 '참가/만들기' 보임
+            groupActions.classList.remove('hidden');
         }
     }, (error) => {
         console.error('Group dashboard render error:', error);

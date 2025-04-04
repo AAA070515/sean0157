@@ -201,27 +201,29 @@
                 </div>
             </section>
             <section id="groupsScreen" class="hidden">
-                <div class="groups-section">
-                    <h3>Groups</h3>
-                    <div id="groupActions" class="group-actions">
-                        <div class="group-create">
-                            <h4>Create a Group</h4>
-                            <input type="text" id="groupNameInput" placeholder="Enter group name" maxlength="50">
-                            <button class="btn" onclick="createGroup()">Create Group</button>
-                            <p id="groupCodeDisplay" class="hidden"></p>
-                            <p id="groupCreateError" class="error hidden"></p>
-                        </div>
-                        <div class="group-join">
-                            <h4>Join a Group</h4>
-                            <input type="text" id="groupCodeInput" placeholder="Enter 6-digit code" maxlength="6">
-                            <button class="btn" onclick="joinGroup()">Join Group</button>
-                            <p id="groupJoinError" class="error hidden"></p>
+                <div class="container">
+                    <div class="groups-section group-actions-box">
+                        <h3>Group Actions</h3>
+                        <div class="group-actions">
+                            <div class="group-create">
+                                <h4>Create a Group</h4>
+                                <input type="text" id="groupNameInput" class="group-input" placeholder="Enter group name" maxlength="30">
+                                <button class="group-btn btn" onclick="createGroup()">Create</button>
+                                <p id="groupCreateError" class="error hidden"></p>
+                                <p id="groupCodeDisplay" class="hidden">Group Code: </p>
+                            </div>
+                            <div class="group-join">
+                                <h4>Join a Group</h4>
+                                <input type="text" id="groupCodeInput" class="group-input" placeholder="Enter group code" maxlength="6">
+                                <button class="group-btn btn" onclick="joinGroup()">Join</button>
+                                <p id="groupJoinError" class="error hidden"></p>
+                            </div>
                         </div>
                     </div>
-                    <div id="groupDashboard" class="group-dashboard hidden">
-                        <h4 id="currentGroupName"></h4>
-                        <div id="groupMembers" class="group-members"></div>
-                        <button class="btn leave-btn" onclick="leaveGroup()">Leave Group</button>
+                    <div class="groups-section group-dashboard-box hidden" id="groupDashboard">
+                        <h3 id="currentGroupName"></h3>
+                        <div class="group-members" id="groupMembers"></div>
+                        <button class="leave-btn btn" onclick="leaveGroup()">Leave Group</button>
                     </div>
                 </div>
             </section>

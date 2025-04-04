@@ -358,75 +358,79 @@ function updateStudyTimeDisplay() {
 }
 
 function startTimer() {
-    const selectedSubject = document.getElementById('subjectSelect').value;
-    if (!selectedSubject) {
-        alert('Please select a subject!');
+    if (timerInterval) clearInterval(timerInterval); // 기존 타이머 정리
+    const subject = document.getElementById('subjectSelect').value;
+    if (!subject) {
+        alert('Please select a subject.');
         return;
     }
-    if (!timerInterval) {
-        const startTime = new Date();
-        timerInterval = setInterval(() => {
-            timerSeconds++;
-            updateTimerDisplay();
-        }, 1000);
-        
-        if (!window.studySessions[currentDate]) {
-            window.studySessions[currentDate] = [];
-        }
-        window.studySessions[currentDate].push({
-            subject: selectedSubject,
-            startTime: startTime.toISOString(),
-            endTime: null,
-            duration: 0
-        });
-    }
-}
 
-async function stopTimer() {
-    const selectedSubject = document.getElementById('subjectSelect').value;
-    if (!selectedSubject) return;
+    timerInterval = setInterval(async () => {
+        window.timerSeconds++;
+        updateTimerDisplay();
 
-    clearInterval(timerInterval);
-    timerInterval = null;
+        // 오늘 날짜의 공부 시간 업데이트
+        if (!window.studyData) window.studyData = {};
+        if (!window.studyData[currentDate]) window.studyData[currentDate] = {};
+        if (!window.studyData[currentDate][subject]) window.studyData[currentDate][subject] = 0;
+        window.studyData[currentDate][subject]++;
 
-    window.studyData[currentDate] = ((window.studyData && window.studyData[currentDate]) || 0) + timerSeconds;
+        // 총 공부 시간 계산
+        const totalStudyTimeToday = Object.values(window.studyData[currentDate]).reduce((sum, time) => sum + time, 0);
+        updateStudyTimeDisplay();
 
-    if (!window.subjectStudyTime[selectedSubject]) {
-        window.subjectStudyTime[selectedSubject] = {};
-    }
-    window.subjectStudyTime[selectedSubject][currentDate] = 
-        (window.subjectStudyTime[selectedSubject][currentDate] || 0) + timerSeconds;
-
-    const lastSession = window.studySessions[currentDate]?.slice(-1)[0];
-    if (lastSession && lastSession.subject === selectedSubject && !lastSession.endTime) {
-        lastSession.endTime = new Date().toISOString();
-        lastSession.duration = timerSeconds;
-    }
-
-    if (window.currentGroupCode) {
-        const groupRef = window.firestoreDoc(window.firestoreDb, "groups", window.currentGroupCode);
-        const groupDoc = await window.firestoreGetDoc(groupRef);
-        if (groupDoc.exists()) {
-            const groupData = groupDoc.data();
+        // 그룹에 실시간으로 공부 시간 반영
+        if (window.currentGroupCode && window.currentUser) {
+            const groupRef = window.firestoreDoc(window.firestoreDb, "groups", window.currentGroupCode);
             await window.firestoreSetDoc(groupRef, {
                 members: {
-                    ...groupData.members,
                     [window.currentUser.uid]: {
                         nickname: window.nickname,
-                        studyTime: window.studyData[currentDate] || 0
+                        studyTime: totalStudyTimeToday
                     }
                 }
             }, { merge: true });
         }
+
+        await window.saveUserData();
+    }, 1000);
+
+    document.getElementById('startBtn').classList.add('hidden');
+    document.getElementById('pauseBtn').classList.remove('hidden');
+    document.getElementById('stopBtn').classList.remove('hidden');
+}
+
+async function stopTimer() {
+    if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
     }
 
-    timerSeconds = 0;
-    await window.saveUserData();
+    const subject = document.getElementById('subjectSelect').value;
+    if (window.studyData && window.studyData[currentDate] && window.studyData[currentDate][subject]) {
+        const totalStudyTimeToday = Object.values(window.studyData[currentDate]).reduce((sum, time) => sum + time, 0);
+
+        // 그룹에 최종 시간 반영
+        if (window.currentGroupCode && window.currentUser) {
+            const groupRef = window.firestoreDoc(window.firestoreDb, "groups", window.currentGroupCode);
+            await window.firestoreSetDoc(groupRef, {
+                members: {
+                    [window.currentUser.uid]: {
+                        nickname: window.nickname,
+                        studyTime: totalStudyTimeToday
+                    }
+                }
+            }, { merge: true });
+        }
+
+        await window.saveUserData();
+    }
+
+    window.timerSeconds = 0;
     updateTimerDisplay();
-    updateStudyTimeDisplay();
-    updateSubjectTimes();
-    updateGoalsProgress();
-    renderHome();
+    document.getElementById('startBtn').classList.remove('hidden');
+    document.getElementById('pauseBtn').classList.add('hidden');
+    document.getElementById('stopBtn').classList.add('hidden');
 }
 
 async function saveDiary() {
@@ -567,8 +571,12 @@ function updateSubjectTimes() {
 }
 
 function pauseTimer() {
-    clearInterval(timerInterval);
-    timerInterval = null;
+    if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+    }
+    document.getElementById('startBtn').classList.remove('hidden');
+    document.getElementById('pauseBtn').classList.add('hidden');
 }
 
 function updateTimerDisplay() {
@@ -1071,10 +1079,10 @@ function renderGroupDashboard() {
                     uid,
                     nickname: data.nickname,
                     studyTime: data.studyTime || 0,
-                    rank: index + 1 // 순위는 나중에 정렬 후 재조정
+                    rank: index + 1
                 }))
-                .sort((a, b) => b.studyTime - a.studyTime) // 공부 시간 내림차순 정렬
-                .map((member, index) => ({ ...member, rank: index + 1 })); // 정렬 후 순위 재설정
+                .sort((a, b) => b.studyTime - a.studyTime)
+                .map((member, index) => ({ ...member, rank: index + 1 }));
 
             membersDiv.innerHTML = '';
             members.forEach(member => {

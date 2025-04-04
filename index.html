@@ -27,22 +27,22 @@
         </div>
     </div>
 
-<nav class="nav-drawer">
-    <div class="hamburger-icon" onclick="toggleDrawer()">☰</div>
-    <div class="drawer-content hidden">
-        <div class="nav-item active" onclick="showScreen('home')">Home</div>
-        <div class="nav-item" onclick="showScreen('study')">Study</div>
-        <div class="nav-item" onclick="showScreen('todo')">To-Do</div>
-        <div class="nav-item" onclick="showScreen('diary')">Journal</div>
-        <div class="nav-item" onclick="showScreen('goals')">Goals</div>
-        <div class="nav-item" onclick="showScreen('groups')">Groups</div>
-        <div class="nav-item" onclick="showScreen('stats')">Statistics</div>
-        <div class="nav-item" id="settings-btn" onclick="showScreen('settings')">Settings</div>
-        <div class="nav-item" id="login-btn">Login</div>
-        <div class="nav-item" id="logout-btn" style="display: none;">Logout</div>
-        <div class="nav-item" id="reset-all-btn" onclick="resetAllSettings()">Reset All Settings</div>
-    </div>
-</nav>
+    <nav class="nav-drawer">
+        <div class="hamburger-icon" onclick="toggleDrawer()">☰</div>
+        <div class="drawer-content hidden">
+            <div class="nav-item active" onclick="showScreen('home')">Home</div>
+            <div class="nav-item" onclick="showScreen('study')">Study</div>
+            <div class="nav-item" onclick="showScreen('todo')">To-Do</div>
+            <div class="nav-item" onclick="showScreen('diary')">Journal</div>
+            <div class="nav-item" onclick="showScreen('goals')">Goals</div>
+            <div class="nav-item" onclick="showScreen('groups')">Groups</div>
+            <div class="nav-item" onclick="showScreen('stats')">Statistics</div>
+            <div class="nav-item" id="settings-btn" onclick="showScreen('settings')">Settings</div>
+            <div class="nav-item" id="login-btn">Login</div>
+            <div class="nav-item" id="logout-btn" style="display: none;">Logout</div>
+            <div class="nav-item" id="reset-all-btn" onclick="resetAllSettings()">Reset All Settings</div>
+        </div>
+    </nav>
     <div class="overlay hidden" onclick="closeDrawer()"></div>
 
     <!-- 메인 콘텐츠 -->
@@ -190,7 +190,7 @@
                     </div>
                 </div>
             </section>
-            <section id="settingsScreen" class="hidden"> <!-- 새로 추가 -->
+            <section id="settingsScreen" class="hidden">
                 <div class="settings-section">
                     <h3>Settings</h3>
                     <div class="nickname-section">
@@ -201,224 +201,233 @@
                     </div>
                 </div>
             </section>
-                <section id="groupsScreen" class="hidden">
-                    <div class="groups-section">
-                        <h3>Groups</h3>
-                        <div class="group-actions">
-                            <!-- 그룹 생성 -->
-                            <div class="group-create">
-                                <h4>Create a Group</h4>
-                                <input type="text" id="groupNameInput" placeholder="Enter group name" maxlength="50">
-                                <button class="btn" onclick="createGroup()">Create Group</button>
-                                <p id="groupCodeDisplay" class="hidden"></p>
-                                <p id="groupCreateError" class="error hidden"></p>
-                            </div>
-                            <!-- 그룹 참여 -->
-                            <div class="group-join">
-                                <h4>Join a Group</h4>
-                                <input type="text" id="groupCodeInput" placeholder="Enter 6-digit code" maxlength="6">
-                                <button class="btn" onclick="joinGroup()">Join Group</button>
-                                <p id="groupJoinError" class="error hidden"></p>
-                            </div>
+            <section id="groupsScreen" class="hidden">
+                <div class="groups-section">
+                    <h3>Groups</h3>
+                    <div class="group-actions">
+                        <div class="group-create">
+                            <h4>Create a Group</h4>
+                            <input type="text" id="groupNameInput" placeholder="Enter group name" maxlength="50">
+                            <button class="btn" onclick="createGroup()">Create Group</button>
+                            <p id="groupCodeDisplay" class="hidden"></p>
+                            <p id="groupCreateError" class="error hidden"></p>
                         </div>
-                        <!-- 그룹 대시보드 -->
-                        <div id="groupDashboard" class="group-dashboard hidden">
-                            <h4 id="currentGroupName"></h4>
-                            <div id="groupMembers" class="group-members"></div>
-                            <button class="btn leave-btn" onclick="leaveGroup()">Leave Group</button>
+                        <div class="group-join">
+                            <h4>Join a Group</h4>
+                            <input type="text" id="groupCodeInput" placeholder="Enter 6-digit code" maxlength="6">
+                            <button class="btn" onclick="joinGroup()">Join Group</button>
+                            <p id="groupJoinError" class="error hidden"></p>
                         </div>
                     </div>
-                </section>
+                    <div id="groupDashboard" class="group-dashboard hidden">
+                        <h4 id="currentGroupName"></h4>
+                        <div id="groupMembers" class="group-members"></div>
+                        <button class="btn leave-btn" onclick="leaveGroup()">Leave Group</button>
+                    </div>
+                </div>
+            </section>
         </div>
     </main>
 
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
-    import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
-    import { getFirestore, doc, setDoc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
 
-    const firebaseConfig = {
-        apiKey: "AIzaSyDx_BBG73R3FReoFsRPuIKcDb754LAxTCI",
-        authDomain: "sean0157-92c62.firebaseapp.com",
-        projectId: "sean0157-92c62",
-        storageBucket: "sean0157-92c62.firebasestorage.app",
-        messagingSenderId: "1052880240716",
-        appId: "1:1052880240716:web:13289245ada3ff291174e9",
-        measurementId: "G-HRWSZ6MSNB"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-
-    window.firebaseAuth = auth; // 전역으로 내보내기
-    window.firestoreDb = db;   // 전역으로 내보내기
-
-    let currentUser = null;
-    let currentGroupCode = null;
-
-    const loginBtn = document.getElementById('login-btn');
-    const logoutBtn = document.getElementById('logout-btn');
-
-    onAuthStateChanged(auth, (user) => {
-        const loginScreen = document.getElementById('loginScreen');
-        const mainContent = document.querySelector('.main-content');
-
-        if (user) {
-            currentUser = user;
-            window.currentUser = user; // 전역 변수로 설정
-            loginScreen.classList.add('hidden');
-            mainContent.classList.remove('hidden');
-            loginBtn.style.display = 'none';
-            logoutBtn.style.display = 'block';
-            checkAndSetNickname(user);
-            loadUserData(user.uid);
-        } else {
-            currentUser = null;
-            window.currentUser = null;
-            loginScreen.classList.remove('hidden');
-            mainContent.classList.add('hidden');
-            loginBtn.style.display = 'block';
-            logoutBtn.style.display = 'none';
-        }
-    });
-
-    document.getElementById('googleLoginBtn').addEventListener('click', () => {
-        const provider = new GoogleAuthProvider();
-        signInWithPopup(auth, provider)
-            .then((result) => {
-                console.log('Login successful:', result.user.displayName);
-            })
-            .catch((error) => {
-                console.error('Login failed:', error.message);
-                alert('로그인에 실패했습니다. 다시 시도해주세요.');
-            });
-    });
-
-    loginBtn.addEventListener('click', () => {
-        document.getElementById('googleLoginBtn').click();
-    });
-
-    logoutBtn.addEventListener('click', () => {
-        signOut(auth)
-            .then(() => {
-                console.log('Logout successful');
-            })
-            .catch((error) => {
-                console.error('Logout failed:', error.message);
-                alert('로그아웃에 실패했습니다.');
-            });
-    });
-
-    async function checkAndSetNickname(user) {
-        const userRef = doc(db, "users", user.uid);
-        const userDoc = await getDoc(userRef);
-        
-        if (!userDoc.exists() || !userDoc.data().nickname) {
-            showNicknameModal(user);
-        } else {
-            console.log('Nickname already set:', userDoc.data().nickname);
-        }
-    }
-
-    function showNicknameModal(user) {
-        const modal = document.getElementById('nicknameModal');
-        const input = document.getElementById('nicknameInput');
-        const saveBtn = document.getElementById('saveNicknameBtn');
-        const error = document.getElementById('nicknameError');
-        
-        modal.classList.remove('hidden');
-        input.value = '';
-        error.classList.add('hidden');
-
-        saveBtn.onclick = async () => {
-            const nickname = input.value.trim();
-            if (nickname.length < 2 || nickname.length > 20) {
-                error.textContent = 'Nickname must be between 2 and 20 characters.';
-                error.classList.remove('hidden');
-                return;
-            }
-
-            try {
-                await setDoc(doc(db, "users", user.uid), { nickname }, { merge: true });
-                modal.classList.add('hidden');
-                window.nickname = nickname;
-                alert(`Welcome, ${nickname}!`);
-            } catch (err) {
-                error.textContent = 'Failed to save nickname. Try again.';
-                error.classList.remove('hidden');
-                console.error('Nickname save error:', err);
-            }
+        const firebaseConfig = {
+            apiKey: "AIzaSyDx_BBG73R3FReoFsRPuIKcDb754LAxTCI",
+            authDomain: "sean0157-92c62.firebaseapp.com",
+            projectId: "sean0157-92c62",
+            storageBucket: "sean0157-92c62.firebasestorage.app",
+            messagingSenderId: "1052880240716",
+            appId: "1:1052880240716:web:13289245ada3ff291174e9",
+            measurementId: "G-HRWSZ6MSNB"
         };
 
-        input.addEventListener('keypress', (event) => {
-            if (event.key === 'Enter') {
-                saveBtn.click();
-            }
-        });
-    }
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
 
-    async function loadUserData(userId) {
-        const userRef = doc(db, "users", userId);
-        onSnapshot(userRef, (doc) => {
-            if (doc.exists()) {
-                const data = doc.data();
-                window.subjects = data.subjects || [];
-                window.studyData = data.studyData || {};
-                window.subjectStudyTime = data.subjectStudyTime || {};
-                window.diaryData = data.diaryData || {};
-                window.todos = data.todos || [];
-                window.goals = data.goals || { daily: null, weekly: null };
-                window.studySessions = data.studySessions || {};
-                window.nickname = data.nickname || 'User';
-                window.currentGroupCode = data.groupCode || null;
-                console.log("Loaded data with nickname:", window.nickname);
+        window.firebaseAuth = auth;
+        window.firestoreDb = db;
+        window.firestoreDoc = doc;      // Firestore 함수 내보내기
+        window.firestoreGetDoc = getDoc;
+        window.firestoreSetDoc = setDoc;
+        window.firestoreOnSnapshot = onSnapshot;
+
+        let currentUser = null;
+        let currentGroupCode = null;
+
+        const loginBtn = document.getElementById('login-btn');
+        const logoutBtn = document.getElementById('logout-btn');
+
+        onAuthStateChanged(auth, (user) => {
+            const loginScreen = document.getElementById('loginScreen');
+            const mainContent = document.querySelector('.main-content');
+
+            if (user) {
+                currentUser = user;
+                window.currentUser = user;
+                loginScreen.classList.add('hidden');
+                mainContent.classList.remove('hidden');
+                loginBtn.style.display = 'none';
+                logoutBtn.style.display = 'block';
+                checkAndSetNickname(user);
+                loadUserData(user.uid);
             } else {
-                window.subjects = [];
-                window.studyData = {};
-                window.subjectStudyTime = {};
-                window.diaryData = {};
-                window.todos = [];
-                window.goals = { daily: null, weekly: null };
-                window.studySessions = {};
-                window.currentGroupCode = null;
+                currentUser = null;
+                window.currentUser = null;
+                loginScreen.classList.remove('hidden');
+                mainContent.classList.add('hidden');
+                loginBtn.style.display = 'block';
+                logoutBtn.style.display = 'none';
             }
-            updateSubjectSelect();
-            updateSubjectTimes();
-            updateStudyTimeDisplay();
-            updateGoalsInputs();
-            updateGoalsProgress();
-            renderHome();
-            renderTodos();
-            renderGroupDashboard();
-        }, (error) => {
-            console.error("Load failed:", error.code, error.message);
         });
-    }
 
-    window.saveUserData = async function() {
-        if (!window.currentUser) return;
-        const userId = window.currentUser.uid;
-        const dataToSave = {
-            subjects: window.subjects || [],
-            studyData: window.studyData || {},
-            subjectStudyTime: window.subjectStudyTime || {},
-            diaryData: window.diaryData || {},
-            todos: window.todos || [],
-            goals: window.goals || { daily: null, weekly: null },
-            studySessions: window.studySessions || {},
-            nickname: window.nickname || 'User',
-            groupCode: window.currentGroupCode || null
-        };
-        try {
-            await setDoc(doc(db, "users", userId), dataToSave, { merge: true });
-            console.log("Data saved successfully!");
-        } catch (error) {
-            console.error("Save failed:", error.code, error.message);
-            alert("Failed to save data: " + error.message);
+        document.getElementById('googleLoginBtn').addEventListener('click', () => {
+            const provider = new GoogleAuthProvider();
+            signInWithPopup(auth, provider)
+                .then((result) => {
+                    console.log('Login successful:', result.user.displayName);
+                })
+                .catch((error) => {
+                    console.error('Login failed:', error.message);
+                    alert('로그인에 실패했습니다. 다시 시도해주세요.');
+                });
+        });
+
+        loginBtn.addEventListener('click', () => {
+            document.getElementById('googleLoginBtn').click();
+        });
+
+        logoutBtn.addEventListener('click', () => {
+            signOut(auth)
+                .then(() => {
+                    console.log('Logout successful');
+                })
+                .catch((error) => {
+                    console.error('Logout failed:', error.message);
+                    alert('로그아웃에 실패했습니다.');
+                });
+        });
+
+        async function checkAndSetNickname(user) {
+            const userRef = doc(db, "users", user.uid);
+            const userDoc = await getDoc(userRef);
+            
+            if (!userDoc.exists() || !userDoc.data().nickname) {
+                showNicknameModal(user);
+            } else {
+                console.log('Nickname already set:', userDoc.data().nickname);
+            }
         }
-    };
-</script>
-<script src="script.js"></script>
+
+        function showNicknameModal(user) {
+            const modal = document.getElementById('nicknameModal');
+            const input = document.getElementById('nicknameInput');
+            const saveBtn = document.getElementById('saveNicknameBtn');
+            const error = document.getElementById('nicknameError');
+            
+            modal.classList.remove('hidden');
+            input.value = '';
+            error.classList.add('hidden');
+
+            saveBtn.onclick = async () => {
+                const nickname = input.value.trim();
+                if (nickname.length < 2 || nickname.length > 20) {
+                    error.textContent = 'Nickname must be between 2 and 20 characters.';
+                    error.classList.remove('hidden');
+                    return;
+                }
+
+                try {
+                    await setDoc(doc(db, "users", user.uid), { nickname }, { merge: true });
+                    modal.classList.add('hidden');
+                    window.nickname = nickname;
+                    alert(`Welcome, ${nickname}!`);
+                } catch (err) {
+                    error.textContent = 'Failed to save nickname. Try again.';
+                    error.classList.remove('hidden');
+                    console.error('Nickname save error:', err);
+                }
+            };
+
+            input.addEventListener('keypress', (event) => {
+                if (event.key === 'Enter') {
+                    saveBtn.click();
+                }
+            });
+        }
+
+        async function loadUserData(userId) {
+            const userRef = doc(db, "users", userId);
+            window.firestoreOnSnapshot(userRef, (doc) => {
+                if (doc.exists()) {
+                    const data = doc.data();
+                    window.subjects = data.subjects || [];
+                    window.studyData = data.studyData || {};
+                    window.subjectStudyTime = data.subjectStudyTime || {};
+                    window.diaryData = data.diaryData || {};
+                    window.todos = data.todos || [];
+                    window.goals = data.goals || { daily: null, weekly: null };
+                    window.studySessions = data.studySessions || {};
+                    window.nickname = data.nickname || 'User';
+                    window.currentGroupCode = data.groupCode || null;
+                    console.log("Loaded data with nickname:", window.nickname);
+                    updateSubjectSelect();
+                    updateSubjectTimes();
+                    updateStudyTimeDisplay();
+                    updateGoalsInputs();
+                    updateGoalsProgress();
+                    renderHome();
+                    renderTodos();
+                    renderGroupDashboard();
+                } else {
+                    window.subjects = [];
+                    window.studyData = {};
+                    window.subjectStudyTime = {};
+                    window.diaryData = {};
+                    window.todos = [];
+                    window.goals = { daily: null, weekly: null };
+                    window.studySessions = {};
+                    window.currentGroupCode = null;
+                    updateSubjectSelect();
+                    updateSubjectTimes();
+                    updateStudyTimeDisplay();
+                    updateGoalsInputs();
+                    updateGoalsProgress();
+                    renderHome();
+                    renderTodos();
+                    renderGroupDashboard();
+                }
+            }, (error) => {
+                console.error("Load failed:", error.code, error.message);
+            });
+        }
+
+        window.saveUserData = async function() {
+            if (!window.currentUser) return;
+            const userId = window.currentUser.uid;
+            const dataToSave = {
+                subjects: window.subjects || [],
+                studyData: window.studyData || {},
+                subjectStudyTime: window.subjectStudyTime || {},
+                diaryData: window.diaryData || {},
+                todos: window.todos || [],
+                goals: window.goals || { daily: null, weekly: null },
+                studySessions: window.studySessions || {},
+                nickname: window.nickname || 'User',
+                groupCode: window.currentGroupCode || null
+            };
+            try {
+                await window.firestoreSetDoc(window.firestoreDoc(db, "users", userId), dataToSave, { merge: true });
+                console.log("Data saved successfully!");
+            } catch (error) {
+                console.error("Save failed:", error.code, error.message);
+                alert("Failed to save data: " + error.message);
+            }
+        };
+    </script>
+    <script src="script.js"></script>
 </body>
 </html>

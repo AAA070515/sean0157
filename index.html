@@ -201,25 +201,22 @@
                 </div>
             </section>
             <section id="groupsScreen" class="hidden">
-                <div class="groups-section">
+                <div class="groups">
                     <h3>Groups</h3>
-                    <div class="group-actions-section">
-                        <h4>Group Actions</h4>
-                        <div class="group-actions">
-                            <div class="group-create">
-                                <input type="text" id="groupNameInput" placeholder="Enter group name" maxlength="50">
-                                <button class="btn group-action-btn" onclick="createGroup()">Create Group</button>
-                                <p id="groupCodeDisplay" class="hidden"></p>
-                                <p id="groupCreateError" class="error hidden"></p>
-                            </div>
-                            <div class="group-join">
-                                <input type="text" id="groupCodeInput" placeholder="Enter 6-digit code" maxlength="6">
-                                <button class="btn group-action-btn" onclick="joinGroup()">Join Group</button>
-                                <p id="groupJoinError" class="error hidden"></p>
-                            </div>
+                    <div class="group-actions">
+                        <div class="group-create">
+                            <input type="text" id="groupNameInput" placeholder="Enter group name" maxlength="50">
+                            <button class="btn group-action-btn" onclick="createGroup()">Create Group</button>
+                            <p id="groupCodeDisplay" class="hidden"></p>
+                            <p id="groupCreateError" class="error hidden"></p>
+                        </div>
+                        <div class="group-join">
+                            <input type="text" id="groupCodeInput" placeholder="Enter 6-digit code" maxlength="6">
+                            <button class="btn group-action-btn" onclick="joinGroup()">Join Group</button>
+                            <p id="groupJoinError" class="error hidden"></p>
                         </div>
                     </div>
-                    <div class="group-dashboard-section hidden">
+                    <div class="group-dashboard hidden">
                         <h4 id="currentGroupName"></h4>
                         <div id="groupMembers" class="group-members"></div>
                         <button class="btn leave-btn" onclick="leaveGroup()">Leave Group</button>

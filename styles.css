@@ -993,3 +993,9 @@ body {
         padding: 10px;
     }
 }
+.drawer-content {
+    /* 기존 스타일 유지 */
+    display: flex;
+    flex-direction: column;
+    gap: 10px; /* 버튼과 nav-item 사이 간격 추가 */
+}

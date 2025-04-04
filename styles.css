@@ -378,7 +378,6 @@ body {
     object-fit: contain;
 }
 
-/* 나머지 스타일 */
 .timer-section {
     background-color: white;
     border-radius: 12px;
@@ -679,10 +678,6 @@ body {
     transform: scale(1.05);
 }
 
-.hidden {
-    display: none !important;
-}
-
 .goals-section {
     background-color: white;
     border-radius: 12px;
@@ -748,6 +743,63 @@ body {
     height: 100%;
     background-color: #4285F4;
     transition: width 0.5s ease-in-out;
+}
+
+.groups-section {
+    background-color: white;
+    border-radius: 12px;
+    padding: 4%;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.group-actions {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+#groupCodeInput {
+    flex: 1;
+    padding: 8px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    font-size: 16px;
+}
+
+.group-list {
+    margin-bottom: 20px;
+}
+
+.group-item {
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.group-item:hover {
+    background-color: #f0f0f0;
+}
+
+.group-details {
+    text-align: center;
+}
+
+#groupRankings, #groupSubjectTimes {
+    margin: 15px 0;
+    font-size: 14px;
+}
+
+.ranking-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 0;
+}
+
+.hidden {
+    display: none !important;
 }
 
 .delete-subject-btn {
@@ -828,15 +880,6 @@ body {
     .week-day {
         padding: 10px;
     }
-}
-.nav-item {
-    padding: 10px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-}
-
-.nav-item:hover {
-    background-color: #e0e0e0;
 }
 
 #login-btn, #logout-btn {

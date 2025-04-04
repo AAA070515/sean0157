@@ -1,191 +1,3 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
-import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
-import { getFirestore, doc, setDoc, onSnapshot, getDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
-
-const firebaseConfig = {
-    apiKey: "AIzaSyDx_BBG73R3FReoFsRPuIKcDb754LAxTCI",
-    authDomain: "sean0157-92c62.firebaseapp.com",
-    projectId: "sean0157-92c62",
-    storageBucket: "sean0157-92c62.firebasestorage.app",
-    messagingSenderId: "1052880240716",
-    appId: "1:1052880240716:web:13289245ada3ff291174e9",
-    measurementId: "G-HRWSZ6MSNB"
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-
-window.firebaseAuth = auth;
-window.firestoreDb = db;
-window.firestoreDoc = doc;
-window.firestoreGetDoc = getDoc;
-window.firestoreSetDoc = setDoc;
-window.firestoreOnSnapshot = onSnapshot;
-window.firestoreDeleteDoc = deleteDoc;
-
-let currentUser = null;
-let currentGroupCode = null;
-
-const loginBtn = document.getElementById('login-btn');
-const logoutBtn = document.getElementById('logout-btn');
-
-onAuthStateChanged(auth, (user) => {
-    const loginScreen = document.getElementById('loginScreen');
-    const mainContent = document.querySelector('.main-content');
-
-    if (user) {
-        currentUser = user;
-        window.currentUser = user;
-        loginScreen.classList.add('hidden');
-        mainContent.classList.remove('hidden');
-        loginBtn.style.display = 'none';
-        logoutBtn.style.display = 'block';
-        checkAndSetNickname(user);
-        loadUserData(user.uid);
-    } else {
-        currentUser = null;
-        window.currentUser = null;
-        loginScreen.classList.remove('hidden');
-        mainContent.classList.add('hidden');
-        loginBtn.style.display = 'block';
-        logoutBtn.style.display = 'none';
-    }
-});
-
-document.getElementById('googleLoginBtn').addEventListener('click', () => {
-    const provider = new GoogleAuthProvider();
-    signInWithPopup(auth, provider)
-        .then((result) => {
-            console.log('Login successful:', result.user.displayName);
-        })
-        .catch((error) => {
-            console.error('Login failed:', error.message);
-            alert('로그인에 실패했습니다. 다시 시도해주세요.');
-        });
-});
-
-loginBtn.addEventListener('click', () => {
-    document.getElementById('googleLoginBtn').click();
-});
-
-async function checkAndSetNickname(user) {
-    const userRef = doc(db, "users", user.uid);
-    const userDoc = await getDoc(userRef);
-    
-    if (!userDoc.exists() || !userDoc.data().nickname) {
-        showNicknameModal(user);
-    } else {
-        console.log('Nickname already set:', userDoc.data().nickname);
-    }
-}
-
-function showNicknameModal(user) {
-    const modal = document.getElementById('nicknameModal');
-    const input = document.getElementById('nicknameInput');
-    const saveBtn = document.getElementById('saveNicknameBtn');
-    const error = document.getElementById('nicknameError');
-    
-    modal.classList.remove('hidden');
-    input.value = '';
-    error.classList.add('hidden');
-
-    saveBtn.onclick = async () => {
-        const nickname = input.value.trim();
-        if (nickname.length < 2 || nickname.length > 20) {
-            error.textContent = 'Nickname must be between 2 and 20 characters.';
-            error.classList.remove('hidden');
-            return;
-        }
-
-        try {
-            await setDoc(doc(db, "users", user.uid), { nickname }, { merge: true });
-            modal.classList.add('hidden');
-            window.nickname = nickname;
-            alert(`Welcome, ${nickname}!`);
-        } catch (err) {
-            error.textContent = 'Failed to save nickname. Try again.';
-            error.classList.remove('hidden');
-            console.error('Nickname save error:', err);
-        }
-    };
-
-    input.addEventListener('keypress', (event) => {
-        if (event.key === 'Enter') {
-            saveBtn.click();
-        }
-    });
-}
-
-async function loadUserData(userId) {
-    const userRef = doc(db, "users", userId);
-    window.firestoreOnSnapshot(userRef, (doc) => {
-        if (doc.exists()) {
-            const data = doc.data();
-            window.subjects = data.subjects || [];
-            window.studyData = data.studyData || {};
-            window.subjectStudyTime = data.subjectStudyTime || {};
-            window.diaryData = data.diaryData || {};
-            window.todos = data.todos || [];
-            window.goals = data.goals || { daily: null, weekly: null };
-            window.studySessions = data.studySessions || {};
-            window.nickname = data.nickname || 'User';
-            window.currentGroupCode = data.groupCode || null;
-            console.log("Loaded data with nickname:", window.nickname);
-            updateSubjectSelect();
-            updateSubjectTimes();
-            updateStudyTimeDisplay();
-            updateGoalsInputs();
-            updateGoalsProgress();
-            renderHome();
-            renderTodos();
-            renderGroupDashboard();
-        } else {
-            window.subjects = [];
-            window.studyData = {};
-            window.subjectStudyTime = {};
-            window.diaryData = {};
-            window.todos = [];
-            window.goals = { daily: null, weekly: null };
-            window.studySessions = {};
-            window.currentGroupCode = null;
-            updateSubjectSelect();
-            updateSubjectTimes();
-            updateStudyTimeDisplay();
-            updateGoalsInputs();
-            updateGoalsProgress();
-            renderHome();
-            renderTodos();
-            renderGroupDashboard();
-        }
-    }, (error) => {
-        console.error("Load failed:", error.code, error.message);
-    });
-}
-
-window.saveUserData = async function() {
-    if (!window.currentUser) return;
-    const userId = window.currentUser.uid;
-    const dataToSave = {
-        subjects: window.subjects || [],
-        studyData: window.studyData || {},
-        subjectStudyTime: window.subjectStudyTime || {},
-        diaryData: window.diaryData || {},
-        todos: window.todos || [],
-        goals: window.goals || { daily: null, weekly: null },
-        studySessions: window.studySessions || {},
-        nickname: window.nickname || 'User',
-        groupCode: window.currentGroupCode || null
-    };
-    try {
-        await window.firestoreSetDoc(window.firestoreDoc(db, "users", userId), dataToSave, { merge: true });
-        console.log("Data saved successfully!");
-    } catch (error) {
-        console.error("Save failed:", error.code, error.message);
-        alert("Failed to save data: " + error.message);
-    }
-};
-
 let timerSeconds = 0;
 let timerInterval = null;
 let currentFilter = 'all';
@@ -862,7 +674,7 @@ function updateGoalsProgress() {
     
     if (window.goals.daily !== null) {
         const dailyTime = (window.studyData && window.studyData[currentDate]) || 0;
-        const dailyPercentage = Math.min(Math.round((dailyTime / 3600) / (window.goals.daily / 3600) * 100), 100);
+        const dailyPercentage = Math.min(Math.round((dailyTime / window.goals.daily) * 100), 100);
         const hours = Math.floor(dailyTime / 3600);
         const minutes = Math.floor((dailyTime % 3600) / 60);
         
@@ -877,7 +689,7 @@ function updateGoalsProgress() {
     
     if (window.goals.weekly !== null) {
         const weeklyTime = calculateWeeklyStudyTime();
-        const weeklyPercentage = Math.min(Math.round((weeklyTime / 3600) / (window.goals.weekly / 3600) * 100), 100);
+        const weeklyPercentage = Math.min(Math.round((weeklyTime / window.goals.weekly) * 100), 100);
         const hours = Math.floor(weeklyTime / 3600);
         const minutes = Math.floor((weeklyTime % 3600) / 60);
         
@@ -1130,7 +942,7 @@ async function joinGroup() {
     try {
         const groupDoc = await window.firestoreGetDoc(groupRef);
         if (!groupDoc.exists()) {
-            error.textContent = 'Group not UHfound.';
+            error.textContent = 'Group not found.';
             error.classList.remove('hidden');
             return;
         }

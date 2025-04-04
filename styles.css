@@ -214,51 +214,6 @@ body {
     transform: translateX(5px);
 }
 
-.reset-btn {
-    width: 100%;
-    padding: 10px;
-    border-radius: 8px;
-    border: none;
-    background-color: #4285F4;
-    color: white;
-    font-size: 16px;
-    cursor: pointer;
-    margin-top: 20px;
-    transition: all 0.3s;
-}
-
-.reset-btn:hover {
-    background-color: #3367D6;
-}
-
-#login-btn, #logout-btn {
-    width: 100%;
-    padding: 10px;
-    border-radius: 8px;
-    border: none;
-    background-color: #4285F4;
-    color: white;
-    font-size: 16px;
-    cursor: pointer;
-    margin-top: 20px;
-    transition: all 0.3s;
-    text-align: center;
-}
-
-#settings-btn, #reset-all-btn {
-    width: 100%;
-    padding: 10px;
-    border-radius: 8px;
-    border: none;
-    background-color: #4285F4;
-    color: white;
-    font-size: 16px;
-    cursor: pointer;
-    margin-top: 20px;
-    transition: all 0.3s;
-    text-align: center;
-}
-
 /* 메인 콘텐츠 */
 .main-content {
     flex: 1;
@@ -919,7 +874,7 @@ body {
     transform: translateY(0);
 }
 
-/* 설정 섹션 추가 */
+/* 설정 섹션 */
 .settings-section {
     background-color: white;
     border-radius: 12px;
@@ -944,22 +899,37 @@ body {
     margin-bottom: 15px;
 }
 
-#settingsNicknameInput {
-    width: 100%;
+.subject-input {
+    width: 70%;
     padding: clamp(8px, 2vw, 12px);
     border-radius: 8px;
     border: 1px solid #ddd;
     font-size: clamp(14px, 2.5vw, 16px);
-    margin-bottom: 15px;
 }
 
-.nickname-section .btn {
+.subject-add-btn {
+    width: 25%;
     background-color: #4285F4;
     color: white;
     font-size: clamp(14px, 2.5vw, 16px);
 }
 
-.nickname-section .btn:hover {
+.subject-add-btn:hover {
+    background-color: #3367D6;
+}
+
+.save-button {
+    width: 100%;
+    padding: clamp(10px, 2.5vw, 15px);
+    border-radius: 25px;
+    background-color: #4285F4;
+    color: white;
+    font-size: clamp(14px, 2.5vw, 16px);
+    font-weight: bold;
+    margin-top: 20px;
+}
+
+.save-button:hover {
     background-color: #3367D6;
 }
 
@@ -986,11 +956,6 @@ body {
         font-size: 14px;
     }
     
-    .reset-btn {
-        padding: 8px;
-        font-size: 14px;
-    }
-    
     .dashboard {
         grid-template-columns: 1fr;
     }
@@ -1007,11 +972,11 @@ body {
         padding: 10px;
     }
 }
+
 .drawer-content {
-    /* 기존 스타일 유지 */
     display: flex;
     flex-direction: column;
-    gap: 10px; /* 버튼과 nav-item 사이 간격 추가 */
+    gap: 10px;
 }
 
 .groups-section {

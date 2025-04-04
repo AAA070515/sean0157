@@ -44,7 +44,7 @@ function closeDrawer() {
 }
 
 function showScreen(screen) {
-    const screens = ['home', 'study', 'diary', 'todo', 'goals', 'stats'];
+    const screens = ['home', 'study', 'diary', 'todo', 'goals', 'stats', 'settings'];
     screens.forEach(s => {
         const el = document.getElementById(`${s}Screen`);
         el.classList.add('hidden');
@@ -61,7 +61,8 @@ function showScreen(screen) {
         'todo': 'To-Do',
         'diary': 'Journal',
         'goals': 'Goals',
-        'stats': 'Statistics'
+        'stats': 'Statistics',
+        'settings': 'Settings'
     };
 
     document.querySelectorAll('.nav-item').forEach(btn => {
@@ -97,6 +98,9 @@ function showScreen(screen) {
         updateGoalsInputs();
         updateGoalsProgress();
     } else if (screen === 'stats') renderStats();
+    else if (screen === 'settings') {
+        loadSettings();
+    }
 }
 
 function renderHome() {
@@ -762,6 +766,43 @@ async function resetAllSettings() {
     }
 }
 
+function loadSettings() {
+    const nicknameInput = document.getElementById('settingsNicknameInput');
+    const error = document.getElementById('settingsNicknameError');
+    nicknameInput.value = window.nickname || 'User';
+    error.classList.add('hidden');
+}
+
+async function changeNickname() {
+    const nicknameInput = document.getElementById('settingsNicknameInput');
+    const error = document.getElementById('settingsNicknameError');
+    const newNickname = nicknameInput.value.trim();
+
+    if (newNickname.length < 2 || newNickname.length > 20) {
+        error.textContent = 'Nickname must be between 2 and 20 characters.';
+        error.classList.remove('hidden');
+        return;
+    }
+
+    if (!window.currentUser) {
+        error.textContent = 'You must be logged in to change your nickname.';
+        error.classList.remove('hidden');
+        return;
+    }
+
+    try {
+        const userRef = doc(window.db, "users", window.currentUser.uid);
+        await setDoc(userRef, { nickname: newNickname }, { merge: true });
+        window.nickname = newNickname;
+        error.classList.add('hidden');
+        alert(`Nickname changed to "${newNickname}"!`);
+    } catch (err) {
+        error.textContent = `Error: ${err.message}`;
+        error.classList.remove('hidden');
+        console.error('Nickname change error:', err);
+    }
+}
+
 document.getElementById('diaryDate').addEventListener('change', function() {
     const selectedDate = this.value;
     loadDiaryData(selectedDate);
@@ -778,6 +819,13 @@ document.getElementById('todoInput').addEventListener('keypress', function(event
     if (event.key === 'Enter') {
         event.preventDefault();
         addTodo();
+    }
+});
+
+document.getElementById('settingsNicknameInput').addEventListener('keypress', function(event) {
+    if (event.key === 'Enter') {
+        event.preventDefault();
+        changeNickname();
     }
 });
 

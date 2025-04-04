@@ -358,13 +358,21 @@ function updateStudyTimeDisplay() {
 }
 
 function startTimer() {
-    if (timerInterval) clearInterval(timerInterval); // 기존 타이머 정리
+    if (timerInterval) {
+        clearInterval(timerInterval); // 기존 타이머 정리
+        console.log('Existing timer cleared');
+    }
+
     const subject = document.getElementById('subjectSelect').value;
+    console.log('Selected subject:', subject);
+
     if (!subject) {
         alert('Please select a subject.');
+        console.log('No subject selected, timer not started');
         return;
     }
 
+    console.log('Starting timer...');
     timerInterval = setInterval(async () => {
         window.timerSeconds++;
         updateTimerDisplay();
@@ -375,29 +383,39 @@ function startTimer() {
         if (!window.studyData[currentDate][subject]) window.studyData[currentDate][subject] = 0;
         window.studyData[currentDate][subject]++;
 
-        // 총 공부 시간 계산
         const totalStudyTimeToday = Object.values(window.studyData[currentDate]).reduce((sum, time) => sum + time, 0);
         updateStudyTimeDisplay();
 
-        // 그룹에 실시간으로 공부 시간 반영
+        // 그룹에 실시간으로 공부 시간 반영 (오류 처리 추가)
         if (window.currentGroupCode && window.currentUser) {
             const groupRef = window.firestoreDoc(window.firestoreDb, "groups", window.currentGroupCode);
-            await window.firestoreSetDoc(groupRef, {
-                members: {
-                    [window.currentUser.uid]: {
-                        nickname: window.nickname,
-                        studyTime: totalStudyTimeToday
+            try {
+                await window.firestoreSetDoc(groupRef, {
+                    members: {
+                        [window.currentUser.uid]: {
+                            nickname: window.nickname,
+                            studyTime: totalStudyTimeToday
+                        }
                     }
-                }
-            }, { merge: true });
+                }, { merge: true });
+                console.log('Firestore updated with study time:', totalStudyTimeToday);
+            } catch (error) {
+                console.error('Firestore update error:', error);
+            }
         }
 
-        await window.saveUserData();
+        try {
+            await window.saveUserData();
+            console.log('User data saved');
+        } catch (error) {
+            console.error('saveUserData error:', error);
+        }
     }, 1000);
 
     document.getElementById('startBtn').classList.add('hidden');
     document.getElementById('pauseBtn').classList.remove('hidden');
     document.getElementById('stopBtn').classList.remove('hidden');
+    console.log('Timer started, UI updated');
 }
 
 async function stopTimer() {
@@ -580,12 +598,11 @@ function pauseTimer() {
 }
 
 function updateTimerDisplay() {
-    const hours = Math.floor(timerSeconds / 3600);
-    const minutes = Math.floor((timerSeconds % 3600) / 60);
-    const seconds = timerSeconds % 60;
-    const timerDisplay = document.getElementById('timerDisplay');
-    timerDisplay.textContent = 
-        `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    const hours = Math.floor(window.timerSeconds / 3600);
+    const minutes = Math.floor((window.timerSeconds % 3600) / 60);
+    const seconds = window.timerSeconds % 60;
+    document.getElementById('timerDisplay').textContent = `${hours}h ${minutes}m ${seconds}s`;
+    console.log('Timer display updated:', window.timerSeconds);
 }
 
 function selectMood(mood) {

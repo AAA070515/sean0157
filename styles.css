@@ -170,7 +170,6 @@ body {
     display: flex;
     flex-direction: column;
     transition: right 0.3s ease-in-out;
-    gap: 10px; /* 버튼과 nav-item 사이 간격 추가 */
 }
 
 .drawer-content.visible {
@@ -232,7 +231,7 @@ body {
     background-color: #3367D6;
 }
 
-#login-btn {
+#login-btn, #logout-btn {
     width: 100%;
     padding: 10px;
     border-radius: 8px;
@@ -246,7 +245,7 @@ body {
     text-align: center;
 }
 
-#settings-btn {
+#settings-btn, #reset-all-btn {
     width: 100%;
     padding: 10px;
     border-radius: 8px;
@@ -722,7 +721,7 @@ body {
 }
 
 .task-filters {
-    display flex;
+    display: flex;
     justify-content: center;
     gap: 10px;
     margin-bottom: 15px;
@@ -920,7 +919,7 @@ body {
     transform: translateY(0);
 }
 
-/* 설정 섹션 */
+/* 설정 섹션 추가 */
 .settings-section {
     background-color: white;
     border-radius: 12px;
@@ -962,19 +961,6 @@ body {
 
 .nickname-section .btn:hover {
     background-color: #3367D6;
-}
-
-.settings-actions {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin-top: 20px;
-}
-
-.settings-actions .btn {
-    width: 100%;
-    padding: clamp(10px, 2.5vw, 15px);
-    font-size: clamp(14px, 2.5vw, 16px);
 }
 
 @media (max-width: 576px) {
@@ -1020,6 +1006,12 @@ body {
     .week-day {
         padding: 10px;
     }
+}
+.drawer-content {
+    /* 기존 스타일 유지 */
+    display: flex;
+    flex-direction: column;
+    gap: 10px; /* 버튼과 nav-item 사이 간격 추가 */
 }
 
 .groups-section {

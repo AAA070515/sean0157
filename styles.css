@@ -979,6 +979,7 @@ body {
     gap: 10px;
 }
 
+/* 그룹 섹션 */
 .groups-section {
     background-color: white;
     border-radius: 12px;
@@ -994,12 +995,17 @@ body {
     color: #4285F4;
 }
 
+/* 그룹 액션 박스 */
+.group-actions-box {
+    /* diary의 날짜 선택과 유사한 스타일 */
+}
+
+/* 그룹 액션 내부 스타일 */
 .group-actions {
     display: flex;
     justify-content: space-around;
     flex-wrap: wrap;
     gap: 20px;
-    margin-bottom: 20px;
 }
 
 .group-create, .group-join {
@@ -1012,7 +1018,7 @@ body {
     margin-bottom: 15px;
 }
 
-#groupNameInput, #groupCodeInput {
+.group-input {
     width: 100%;
     padding: clamp(8px, 2vw, 12px);
     border-radius: 8px;
@@ -1021,13 +1027,14 @@ body {
     margin-bottom: 15px;
 }
 
-.group-actions .btn {
+.group-btn {
+    width: 100%;
     background-color: #4285F4;
     color: white;
     font-size: clamp(14px, 2.5vw, 16px);
 }
 
-.group-actions .btn:hover {
+.group-btn:hover {
     background-color: #3367D6;
 }
 
@@ -1037,9 +1044,9 @@ body {
     margin-top: 10px;
 }
 
-.group-dashboard {
-    margin-top: 20px;
-    text-align: left;
+/* 그룹 대시보드 박스 */
+.group-dashboard-box {
+    /* diary의 기분 선택과 유사한 스타일 */
 }
 
 #currentGroupName {
@@ -1076,6 +1083,7 @@ body {
 }
 
 .leave-btn {
+    width: 100%;
     background-color: #EA4335;
     color: white;
     font-size: clamp(14px, 2.5vw, 16px);
@@ -1083,4 +1091,16 @@ body {
 
 .leave-btn:hover {
     background-color: #D32F2F;
+}
+
+/* 반응형 조정 */
+@media (max-width: 576px) {
+    .group-actions {
+        flex-direction: column;
+        gap: 30px;
+    }
+
+    .group-create, .group-join {
+        min-width: 100%;
+    }
 }

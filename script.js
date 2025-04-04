@@ -1,12 +1,12 @@
 let timerSeconds = 0;
 let timerInterval = null;
-let subjects;
-let studyData;
-let subjectStudyTime;
-let diaryData;
-let todos;
-let goals;
-let studySessions;
+let subjects = [];
+let studyData = {};
+let subjectStudyTime = {};
+let diaryData = {};
+let todos = [];
+let goals = { daily: null, weekly: null };
+let studySessions = {};
 let currentFilter = 'all';
 let selectedMood = null;
 let uploadedImage = null;
@@ -15,7 +15,6 @@ let currentWeekOffset = 0;
 
 const today = new Date();
 let currentDate = today.toISOString().split('T')[0];
-
 updateStudyTimeDisplay();
 renderHome();
 renderTodos();

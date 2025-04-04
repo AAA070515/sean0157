@@ -905,7 +905,7 @@ body {
     transform: translateY(0);
 }
 
-/* 설정 섹션 추가 */
+/* 설정 섹션 */
 .settings-section {
     background-color: white;
     border-radius: 12px;
@@ -949,57 +949,7 @@ body {
     background-color: #3367D6;
 }
 
-@media (max-width: 576px) {
-    .hamburger-icon {
-        font-size: 25px;
-    }
-    
-    .drawer-content {
-        width: 200px;
-        right: -200px;
-    }
-    
-    .drawer-content.visible {
-        right: 0;
-    }
-    
-    .overlay {
-        width: 100%;
-    }
-    
-    .nav-item {
-        padding: 10px;
-        font-size: 14px;
-    }
-    
-    .reset-btn {
-        padding: 8px;
-        font-size: 14px;
-    }
-    
-    .dashboard {
-        grid-template-columns: 1fr;
-    }
-    
-    .big-text {
-        font-size: 24px;
-    }
-    
-    .week-calendar {
-        flex-direction: column;
-    }
-    
-    .week-day {
-        padding: 10px;
-    }
-}
-.drawer-content {
-    /* 기존 스타일 유지 */
-    display: flex;
-    flex-direction: column;
-    gap: 10px; /* 버튼과 nav-item 사이 간격 추가 */
-}
-
+/* 그룹 섹션 추가 */
 .groups-section {
     background-color: white;
     border-radius: 12px;
@@ -1087,4 +1037,55 @@ body {
     justify-content: space-between;
     padding: 10px 0;
     border-bottom: 1px solid #eee;
+}
+
+@media (max-width: 576px) {
+    .hamburger-icon {
+        font-size: 25px;
+    }
+    
+    .drawer-content {
+        width: 200px;
+        right: -200px;
+    }
+    
+    .drawer-content.visible {
+        right: 0;
+    }
+    
+    .overlay {
+        width: 100%;
+    }
+    
+    .nav-item {
+        padding: 10px;
+        font-size: 14px;
+    }
+    
+    .reset-btn {
+        padding: 8px;
+        font-size: 14px;
+    }
+    
+    .dashboard {
+        grid-template-columns: 1fr;
+    }
+    
+    .big-text {
+        font-size: 24px;
+    }
+    
+    .week-calendar {
+        flex-direction: column;
+    }
+    
+    .week-day {
+        padding: 10px;
+    }
+}
+
+.drawer-content {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }

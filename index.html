@@ -37,6 +37,7 @@
             <div class="nav-item" onclick="showScreen('diary')">Journal</div>
             <div class="nav-item" onclick="showScreen('goals')">Goals</div>
             <div class="nav-item" onclick="showScreen('stats')">Statistics</div>
+            <div class="nav-item" onclick="showScreen('settings')">Settings</div> <!-- 새로 추가 -->
             <div class="nav-item" id="login-btn">Login</div>
             <div class="nav-item" id="logout-btn" style="display: none;">Logout</div>
             <button class="reset-btn" onclick="resetAllSettings()">Reset All Settings</button>
@@ -186,6 +187,17 @@
                         <div id="statsStudyTime"></div>
                         <div id="statsSubjects"></div>
                         <div id="statsDiary" class="stats-diary"></div>
+                    </div>
+                </div>
+            </section>
+            <section id="settingsScreen" class="hidden"> <!-- 새로 추가 -->
+                <div class="settings-section">
+                    <h3>Settings</h3>
+                    <div class="nickname-section">
+                        <h4>Change Nickname</h4>
+                        <input type="text" id="settingsNicknameInput" placeholder="Enter new nickname" maxlength="20">
+                        <button class="btn" onclick="changeNickname()">Save</button>
+                        <p id="settingsNicknameError" class="error hidden"></p>
                     </div>
                 </div>
             </section>

@@ -368,8 +368,28 @@ function startTimer() {
         timerInterval = setInterval(() => {
             timerSeconds++;
             updateTimerDisplay();
+
+            // 10초마다 그룹 데이터 업데이트 (선택 사항)
+            if (timerSeconds % 1 === 0 && window.currentGroupCode) {
+                const groupRef = window.firestoreDoc(window.firestoreDb, "groups", window.currentGroupCode);
+                window.firestoreGetDoc(groupRef).then(groupDoc => {
+                    if (groupDoc.exists()) {
+                        const groupData = groupDoc.data();
+                        const tempStudyTime = (window.studyData[currentDate] || 0) + timerSeconds;
+                        window.firestoreSetDoc(groupRef, {
+                            members: {
+                                ...groupData.members,
+                                [window.currentUser.uid]: {
+                                    nickname: window.nickname,
+                                    studyTime: tempStudyTime
+                                }
+                            }
+                        }, { merge: true });
+                    }
+                });
+            }
         }, 1000);
-        
+
         if (!window.studySessions[currentDate]) {
             window.studySessions[currentDate] = [];
         }
@@ -389,6 +409,7 @@ async function stopTimer() {
     clearInterval(timerInterval);
     timerInterval = null;
 
+    // 현재 날짜의 공부 시간 업데이트
     window.studyData[currentDate] = ((window.studyData && window.studyData[currentDate]) || 0) + timerSeconds;
 
     if (!window.subjectStudyTime[selectedSubject]) {
@@ -403,20 +424,20 @@ async function stopTimer() {
         lastSession.duration = timerSeconds;
     }
 
+    // 그룹이 있을 경우 실시간으로 그룹 데이터 업데이트
     if (window.currentGroupCode) {
         const groupRef = window.firestoreDoc(window.firestoreDb, "groups", window.currentGroupCode);
         const groupDoc = await window.firestoreGetDoc(groupRef);
         if (groupDoc.exists()) {
             const groupData = groupDoc.data();
-            await window.firestoreSetDoc(groupRef, {
-                members: {
-                    ...groupData.members,
-                    [window.currentUser.uid]: {
-                        nickname: window.nickname,
-                        studyTime: window.studyData[currentDate] || 0
-                    }
+            const updatedMembers = {
+                ...groupData.members,
+                [window.currentUser.uid]: {
+                    nickname: window.nickname,
+                    studyTime: window.studyData[currentDate] || 0
                 }
-            }, { merge: true });
+            };
+            await window.firestoreSetDoc(groupRef, { members: updatedMembers }, { merge: true });
         }
     }
 
@@ -1066,12 +1087,13 @@ function renderGroupDashboard() {
             const groupData = doc.data();
             groupNameDiv.textContent = `${groupData.name} (Code: ${window.currentGroupCode})`;
 
+            // 멤버 데이터를 공부 시간 기준으로 정렬하고 랭킹 부여
             const members = Object.entries(groupData.members)
                 .map(([uid, data], index) => ({
                     uid,
                     nickname: data.nickname,
                     studyTime: data.studyTime || 0,
-                    rank: index + 1 // 순위는 나중에 정렬 후 재조정
+                    rank: index + 1
                 }))
                 .sort((a, b) => b.studyTime - a.studyTime) // 공부 시간 내림차순 정렬
                 .map((member, index) => ({ ...member, rank: index + 1 })); // 정렬 후 순위 재설정

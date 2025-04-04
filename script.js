@@ -234,14 +234,6 @@
             el.classList.add('hidden');
         });
 
-        if (screen === 'groups') {
-            document.getElementById('groupNameInput').value = '';
-            document.getElementById('groupCodeInput').value = '';
-            document.getElementById('groupCreateError').classList.add('hidden');
-            document.getElementById('groupJoinError').classList.add('hidden');
-            renderGroupDashboard();
-        }
-
         const targetScreen = document.getElementById(`${screen}Screen`);
         setTimeout(() => {
             targetScreen.classList.remove('hidden');
@@ -1192,42 +1184,42 @@
         }
     }
 
-function renderGroupDashboard() {
-    const groupDashboard = document.getElementById('groupDashboard');
-    const currentGroupName = document.getElementById('currentGroupName');
-    const groupMembers = document.getElementById('groupMembers');
+    function renderGroupDashboard() {
+        const groupDashboard = document.getElementById('groupDashboard');
+        const currentGroupName = document.getElementById('currentGroupName');
+        const groupMembers = document.getElementById('groupMembers');
 
-    if (!window.currentGroupCode) {
-        groupDashboard.classList.add('hidden');
-        return;
-    }
-
-    const groupRef = window.firestoreDoc(window.firestoreDb, "groups", window.currentGroupCode);
-    window.firestoreOnSnapshot(groupRef, (doc) => {
-        if (doc.exists()) {
-            const groupData = doc.data();
-            currentGroupName.textContent = `${groupData.name} (Code: ${window.currentGroupCode})`;
-            groupMembers.innerHTML = '';
-
-            Object.entries(groupData.members).forEach(([uid, member]) => {
-                const hours = Math.floor(member.studyTime / 3600);
-                const minutes = Math.floor((member.studyTime % 3600) / 60);
-                const seconds = member.studyTime % 60;
-                groupMembers.innerHTML += `
-                    <div class="member-card">
-                        <div class="nickname">${member.nickname}</div>
-                        <div class="study-time">${hours}h ${minutes}m ${seconds}s</div>
-                    </div>
-                `;
-            });
-
-            groupDashboard.classList.remove('hidden');
-        } else {
+        if (!window.currentGroupCode) {
             groupDashboard.classList.add('hidden');
+            return;
         }
-    }, (error) => {
-        console.error("Group load failed:", error.code, error.message);
-        groupDashboard.classList.add('hidden');
-    });
-}
+
+        const groupRef = window.firestoreDoc(window.firestoreDb, "groups", window.currentGroupCode);
+        window.firestoreOnSnapshot(groupRef, (doc) => {
+            if (doc.exists()) {
+                const groupData = doc.data();
+                currentGroupName.textContent = `${groupData.name} (Code: ${window.currentGroupCode})`;
+                groupMembers.innerHTML = '';
+
+                Object.entries(groupData.members).forEach(([uid, member]) => {
+                    const hours = Math.floor(member.studyTime / 3600);
+                    const minutes = Math.floor((member.studyTime % 3600) / 60);
+                    const seconds = member.studyTime % 60;
+                    groupMembers.innerHTML += `
+                        <div class="member-card">
+                            <div class="nickname">${member.nickname}</div>
+                            <div class="study-time">${hours}h ${minutes}m ${seconds}s</div>
+                        </div>
+                    `;
+                });
+
+                groupDashboard.classList.remove('hidden');
+            } else {
+                groupDashboard.classList.add('hidden');
+            }
+        }, (error) => {
+            console.error("Group load failed:", error.code, error.message);
+            groupDashboard.classList.add('hidden');
+        });
+    }
 </script>

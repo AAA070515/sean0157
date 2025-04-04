@@ -204,7 +204,7 @@
             <section id="groupsScreen" class="hidden">
                 <div class="groups-section">
                     <h3>Groups</h3>
-                    <div class="group-actions">
+                    <div id="groupActions" class="group-actions">
                         <div class="group-create">
                             <h4>Create a Group</h4>
                             <input type="text" id="groupNameInput" placeholder="Enter group name" maxlength="50">
@@ -250,7 +250,7 @@
 
         window.firebaseAuth = auth;
         window.firestoreDb = db;
-        window.firestoreDoc = doc;      // Firestore 함수 내보내기
+        window.firestoreDoc = doc;
         window.firestoreGetDoc = getDoc;
         window.firestoreSetDoc = setDoc;
         window.firestoreOnSnapshot = onSnapshot;

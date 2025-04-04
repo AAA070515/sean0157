@@ -37,7 +37,7 @@
             <div class="nav-item" onclick="showScreen('diary')">Journal</div>
             <div class="nav-item" onclick="showScreen('goals')">Goals</div>
             <div class="nav-item" onclick="showScreen('stats')">Statistics</div>
-            <div class="nav-item" onclick="showScreen('groups')">Groups</div> <!-- 새로 추가 -->
+            <!-- Settings를 버튼으로 변경 -->
             <button class="reset-btn" onclick="showScreen('settings')">Settings</button>
             <div class="nav-item" id="login-btn">Login</div>
             <div class="nav-item" id="logout-btn" style="display: none;">Logout</div>
@@ -191,7 +191,7 @@
                     </div>
                 </div>
             </section>
-            <section id="settingsScreen" class="hidden">
+            <section id="settingsScreen" class="hidden"> <!-- 새로 추가 -->
                 <div class="settings-section">
                     <h3>Settings</h3>
                     <div class="nickname-section">
@@ -199,32 +199,6 @@
                         <input type="text" id="settingsNicknameInput" placeholder="Enter new nickname" maxlength="20">
                         <button class="btn" onclick="changeNickname()">Save</button>
                         <p id="settingsNicknameError" class="error hidden"></p>
-                    </div>
-                </div>
-            </section>
-            <section id="groupsScreen" class="hidden"> <!-- 새로 추가 -->
-                <div class="groups-section">
-                    <h3>Groups</h3>
-                    <div id="groupOptions" class="group-options">
-                        <button class="btn" onclick="showCreateGroup()">Create Group</button>
-                        <button class="btn" onclick="showJoinGroup()">Join Group</button>
-                    </div>
-                    <div id="createGroupForm" class="hidden">
-                        <h4>Create a Group</h4>
-                        <input type="text" id="groupNameInput" placeholder="Enter group name" maxlength="20">
-                        <button class="btn" onclick="createGroup()">Create</button>
-                        <p id="groupCodeDisplay" class="hidden"></p>
-                        <p id="createGroupError" class="error hidden"></p>
-                    </div>
-                    <div id="joinGroupForm" class="hidden">
-                        <h4>Join a Group</h4>
-                        <input type="text" id="groupCodeInput" placeholder="Enter 6-digit group code">
-                        <button class="btn" onclick="joinGroup()">Join</button>
-                        <p id="joinGroupError" class="error hidden"></p>
-                    </div>
-                    <div id="groupDashboard" class="group-dashboard hidden">
-                        <h4>Your Group: <span id="currentGroupName"></span></h4>
-                        <div id="groupMembersStudyTime"></div>
                     </div>
                 </div>
             </section>

@@ -5,6 +5,7 @@ let selectedMood = null;
 let uploadedImage = null;
 let currentSelectedDate = null;
 let currentWeekOffset = 0;
+let currentSelectedSubject = null;
 
 const today = new Date();
 let currentDate = today.toISOString().split('T')[0];
@@ -76,6 +77,9 @@ function showScreen(screen) {
         updateSubjectSelect();
         updateSubjectTimes();
         updateTimerDisplay();
+        if (currentSelectedSubject) {
+            document.getElementById('subjectSelect').value = currentSelectedSubject;
+        }
     } else if (screen === 'diary') {
         document.getElementById('diaryDate').value = currentDate;
         document.getElementById('memoInput').value = '';
@@ -98,7 +102,7 @@ function showScreen(screen) {
         document.getElementById('groupCreateError').classList.add('hidden');
         document.getElementById('groupJoinError').classList.add('hidden');
         document.getElementById('groupCodeDisplay').classList.add('hidden');
-        renderGroupDashboard(); // 그룹 상태에 따라 표시 제어
+        renderGroupDashboard();
     }
 }
 
@@ -360,20 +364,18 @@ function updateStudyTimeDisplay() {
 function startTimer() {
     const selectedSubject = document.getElementById('subjectSelect').value;
 
-    // 타이머가 실행 중이 아닌 경우에만 과목 선택을 확인
     if (!timerInterval && !selectedSubject) {
         alert('Please select a subject!');
         return;
     }
 
-    // 타이머가 이미 실행 중이면 새로 시작하지 않음
     if (!timerInterval && selectedSubject) {
+        currentSelectedSubject = selectedSubject;
         const startTime = new Date();
         timerInterval = setInterval(() => {
             timerSeconds++;
             updateTimerDisplay();
 
-            // (선택 사항) 실시간 그룹 업데이트 로직 추가 시 여기서 처리
             if (timerSeconds % 1 === 0 && window.currentGroupCode) {
                 const groupRef = window.firestoreDoc(window.firestoreDb, "groups", window.currentGroupCode);
                 window.firestoreGetDoc(groupRef).then(groupDoc => {
@@ -413,7 +415,6 @@ async function stopTimer() {
     clearInterval(timerInterval);
     timerInterval = null;
 
-    // 현재 날짜의 공부 시간 업데이트
     window.studyData[currentDate] = ((window.studyData && window.studyData[currentDate]) || 0) + timerSeconds;
 
     if (!window.subjectStudyTime[selectedSubject]) {
@@ -428,7 +429,6 @@ async function stopTimer() {
         lastSession.duration = timerSeconds;
     }
 
-    // 그룹이 있을 경우 실시간으로 그룹 데이터 업데이트
     if (window.currentGroupCode) {
         const groupRef = window.firestoreDoc(window.firestoreDb, "groups", window.currentGroupCode);
         const groupDoc = await window.firestoreGetDoc(groupRef);
@@ -452,6 +452,8 @@ async function stopTimer() {
     updateSubjectTimes();
     updateGoalsProgress();
     renderHome();
+
+    document.getElementById('subjectSelect').value = currentSelectedSubject;
 }
 
 async function saveDiary() {

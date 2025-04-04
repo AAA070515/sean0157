@@ -171,21 +171,24 @@
     </main>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+        import { initializeApp } from "firebase/app";
+        import { getAnalytics } from "firebase/analytics";
 
         const firebaseConfig = {
-            apiKey: "AIzaSyDx_BBG73R3FReoFsRPuIKcDb754LAxTCI",
-            authDomain: "sean0157-92c62.firebaseapp.com",
-            projectId: "sean0157-92c62",
-            storageBucket: "sean0157-92c62.firebasestorage.app",
-            messagingSenderId: "1052880240716",
-            appId: "1:1052880240716:web:13289245ada3ff291174e9",
-            measurementId: "G-HRWSZ6MSNB"
+          apiKey: "AIzaSyDx_BBG73R3FReoFsRPuIKcDb754LAxTCI",
+          authDomain: "sean0157-92c62.firebaseapp.com",
+          databaseURL: "https://sean0157-92c62-default-rtdb.firebaseio.com",
+          projectId: "sean0157-92c62",
+          storageBucket: "sean0157-92c62.firebasestorage.app",
+          messagingSenderId: "1052880240716",
+          appId: "1:1052880240716:web:13289245ada3ff291174e9",
+          measurementId: "G-HRWSZ6MSNB"
         };
 
         const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
         const auth = getAuth(app);
         const db = getFirestore(app);
 

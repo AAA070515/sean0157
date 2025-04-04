@@ -50,9 +50,7 @@
                     </div>
                     <div class="widget" onclick="showScreen('diary')">
                         <h3>Recent Journal</h3>
-                        <div id="dashboardDiary" class="diary-preview">
-                            <p>No recent entries</p>
-                        </div>
+                        <div id="dashboardDiary" class="diary-preview"></div>
                     </div>
                     <div class="widget" onclick="showScreen('stats')">
                         <h3>Goal Progress</h3>
@@ -62,7 +60,7 @@
             </section>
             <section id="studyScreen" class="hidden">
                 <div class="timer-section">
-                    <div style="display: flex;">
+                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
                         <label for="subjectInput" class="hidden-label">Add subject</label>
                         <input type="text" class="subject-input" id="subjectInput" placeholder="Add subject">
                         <button class="subject-add-btn btn" onclick="addSubject()">Add</button>
@@ -91,11 +89,11 @@
                 <div class="diary-section">
                     <h3>How was your mood today?</h3>
                     <div class="mood-beans">
-                        <div class="mood-bean happy" onclick="selectMood('happy')"><img src="very_happy.png" alt="Happy" style="width:200%" loading="lazy"></div>
-                        <div class="mood-bean calm" onclick="selectMood('calm')"><img src="happy.png" alt="Calm" style="width:200%" loading="lazy"></div>
-                        <div class="mood-bean neutral" onclick="selectMood('neutral')"><img src="calm.png" alt="Neutral" style="width:200%" loading="lazy"></div>
-                        <div class="mood-bean sad" onclick="selectMood('sad')"><img src="sad.png" alt="Sad" style="width:200%" loading="lazy"></div>
-                        <div class="mood-bean angry" onclick="selectMood('angry')"><img src="angry.png" alt="Angry" style="width:200%" loading="lazy"></div>
+                        <div class="mood-bean happy" onclick="selectMood('happy')"><img src="very_happy.png" alt="Happy" style="width: 100%; height: 100%; object-fit: contain;" loading="lazy"></div>
+                        <div class="mood-bean calm" onclick="selectMood('calm')"><img src="happy.png" alt="Calm" style="width: 100%; height: 100%; object-fit: contain;" loading="lazy"></div>
+                        <div class="mood-bean neutral" onclick="selectMood('neutral')"><img src="calm.png" alt="Neutral" style="width: 100%; height: 100%; object-fit: contain;" loading="lazy"></div>
+                        <div class="mood-bean sad" onclick="selectMood('sad')"><img src="sad.png" alt="Sad" style="width: 100%; height: 100%; object-fit: contain;" loading="lazy"></div>
+                        <div class="mood-bean angry" onclick="selectMood('angry')"><img src="angry.png" alt="Angry" style="width: 100%; height: 100%; object-fit: contain;" loading="lazy"></div>
                     </div>
                 </div>
                 <div class="diary-section">
@@ -112,7 +110,7 @@
             </section>
             <section id="todoScreen" class="hidden">
                 <div class="todo-section">
-                    <div style="display: flex;">
+                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
                         <label for="todoInput" class="hidden-label">Add new task</label>
                         <input type="text" class="todo-input" id="todoInput" placeholder="Add new task">
                         <button class="todo-add-btn btn" onclick="addTodo()">Add</button>

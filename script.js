@@ -5,6 +5,7 @@ let selectedMood = null;
 let uploadedImage = null;
 let currentSelectedDate = null;
 let currentWeekOffset = 0;
+let currentGroupId = null;
 
 const today = new Date();
 let currentDate = today.toISOString().split('T')[0];
@@ -44,7 +45,7 @@ function closeDrawer() {
 }
 
 function showScreen(screen) {
-    const screens = ['home', 'study', 'diary', 'todo', 'goals', 'stats', 'settings'];
+    const screens = ['home', 'study', 'diary', 'todo', 'goals', 'stats', 'settings', 'groups'];
     screens.forEach(s => {
         const el = document.getElementById(`${s}Screen`);
         el.classList.add('hidden');
@@ -61,8 +62,8 @@ function showScreen(screen) {
         'todo': 'To-Do',
         'diary': 'Journal',
         'goals': 'Goals',
-        'stats': 'Statistics'
-        // 'settings'는 버튼이므로 navMapping에서 제외
+        'stats': 'Statistics',
+        'groups': 'Groups'
     };
 
     document.querySelectorAll('.nav-item').forEach(btn => {
@@ -100,6 +101,8 @@ function showScreen(screen) {
     } else if (screen === 'stats') renderStats();
     else if (screen === 'settings') {
         loadSettings();
+    } else if (screen === 'groups') {
+        renderGroups();
     }
 }
 
@@ -596,25 +599,25 @@ function uploadImage() {
 }
 
 function loadDiaryData(selectedDate) {
-    const diaryEntry = window.diaryData[selectedDate];
-    
-    document.querySelectorAll('.mood-bean').forEach(bean => bean.classList.remove('selected'));
-    document.getElementById('memoInput').value = '';
-    document.getElementById('imagePreview').innerHTML = '';
-    selectedMood = null;
-    uploadedImage = null;
-    
-    if (diaryEntry) {
-        const mood = diaryEntry.mood;
-        if (mood) {
-            document.querySelector(`.mood-bean.${mood}`).classList.add('selected');
-            selectedMood = mood;
-        }
+    const diaryEntry = window.diaryData[selected  {
+        document.querySelectorAll('.mood-bean').forEach(bean => bean.classList.remove('selected'));
+        document.getElementById('memoInput').value = '';
+        document.getElementById('imagePreview').innerHTML = '';
+        selectedMood = null;
+        uploadedImage = null;
         
-        document.getElementById('memoInput').value = diaryEntry.memo || '';
-        if (diaryEntry.image) {
-            document.getElementById('imagePreview').innerHTML = `<img src="${diaryEntry.image}" alt="Diary Image">`;
-            uploadedImage = diaryEntry.image;
+        if (diaryEntry) {
+            const mood = diaryEntry.mood;
+            if (mood) {
+                document.querySelector(`.mood-bean.${mood}`).classList.add('selected');
+                selectedMood = mood;
+            }
+            
+            document.getElementById('memoInput').value = diaryEntry.memo || '';
+            if (diaryEntry.image) {
+                document.getElementById('imagePreview').innerHTML = `<img src="${diaryEntry.image}" alt="Diary Image">`;
+                uploadedImage = diaryEntry.image;
+            }
         }
     }
 }
@@ -725,7 +728,8 @@ async function resetAllSettings() {
                     todos: [],
                     goals: { daily: null, weekly: null },
                     studySessions: {},
-                    nickname: window.nickname
+                    nickname: window.nickname,
+                    groupId: null
                 });
                 window.subjects = [];
                 window.studyData = {};
@@ -734,6 +738,7 @@ async function resetAllSettings() {
                 window.todos = [];
                 window.goals = { daily: null, weekly: null };
                 window.studySessions = {};
+                window.currentGroupId = null;
                 timerSeconds = 0;
                 if (timerInterval) clearInterval(timerInterval);
                 timerInterval = null;
@@ -749,6 +754,7 @@ async function resetAllSettings() {
                 updateGoalsProgress();
                 renderHome();
                 renderTodos();
+                renderGroups();
                 document.getElementById('dayDetails').classList.add('hidden');
                 document.getElementById('subjectInput').value = '';
                 document.getElementById('todoInput').value = '';
@@ -800,6 +806,163 @@ async function changeNickname() {
         error.textContent = `Error: ${err.message}`;
         error.classList.remove('hidden');
         console.error('Nickname change error:', err);
+    }
+}
+
+// 그룹 관련 함수
+function generateGroupCode() {
+    return Math.random().toString(36).substr(2, 6).toUpperCase();
+}
+
+async function renderGroups() {
+    const groupOptions = document.getElementById('groupOptions');
+    const createGroupForm = document.getElementById('createGroupForm');
+    const joinGroupForm = document.getElementById('joinGroupForm');
+    const groupDashboard = document.getElementById('groupDashboard');
+
+    if (!window.currentUser) {
+        groupOptions.classList.remove('hidden');
+        createGroupForm.classList.add('hidden');
+        joinGroupForm.classList.add('hidden');
+        groupDashboard.classList.add('hidden');
+        return;
+    }
+
+    const userRef = doc(window.db, "users", window.currentUser.uid);
+    const userDoc = await getDoc(userRef);
+    const userData = userDoc.data();
+    window.currentGroupId = userData.groupId || null;
+
+    if (window.currentGroupId) {
+        groupOptions.classList.add('hidden');
+        createGroupForm.classList.add('hidden');
+        joinGroupForm.classList.add('hidden');
+        groupDashboard.classList.remove('hidden');
+        renderGroupDashboard();
+    } else {
+        groupOptions.classList.remove('hidden');
+        createGroupForm.classList.add('hidden');
+        joinGroupForm.classList.add('hidden');
+        groupDashboard.classList.add('hidden');
+    }
+}
+
+function showCreateGroup() {
+    document.getElementById('groupOptions').classList.add('hidden');
+    document.getElementById('createGroupForm').classList.remove('hidden');
+    document.getElementById('joinGroupForm').classList.add('hidden');
+    document.getElementById('groupNameInput').value = '';
+    document.getElementById('groupCodeDisplay').classList.add('hidden');
+    document.getElementById('createGroupError').classList.add('hidden');
+}
+
+function showJoinGroup() {
+    document.getElementById('groupOptions').classList.add('hidden');
+    document.getElementById('createGroupForm').classList.add('hidden');
+    document.getElementById('joinGroupForm').classList.remove('hidden');
+    document.getElementById('groupCodeInput').value = '';
+    document.getElementById('joinGroupError').classList.add('hidden');
+}
+
+async function createGroup() {
+    const groupName = document.getElementById('groupNameInput').value.trim();
+    const error = document.getElementById('createGroupError');
+
+    if (!groupName || groupName.length < 2) {
+        error.textContent = 'Group name must be at least 2 characters.';
+        error.classList.remove('hidden');
+        return;
+    }
+
+    const groupCode = generateGroupCode();
+    try {
+        const groupRef = await addDoc(collection(window.db, "groups"), {
+            name: groupName,
+            code: groupCode,
+            members: [window.currentUser.uid],
+            createdAt: new Date().toISOString()
+        });
+
+        await setDoc(doc(window.db, "users", window.currentUser.uid), { groupId: groupRef.id }, { merge: true });
+        window.currentGroupId = groupRef.id;
+
+        document.getElementById('groupCodeDisplay').textContent = `Group Code: ${groupCode}`;
+        document.getElementById('groupCodeDisplay').classList.remove('hidden');
+        document.getElementById('createGroupError').classList.add('hidden');
+        renderGroups();
+    } catch (err) {
+        error.textContent = `Error: ${err.message}`;
+        error.classList.remove('hidden');
+    }
+}
+
+async function joinGroup() {
+    const groupCode = document.getElementById('groupCodeInput').value.trim().toUpperCase();
+    const error = document.getElementById('joinGroupError');
+
+    if (groupCode.length !== 6) {
+        error.textContent = 'Please enter a valid 6-digit group code.';
+        error.classList.remove('hidden');
+        return;
+    }
+
+    try {
+        const q = query(collection(window.db, "groups"), where("code", "==", groupCode));
+        const querySnapshot = await getDocs(q);
+
+        if (querySnapshot.empty) {
+            error.textContent = 'Invalid group code.';
+            error.classList.remove('hidden');
+            return;
+        }
+
+        const groupDoc = querySnapshot.docs[0];
+        const groupData = groupDoc.data();
+
+        if (groupData.members.includes(window.currentUser.uid)) {
+            error.textContent = 'You are already in this group.';
+            error.classList.remove('hidden');
+            return;
+        }
+
+        const updatedMembers = [...groupData.members, window.currentUser.uid];
+        await updateDoc(doc(window.db, "groups", groupDoc.id), { members: updatedMembers });
+        await setDoc(doc(window.db, "users", window.currentUser.uid), { groupId: groupDoc.id }, { merge: true });
+
+        window.currentGroupId = groupDoc.id;
+        renderGroups();
+    } catch (err) {
+        error.textContent = `Error: ${err.message}`;
+        error.classList.remove('hidden');
+    }
+}
+
+async function renderGroupDashboard() {
+    const groupRef = doc(window.db, "groups", window.currentGroupId);
+    const groupDoc = await getDoc(groupRef);
+    const groupData = groupDoc.data();
+
+    document.getElementById('currentGroupName').textContent = groupData.name;
+
+    const membersStudyTime = document.getElementById('groupMembersStudyTime');
+    membersStudyTime.innerHTML = '';
+
+    const today = new Date().toISOString().split('T')[0];
+    for (const memberId of groupData.members) {
+        const memberRef = doc(window.db, "users", memberId);
+        const memberDoc = await getDoc(memberRef);
+        const memberData = memberDoc.data();
+        const studyTime = memberData.studyData?.[today] || 0;
+        const hours = Math.floor(studyTime / 3600);
+        const minutes = Math.floor((studyTime % 3600) / 60);
+        const seconds = studyTime % 60;
+
+        membersStudyTime.innerHTML += `
+            <div class="member-study-time">
+                <span>${memberData.nickname || 'Unknown'}</span>
+                <span>${hours}h ${minutes}m ${seconds}s</span>
+            </div>
+        `;
     }
 }
 

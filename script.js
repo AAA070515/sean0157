@@ -1,12 +1,12 @@
 let timerSeconds = 0;
 let timerInterval = null;
-let subjects = [];
-let studyData = {};
-let subjectStudyTime = {};
-let diaryData = {};
-let todos = [];
-let goals = { daily: null, weekly: null };
-let studySessions = {};
+let subjects;
+let studyData;
+let subjectStudyTime;
+let diaryData;
+let todos;
+let goals;
+let studySessions;
 let currentFilter = 'all';
 let selectedMood = null;
 let uploadedImage = null;
@@ -15,10 +15,12 @@ let currentWeekOffset = 0;
 
 const today = new Date();
 let currentDate = today.toISOString().split('T')[0];
-updateStudyTimeDisplay();
-renderHome();
-renderTodos();
-updateGoalsProgress();
+
+// 페이지 로드 시 초기화하지 않음, Firestore에서 데이터 로드 후 UI 업데이트
+// updateStudyTimeDisplay();
+// renderHome();
+// renderTodos();
+// updateGoalsProgress();
 
 function getMoodImage(mood) {
     const moodImages = {
@@ -848,5 +850,6 @@ style.textContent = `
 
 document.head.appendChild(style);
 
-updateSubjectSelect();
-updateSubjectTimes();
+// Firestore에서 데이터가 로드될 때까지 UI 업데이트를 기다리므로 초기 호출 제거
+// updateSubjectSelect();
+// updateSubjectTimes();

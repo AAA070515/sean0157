@@ -173,7 +173,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDx_BBG73R3FReoFsRPuIKcDb754LAxTCI",
@@ -206,7 +206,7 @@
                 loginBtn.style.display = 'block';
                 logoutBtn.style.display = 'none';
                 console.log('Logged out');
-                showScreen('home');
+                showScreen('home'); // 로그아웃 시 초기화하지 않고 홈 화면으로 이동
             }
         });
 
@@ -245,7 +245,7 @@
                     window.todos = data.todos || [];
                     window.goals = data.goals || { daily: null, weekly: null };
                     window.studySessions = data.studySessions || {};
-                    console.log("Loaded data from Firestore:", {
+                    console.log("Loaded data:", {
                         subjects: window.subjects,
                         studyData: window.studyData,
                         diaryData: window.diaryData,
@@ -300,8 +300,6 @@
                 const docSnap = await getDoc(userRef);
                 if (docSnap.exists()) {
                     console.log("Data after save:", docSnap.data());
-                } else {
-                    console.log("No data found after save.");
                 }
             } catch (error) {
                 console.error("Save failed:", error.code, error.message);

@@ -7,6 +7,27 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <!-- 로그인 화면 -->
+    <div id="loginScreen" class="login-screen">
+        <div class="login-container">
+            <h1>Welcome to 윤사랑 공부해</h1>
+            <p>Please log in to continue</p>
+            <button id="googleLoginBtn" class="btn login-btn">Login with Google</button>
+        </div>
+    </div>
+
+    <!-- 닉네임 설정 모달 -->
+    <div id="nicknameModal" class="modal hidden">
+        <div class="modal-content">
+            <h2>Set Your Nickname</h2>
+            <p>Please enter a nickname to use in the app.</p>
+            <input type="text" id="nicknameInput" placeholder="Enter your nickname" maxlength="20">
+            <button id="saveNicknameBtn" class="btn">Save</button>
+            <p id="nicknameError" class="error hidden"></p>
+        </div>
+    </div>
+
+    <!-- 네비게이션 -->
     <nav class="nav-drawer">
         <div class="hamburger-icon" onclick="toggleDrawer()">☰</div>
         <div class="drawer-content hidden">
@@ -23,7 +44,8 @@
     </nav>
     <div class="overlay hidden" onclick="closeDrawer()"></div>
 
-    <main class="main-content">
+    <!-- 메인 콘텐츠 -->
+    <main class="main-content hidden">
         <div class="container">
             <section id="homeScreen">
                 <div class="dashboard">
@@ -195,22 +217,27 @@
         const logoutBtn = document.getElementById('logout-btn');
 
         onAuthStateChanged(auth, (user) => {
+            const loginScreen = document.getElementById('loginScreen');
+            const mainContent = document.querySelector('.main-content');
+
             if (user) {
                 currentUser = user;
+                loginScreen.classList.add('hidden');
+                mainContent.classList.remove('hidden');
                 loginBtn.style.display = 'none';
                 logoutBtn.style.display = 'block';
-                console.log('Logged in as:', user.displayName, user.email);
+                checkAndSetNickname(user);
                 loadUserData(user.uid);
             } else {
                 currentUser = null;
+                loginScreen.classList.remove('hidden');
+                mainContent.classList.add('hidden');
                 loginBtn.style.display = 'block';
                 logoutBtn.style.display = 'none';
-                console.log('Logged out');
-                showScreen('home');
             }
         });
 
-        loginBtn.addEventListener('click', () => {
+        document.getElementById('googleLoginBtn').addEventListener('click', () => {
             const provider = new GoogleAuthProvider();
             signInWithPopup(auth, provider)
                 .then((result) => {
@@ -220,6 +247,10 @@
                     console.error('Login failed:', error.message);
                     alert('로그인에 실패했습니다. 다시 시도해주세요.');
                 });
+        });
+
+        loginBtn.addEventListener('click', () => {
+            document.getElementById('googleLoginBtn').click();
         });
 
         logoutBtn.addEventListener('click', () => {
@@ -233,7 +264,55 @@
                 });
         });
 
-        function loadUserData(userId) {
+        async function checkAndSetNickname(user) {
+            const userRef = doc(db, "users", user.uid);
+            const userDoc = await getDoc(userRef);
+            
+            if (!userDoc.exists() || !userDoc.data().nickname) {
+                showNicknameModal(user);
+            } else {
+                console.log('Nickname already set:', userDoc.data().nickname);
+            }
+        }
+
+        function showNicknameModal(user) {
+            const modal = document.getElementById('nicknameModal');
+            const input = document.getElementById('nicknameInput');
+            const saveBtn = document.getElementById('saveNicknameBtn');
+            const error = document.getElementById('nicknameError');
+            
+            modal.classList.remove('hidden');
+            input.value = '';
+            error.classList.add('hidden');
+
+            saveBtn.onclick = async () => {
+                const nickname = input.value.trim();
+                if (nickname.length < 2 || nickname.length > 20) {
+                    error.textContent = 'Nickname must be between 2 and 20 characters.';
+                    error.classList.remove('hidden');
+                    return;
+                }
+
+                try {
+                    await setDoc(doc(db, "users", user.uid), { nickname }, { merge: true });
+                    modal.classList.add('hidden');
+                    window.nickname = nickname;
+                    alert(`Welcome, ${nickname}!`);
+                } catch (err) {
+                    error.textContent = 'Failed to save nickname. Try again.';
+                    error.classList.remove('hidden');
+                    console.error('Nickname save error:', err);
+                }
+            };
+
+            input.addEventListener('keypress', (event) => {
+                if (event.key === 'Enter') {
+                    saveBtn.click();
+                }
+            });
+        }
+
+        async function loadUserData(userId) {
             const userRef = doc(db, "users", userId);
             onSnapshot(userRef, (doc) => {
                 if (doc.exists()) {
@@ -245,16 +324,9 @@
                     window.todos = data.todos || [];
                     window.goals = data.goals || { daily: null, weekly: null };
                     window.studySessions = data.studySessions || {};
-                    console.log("Loaded data:", {
-                        subjects: window.subjects,
-                        studyData: window.studyData,
-                        diaryData: window.diaryData,
-                        todos: window.todos,
-                        goals: window.goals,
-                        studySessions: window.studySessions
-                    });
+                    window.nickname = data.nickname || 'User';
+                    console.log("Loaded data with nickname:", window.nickname);
                 } else {
-                    console.log("No data found for user, initializing with defaults.");
                     window.subjects = [];
                     window.studyData = {};
                     window.subjectStudyTime = {};
@@ -276,10 +348,7 @@
         }
 
         async function saveUserData() {
-            if (!currentUser) {
-                console.log("No user logged in, cannot save data!");
-                return;
-            }
+            if (!currentUser) return;
             const userId = currentUser.uid;
             const dataToSave = {
                 subjects: window.subjects || [],
@@ -288,17 +357,12 @@
                 diaryData: window.diaryData || {},
                 todos: window.todos || [],
                 goals: window.goals || { daily: null, weekly: null },
-                studySessions: window.studySessions || {}
+                studySessions: window.studySessions || {},
+                nickname: window.nickname || 'User'
             };
-            console.log("Data to save:", JSON.stringify(dataToSave, null, 2));
             try {
                 await setDoc(doc(db, "users", userId), dataToSave, { merge: true });
                 console.log("Data saved successfully!");
-                const userRef = doc(db, "users", userId);
-                const docSnap = await getDoc(userRef);
-                if (docSnap.exists()) {
-                    console.log("Data after save:", docSnap.data());
-                }
             } catch (error) {
                 console.error("Save failed:", error.code, error.message);
                 alert("Failed to save data: " + error.message);
@@ -307,7 +371,6 @@
 
         window.saveUserData = saveUserData;
     </script>
-
     <script src="script.js"></script>
 </body>
 </html>

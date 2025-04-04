@@ -50,7 +50,9 @@
                     </div>
                     <div class="widget" onclick="showScreen('diary')">
                         <h3>Recent Journal</h3>
-                        <div id="dashboardDiary" class="diary-preview"></div>
+                        <div id="dashboardDiary" class="diary-preview">
+                            <p>No recent entries</p>
+                        </div>
                     </div>
                     <div class="widget" onclick="showScreen('stats')">
                         <h3>Goal Progress</h3>
@@ -60,7 +62,7 @@
             </section>
             <section id="studyScreen" class="hidden">
                 <div class="timer-section">
-                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                    <div style="display: flex;">
                         <label for="subjectInput" class="hidden-label">Add subject</label>
                         <input type="text" class="subject-input" id="subjectInput" placeholder="Add subject">
                         <button class="subject-add-btn btn" onclick="addSubject()">Add</button>
@@ -89,11 +91,11 @@
                 <div class="diary-section">
                     <h3>How was your mood today?</h3>
                     <div class="mood-beans">
-                        <div class="mood-bean happy" onclick="selectMood('happy')"><img src="very_happy.png" alt="Happy" style="width: 100%; height: 100%; object-fit: contain;" loading="lazy"></div>
-                        <div class="mood-bean calm" onclick="selectMood('calm')"><img src="happy.png" alt="Calm" style="width: 100%; height: 100%; object-fit: contain;" loading="lazy"></div>
-                        <div class="mood-bean neutral" onclick="selectMood('neutral')"><img src="calm.png" alt="Neutral" style="width: 100%; height: 100%; object-fit: contain;" loading="lazy"></div>
-                        <div class="mood-bean sad" onclick="selectMood('sad')"><img src="sad.png" alt="Sad" style="width: 100%; height: 100%; object-fit: contain;" loading="lazy"></div>
-                        <div class="mood-bean angry" onclick="selectMood('angry')"><img src="angry.png" alt="Angry" style="width: 100%; height: 100%; object-fit: contain;" loading="lazy"></div>
+                        <div class="mood-bean happy" onclick="selectMood('happy')"><img src="very_happy.png" alt="Happy" style="width:200%" loading="lazy"></div>
+                        <div class="mood-bean calm" onclick="selectMood('calm')"><img src="happy.png" alt="Calm" style="width:200%" loading="lazy"></div>
+                        <div class="mood-bean neutral" onclick="selectMood('neutral')"><img src="calm.png" alt="Neutral" style="width:200%" loading="lazy"></div>
+                        <div class="mood-bean sad" onclick="selectMood('sad')"><img src="sad.png" alt="Sad" style="width:200%" loading="lazy"></div>
+                        <div class="mood-bean angry" onclick="selectMood('angry')"><img src="angry.png" alt="Angry" style="width:200%" loading="lazy"></div>
                     </div>
                 </div>
                 <div class="diary-section">
@@ -110,7 +112,7 @@
             </section>
             <section id="todoScreen" class="hidden">
                 <div class="todo-section">
-                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                    <div style="display: flex;">
                         <label for="todoInput" class="hidden-label">Add new task</label>
                         <input type="text" class="todo-input" id="todoInput" placeholder="Add new task">
                         <button class="todo-add-btn btn" onclick="addTodo()">Add</button>
@@ -171,8 +173,6 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
-        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-storage.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDx_BBG73R3FReoFsRPuIKcDb754LAxTCI",
@@ -184,38 +184,21 @@
             measurementId: "G-HRWSZ6MSNB"
         };
 
-        try {
-            const app = initializeApp(firebaseConfig);
-            const auth = getAuth(app);
-            const db = getFirestore(app);
-            const storage = getStorage(app);
-            console.log("Firebase initialized:", { app, auth, db, storage });
-            window.auth = auth;
-            window.db = db;
-            window.storage = storage;
-        } catch (error) {
-            console.error("Firebase initialization failed:", error);
-        }
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
 
         const loginBtn = document.getElementById('login-btn');
         const logoutBtn = document.getElementById('logout-btn');
 
-        let unsubscribe = null;
-
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                window.userUID = user.uid;
-                console.log("User logged in:", user.displayName, "UID:", window.userUID);
                 loginBtn.style.display = 'none';
                 logoutBtn.style.display = 'block';
-                syncDataFromFirestore();
+                console.log('Logged in as:', user.displayName, user.email);
             } else {
-                window.userUID = null;
-                console.log("User logged out, UID cleared");
                 loginBtn.style.display = 'block';
                 logoutBtn.style.display = 'none';
-                if (unsubscribe) unsubscribe();
-                resetLocalData();
+                console.log('Logged out');
             }
         });
 
@@ -223,7 +206,8 @@
             const provider = new GoogleAuthProvider();
             signInWithPopup(auth, provider)
                 .then((result) => {
-                    console.log('Login successful:', result.user.displayName, "UID:", result.user.uid);
+                    const user = result.user;
+                    console.log('Login successful:', user.displayName);
                 })
                 .catch((error) => {
                     console.error('Login failed:', error.message);
@@ -239,118 +223,6 @@
                     console.error('Logout failed:', error.message);
                 });
         });
-
-        function syncDataFromFirestore() {
-            if (!window.userUID) {
-                console.error("No user UID for syncing data");
-                return;
-            }
-
-            console.log("Starting data sync for UID:", window.userUID);
-            const userDocRef = doc(db, "users", window.userUID);
-            unsubscribe = onSnapshot(userDocRef, (docSnap) => {
-                if (docSnap.exists()) {
-                    const data = docSnap.data();
-                    console.log("Data synced from Firestore:", data);
-                    window.subjects = data.subjects || [];
-                    window.studyData = data.studyData || {};
-                    window.subjectStudyTime = data.subjectStudyTime || {};
-                    window.diaryData = data.diaryData || {};
-                    window.todos = data.todos || [];
-                    window.goals = data.goals || { daily: null, weekly: null };
-                    window.studySessions = data.studySessions || {};
-                } else {
-                    console.log("No data exists for user, initializing...");
-                    setDoc(userDocRef, {
-                        subjects: [],
-                        studyData: {},
-                        subjectStudyTime: {},
-                        diaryData: {},
-                        todos: [],
-                        goals: { daily: null, weekly: null },
-                        studySessions: {}
-                    }, { merge: true }).then(() => {
-                        console.log("Initialized empty data for user");
-                    }).catch((error) => {
-                        console.error("Error initializing data:", error);
-                    });
-                    window.subjects = [];
-                    window.studyData = {};
-                    window.subjectStudyTime = {};
-                    window.diaryData = {};
-                    window.todos = [];
-                    window.goals = { daily: null, weekly: null };
-                    window.studySessions = {};
-                }
-                updateSubjectSelect();
-                updateSubjectTimes();
-                updateStudyTimeDisplay();
-                renderHome();
-                renderTodos();
-                updateGoalsProgress();
-            }, (error) => {
-                console.error("Error syncing data with onSnapshot:", error);
-            });
-        }
-
-        async function saveDataToFirestore() {
-            if (!window.userUID) {
-                console.error("No user UID available. User might not be logged in.");
-                alert("Please log in to save data.");
-                return;
-            }
-
-            console.log("Attempting to save data to Firestore for UID:", window.userUID);
-            const dataToSave = {
-                subjects: window.subjects || [],
-                studyData: window.studyData || {},
-                subjectStudyTime: window.subjectStudyTime || {},
-                diaryData: window.diaryData || {},
-                todos: window.todos || [],
-                goals: window.goals || { daily: null, weekly: null },
-                studySessions: window.studySessions || {}
-            };
-            console.log("Data to save:", dataToSave);
-
-            const userDocRef = doc(db, "users", window.userUID);
-            try {
-                await setDoc(userDocRef, dataToSave, { merge: true });
-                console.log("Data successfully saved to Firestore:", dataToSave.diaryData);
-                const docSnap = await getDoc(userDocRef);
-                if (docSnap.exists()) {
-                    console.log("Data fetched after save:", docSnap.data());
-                } else {
-                    console.log("No data found after save");
-                }
-            } catch (error) {
-                console.error("Error saving data to Firestore:", error);
-                alert("Failed to save data. Check console for details.");
-                throw error;
-            }
-        }
-
-        function resetLocalData() {
-            window.subjects = [];
-            window.studyData = {};
-            window.subjectStudyTime = {};
-            window.diaryData = {};
-            window.todos = [];
-            window.goals = { daily: null, weekly: null };
-            window.studySessions = {};
-            window.timerSeconds = 0;
-            if (window.timerInterval) clearInterval(window.timerInterval);
-            window.timerInterval = null;
-            updateSubjectSelect();
-            updateSubjectTimes();
-            updateStudyTimeDisplay();
-            updateTimerDisplay();
-            renderHome();
-            renderTodos();
-        }
-
-        window.syncDataFromFirestore = syncDataFromFirestore;
-        window.saveDataToFirestore = saveDataToFirestore;
-        window.resetLocalData = resetLocalData;
     </script>
 
     <script src="script.js"></script>

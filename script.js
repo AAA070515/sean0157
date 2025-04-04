@@ -1,4 +1,3 @@
-// 로컬 변수 선언 제거, window 객체 사용
 let timerSeconds = 0;
 let timerInterval = null;
 let currentFilter = 'all';
@@ -10,7 +9,6 @@ let currentWeekOffset = 0;
 const today = new Date();
 let currentDate = today.toISOString().split('T')[0];
 
-// 초기화는 loadUserData()에서 처리하므로 여기서 하지 않음
 updateStudyTimeDisplay();
 renderHome();
 renderTodos();

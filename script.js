@@ -98,7 +98,7 @@ function showScreen(screen) {
         document.getElementById('groupCreateError').classList.add('hidden');
         document.getElementById('groupJoinError').classList.add('hidden');
         document.getElementById('groupCodeDisplay').classList.add('hidden');
-        renderGroupDashboard();
+        renderGroupDashboard(); // 그룹 상태에 따라 표시 제어
     }
 }
 
@@ -918,11 +918,59 @@ async function createGroup() {
         document.getElementById('groupCodeDisplay').classList.remove('hidden');
         error.classList.add('hidden');
         await window.saveUserData();
-        renderGroupDashboard();
+        renderGroupDashboard(); // 그룹 생성 후 대시보드 표시
     } catch (err) {
         error.textContent = `Error: ${err.message}`;
         error.classList.remove('hidden');
         console.error('Group creation error:', err);
+    }
+}
+
+async function joinGroup() {
+    if (!window.currentUser) {
+        alert('You must be logged in to join a group.');
+        return;
+    }
+
+    const groupCodeInput = document.getElementById('groupCodeInput');
+    const groupCode = groupCodeInput.value.trim().toUpperCase();
+    const error = document.getElementById('groupJoinError');
+
+    if (groupCode.length !== 6) {
+        error.textContent = 'Please enter a valid 6-digit code.';
+        error.classList.remove('hidden');
+        return;
+    }
+
+    const groupRef = window.firestoreDoc(window.firestoreDb, "groups", groupCode);
+    try {
+        const groupDoc = await window.firestoreGetDoc(groupRef);
+        if (!groupDoc.exists()) {
+            error.textContent = 'Group not found.';
+            error.classList.remove('hidden');
+            return;
+        }
+
+        const groupData = groupDoc.data();
+        await window.firestoreSetDoc(groupRef, {
+            members: {
+                ...groupData.members,
+                [window.currentUser.uid]: {
+                    nickname: window.nickname,
+                    studyTime: (window.studyData && window.studyData[currentDate]) || 0
+                }
+            }
+        }, { merge: true });
+
+        window.currentGroupCode = groupCode;
+        groupCodeInput.value = '';
+        error.classList.add('hidden');
+        await window.saveUserData();
+        renderGroupDashboard(); // 그룹 가입 후 대시보드 표시
+    } catch (err) {
+        error.textContent = `Error: ${err.message}`;
+        error.classList.remove('hidden');
+        console.error('Group join error:', err);
     }
 }
 
@@ -993,7 +1041,7 @@ async function leaveGroup() {
 
     window.currentGroupCode = null;
     await window.saveUserData();
-    renderGroupDashboard();
+    renderGroupDashboard(); // 그룹 나가기 후 "그룹 만들기/참가" 표시
 }
 
 function renderGroupDashboard() {
@@ -1011,6 +1059,7 @@ function renderGroupDashboard() {
 
     dashboard.classList.remove('hidden');
     actions.classList.add('hidden');
+
     const groupRef = window.firestoreDoc(window.firestoreDb, "groups", window.currentGroupCode);
     window.firestoreOnSnapshot(groupRef, (doc) => {
         if (doc.exists()) {
@@ -1018,12 +1067,14 @@ function renderGroupDashboard() {
             groupNameDiv.textContent = `${groupData.name} (Code: ${window.currentGroupCode})`;
 
             const members = Object.entries(groupData.members)
-                .map(([uid, data]) => ({
+                .map(([uid, data], index) => ({
                     uid,
                     nickname: data.nickname,
-                    studyTime: data.studyTime || 0
+                    studyTime: data.studyTime || 0,
+                    rank: index + 1 // 순위는 나중에 정렬 후 재조정
                 }))
-                .sort((a, b) => b.studyTime - a.studyTime);
+                .sort((a, b) => b.studyTime - a.studyTime) // 공부 시간 내림차순 정렬
+                .map((member, index) => ({ ...member, rank: index + 1 })); // 정렬 후 순위 재설정
 
             membersDiv.innerHTML = '';
             members.forEach(member => {
@@ -1032,6 +1083,7 @@ function renderGroupDashboard() {
                 const seconds = member.studyTime % 60;
                 membersDiv.innerHTML += `
                     <div class="member-card">
+                        <div class="rank">#${member.rank}</div>
                         <div class="nickname">${member.nickname}</div>
                         <div class="study-time">${hours}h ${minutes}m ${seconds}s</div>
                     </div>
@@ -1047,7 +1099,6 @@ function renderGroupDashboard() {
         console.error('Group dashboard render error:', error);
     });
 }
-
 document.getElementById('groupNameInput').addEventListener('keypress', function(event) {
     if (event.key === 'Enter') {
         event.preventDefault();

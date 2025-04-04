@@ -919,7 +919,6 @@ body {
     transform: translateY(0);
 }
 
-/* 설정 섹션 추가 */
 .settings-section {
     background-color: white;
     border-radius: 12px;
@@ -945,7 +944,7 @@ body {
 }
 
 #settingsNicknameInput {
-    width: 100%;
+    width: 70%;
     padding: clamp(8px, 2vw, 12px);
     border-radius: 8px;
     border: 1px solid #ddd;
@@ -953,14 +952,40 @@ body {
     margin-bottom: 15px;
 }
 
-.nickname-section .btn {
+.nickname-save-btn {
+    width: 25%;
     background-color: #4285F4;
     color: white;
     font-size: clamp(14px, 2.5vw, 16px);
+    padding: clamp(8px, 2vw, 12px);
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.2s ease, background-color 0.3s ease;
 }
 
-.nickname-section .btn:hover {
+.nickname-save-btn:hover {
     background-color: #3367D6;
+    transform: scale(1.05);
+}
+
+.save-button {
+    width: 100%;
+    padding: clamp(10px, 2.5vw, 15px);
+    border-radius: 25px;
+    background-color: #4285F4;
+    color: white;
+    font-size: clamp(14px, 2.5vw, 16px);
+    font-weight: bold;
+    margin-top: 20px;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.2s ease, background-color 0.3s ease;
+}
+
+.save-button:hover {
+    background-color: #3367D6;
+    transform: scale(1.05);
 }
 
 @media (max-width: 576px) {

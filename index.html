@@ -190,8 +190,10 @@
                     <h3>Settings</h3>
                     <div class="nickname-section">
                         <h4>Change Nickname</h4>
-                        <input type="text" id="settingsNicknameInput" placeholder="Enter new nickname" maxlength="20">
-                        <button class="btn" onclick="changeNickname()">Save</button>
+                        <div class="nickname-input-group">
+                            <input type="text" id="settingsNicknameInput" placeholder="Enter new nickname" maxlength="20">
+                            <button class="btn save-nickname-btn" onclick="changeNickname()">Save</button>
+                        </div>
                         <p id="settingsNicknameError" class="error hidden"></p>
                     </div>
                     <div class="settings-actions">

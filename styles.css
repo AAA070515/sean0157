@@ -231,7 +231,7 @@ body {
     background-color: #3367D6;
 }
 
-#login-btn, #logout-btn {
+#login-btn {
     width: 100%;
     padding: 10px;
     border-radius: 8px;
@@ -245,7 +245,7 @@ body {
     text-align: center;
 }
 
-#settings-btn, #reset-all-btn {
+#settings-btn {
     width: 100%;
     padding: 10px;
     border-radius: 8px;
@@ -944,19 +944,22 @@ body {
     margin-bottom: 15px;
 }
 
-#settingsNicknameInput {
-    width: 100%;
+.nickname-section input {
+    width: 70%;
     padding: clamp(8px, 2vw, 12px);
     border-radius: 8px;
     border: 1px solid #ddd;
-    font-size: clamp(14px, 2.5vw, 16px);
     margin-bottom: 15px;
+    font-size: clamp(14px, 2.5vw, 16px);
 }
 
 .nickname-section .btn {
+    width: 25%;
     background-color: #4285F4;
     color: white;
     font-size: clamp(14px, 2.5vw, 16px);
+    margin-left: 5%;
+    margin-bottom: 15px;
 }
 
 .nickname-section .btn:hover {

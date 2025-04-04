@@ -89,8 +89,10 @@ function showScreen(screen) {
         updateGoalsInputs();
         updateGoalsProgress();
     } else if (screen === 'stats') renderStats();
-    else if (screen === 'settings') loadSettings();
-    else if (screen === 'groups') {
+    else if (screen === 'settings') {
+        loadSettings();
+        document.getElementById('logout-btn').style.display = window.currentUser ? 'block' : 'none';
+    } else if (screen === 'groups') {
         document.getElementById('groupNameInput').value = '';
         document.getElementById('groupCodeInput').value = '';
         document.getElementById('groupCreateError').classList.add('hidden');
@@ -785,6 +787,7 @@ function loadSettings() {
     const error = document.getElementById('settingsNicknameError');
     nicknameInput.value = window.nickname || 'User';
     error.classList.add('hidden');
+    document.getElementById('logout-btn').style.display = window.currentUser ? 'block' : 'none';
 }
 
 async function changeNickname() {

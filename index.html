@@ -190,10 +190,14 @@
                     <h3>Settings</h3>
                     <div class="nickname-section">
                         <h4>Change Nickname</h4>
-                        <input type="text" id="settingsNicknameInput" placeholder="Enter new nickname" maxlength="20">
-                        <button class="btn" onclick="changeNickname()">Save</button>
+                        <div style="display: flex; gap: 10px;">
+                            <input type="text" class="subject-input" id="settingsNicknameInput" placeholder="Enter new nickname" maxlength="20">
+                            <button class="subject-add-btn btn" onclick="changeNickname()">Save</button>
+                        </div>
                         <p id="settingsNicknameError" class="error hidden"></p>
                     </div>
+                    <button class="save-button btn" id="logout-btn" onclick="signOut(window.firebaseAuth)">Logout</button>
+                    <button class="save-button btn" id="reset-all-btn" onclick="resetAllSettings()">Reset All Settings</button>
                 </div>
             </section>
             <section id="groupsScreen" class="hidden">

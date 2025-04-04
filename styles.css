@@ -870,39 +870,6 @@ body {
     transition: width 0.5s ease-in-out;
 }
 
-/* 설정 섹션 스타일 추가 */
-.settings-section {
-    background-color: white;
-    border-radius: 12px;
-    padding: 4%;
-    margin-bottom: 20px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-}
-
-.settings-section h3 {
-    font-size: clamp(16px, 3vw, 18px);
-    margin-bottom: 20px;
-    color: #4285F4;
-}
-
-.setting-item {
-    margin-bottom: 20px;
-}
-
-.setting-item h4 {
-    font-size: clamp(14px, 2.5vw, 16px);
-    margin-bottom: 10px;
-}
-
-#settingsNicknameInput {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    font-size: 16px;
-    margin-bottom: 15px;
-}
-
 .delete-subject-btn {
     background: none;
     border: none;

@@ -99,6 +99,13 @@ function showScreen(screen) {
         document.getElementById('groupJoinError').classList.add('hidden');
         renderGroupDashboard();
     }
+    if (screen === 'groups') {
+        document.getElementById('groupNameInput').value = '';
+        document.getElementById('groupCodeInput').value = '';
+        document.getElementById('groupCreateError').classList.add('hidden');
+        document.getElementById('groupJoinError').classList.add('hidden');
+        renderGroupDashboard();
+    }
 }
 
 function renderHome() {
@@ -996,10 +1003,10 @@ async function leaveGroup() {
 }
 
 function renderGroupDashboard() {
-    const dashboard = document.getElementById('groupDashboard');
+    const dashboard = document.querySelector('.group-dashboard-section');
     const membersDiv = document.getElementById('groupMembers');
     const groupNameDiv = document.getElementById('currentGroupName');
-    const groupActions = document.getElementById('groupActions');
+    const groupActions = document.querySelector('.group-actions-section');
 
     if (!window.currentGroupCode) {
         dashboard.classList.add('hidden');

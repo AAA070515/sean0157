@@ -42,71 +42,26 @@ const loginBtn = document.getElementById('login-btn');
 onAuthStateChanged(auth, (user) => {
     const loginScreen = document.getElementById('loginScreen');
     const mainContent = document.querySelector('.main-content');
-    const loginBtn = document.getElementById('login-btn');
     const logoutBtn = document.getElementById('logout-btn');
 
-    if (user```javascript
-user) {
-    currentUser = user;
-    window.currentUser = user;
-    loginScreen.classList.add('hidden');
-    mainContent.classList.remove('hidden');
-    loginBtn.style.display = 'none';
-    logoutBtn.style.display = 'block';
-    checkAndSetNickname(user);
-    loadUserData(user.uid);
-    showScreen('home'); // 로그인 후 홈 화면 표시
-} else {
-    currentUser = null;
-    window.currentUser = null;
-    loginScreen.classList.remove('hidden');
-    mainContent.classList.add('hidden');
-    loginBtn.style.display = 'block';
-    logoutBtn.style.display = 'none';
-}
+    if (user) {
+        currentUser = user;
+        window.currentUser = user;
+        loginScreen.classList.add('hidden');
+        mainContent.classList.remove('hidden');
+        loginBtn.style.display = 'block';
+        logoutBtn.style.display = 'block';
+        checkAndSetNickname(user);
+        loadUserData(user.uid);
+    } else {
+        currentUser = null;
+        window.currentUser = null;
+        loginScreen.classList.remove('hidden');
+        mainContent.classList.add('hidden');
+        loginBtn.style.display = 'block';
+        logoutBtn.style.display = 'none';
+    }
 });
-
-function toggleDrawer() {
-    const drawerContent = document.querySelector('.drawer-content');
-    const overlay = document.querySelector('.overlay');
-    drawerContent.classList.toggle('hidden');
-    drawerContent.classList.toggle('visible');
-    overlay.classList.toggle('hidden');
-    overlay.classList.toggle('visible');
-}
-
-function showScreen(screen) {
-    const screens = ['home', 'study', 'diary', 'todo', 'goals', 'stats', 'settings', 'groups'];
-    screens.forEach(s => {
-        const el = document.getElementById(`${s}Screen`);
-        el.classList.add('hidden');
-    });
-
-    const targetScreen = document.getElementById(`${screen}Screen`);
-    setTimeout(() => {
-        targetScreen.classList.remove('hidden');
-    }, 50);
-
-    const navMapping = {
-        'home': 'Home',
-        'study': 'Study',
-        'todo': 'To-Do',
-        'diary': 'Journal',
-        'goals': 'Goals',
-        'stats': 'Statistics',
-        'settings': 'Settings',
-        'groups': 'Groups'
-    };
-
-    document.querySelectorAll('.nav-item').forEach(btn => {
-        btn.classList.remove('active');
-        if (navMapping[screen] && btn.textContent.trim() === navMapping[screen]) {
-            btn.classList.add('active');
-        }
-    });
-
-    closeDrawer();
-}
 
 document.getElementById('googleLoginBtn').addEventListener('click', () => {
     const provider = new GoogleAuthProvider();
@@ -1208,21 +1163,17 @@ function renderGroupDashboard() {
     const dashboard = document.getElementById('groupDashboard');
     const membersDiv = document.getElementById('groupMembers');
     const groupNameDiv = document.getElementById('currentGroupName');
-    const createSection = document.querySelector('.group-create-section');
-    const joinSection = document.querySelector('.group-join-section');
+    const groupActions = document.getElementById('groupActions');
 
     if (!window.currentGroupCode) {
         dashboard.classList.add('hidden');
-        createSection.classList.remove('hidden');
-        joinSection.classList.remove('hidden');
+        groupActions.classList.remove('hidden');
         document.getElementById('groupCodeDisplay').classList.add('hidden');
         return;
     }
 
     dashboard.classList.remove('hidden');
-    createSection.classList.add('hidden');
-    joinSection.classList.add('hidden');
-
+    groupActions.classList.add('hidden');
     const groupRef = window.firestoreDoc(window.firestoreDb, "groups", window.currentGroupCode);
     window.firestoreOnSnapshot(groupRef, (doc) => {
         if (doc.exists()) {
@@ -1252,8 +1203,7 @@ function renderGroupDashboard() {
         } else {
             window.currentGroupCode = null;
             dashboard.classList.add('hidden');
-            createSection.classList.remove('hidden');
-            joinSection.classList.remove('hidden');
+            groupActions.classList.remove('hidden');
         }
     }, (error) => {
         console.error('Group dashboard render error:', error);

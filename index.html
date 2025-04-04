@@ -206,22 +206,7 @@
                 loginBtn.style.display = 'block';
                 logoutBtn.style.display = 'none';
                 console.log('Logged out');
-                // 로그아웃 시 데이터 초기화하지 않음, 기본값으로 UI만 렌더링
-                window.subjects = [];
-                window.studyData = {};
-                window.subjectStudyTime = {};
-                window.diaryData = {};
-                window.todos = [];
-                window.goals = { daily: null, weekly: null };
-                window.studySessions = {};
-                updateSubjectSelect();
-                updateSubjectTimes();
-                updateStudyTimeDisplay();
-                updateGoalsInputs();
-                updateGoalsProgress();
-                renderHome();
-                renderTodos();
-                showScreen('home');
+                showScreen('home'); // 로그아웃 시 초기화하지 않고 홈 화면으로 이동
             }
         });
 
@@ -253,7 +238,6 @@
             onSnapshot(userRef, (doc) => {
                 if (doc.exists()) {
                     const data = doc.data();
-                    console.log("Data loaded from Firestore:", data);
                     window.subjects = data.subjects || [];
                     window.studyData = data.studyData || {};
                     window.subjectStudyTime = data.subjectStudyTime || {};
@@ -270,7 +254,6 @@
                     window.todos = [];
                     window.goals = { daily: null, weekly: null };
                     window.studySessions = {};
-                    saveUserData(); // 초기 데이터 저장
                 }
                 updateSubjectSelect();
                 updateSubjectTimes();
@@ -290,15 +273,7 @@
                 console.log("No user logged in, cannot save data!");
                 return;
             }
-            console.log("Saving data to Firestore:", {
-                subjects: window.subjects,
-                studyData: window.studyData,
-                subjectStudyTime: window.subjectStudyTime,
-                diaryData: window.diaryData,
-                todos: window.todos,
-                goals: window.goals,
-                studySessions: window.studySessions
-            });
+            console.log("Saving data for user:", currentUser.uid);
             const userId = currentUser.uid;
             setDoc(doc(db, "users", userId), {
                 subjects: window.subjects,
@@ -309,7 +284,7 @@
                 goals: window.goals,
                 studySessions: window.studySessions
             }, { merge: true }).then(() => {
-                console.log("Data saved successfully to Firestore!");
+                console.log("Data saved successfully!");
             }).catch((error) => {
                 console.error("Save failed:", error.code, error.message);
             });

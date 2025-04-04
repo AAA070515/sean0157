@@ -1,12 +1,12 @@
 let timerSeconds = 0;
 let timerInterval = null;
-let subjects = JSON.parse(localStorage.getItem('subjects')) || [];
-let studyData = JSON.parse(localStorage.getItem('studyData')) || {};
-let subjectStudyTime = JSON.parse(localStorage.getItem('subjectStudyTime')) || {};
-let diaryData = JSON.parse(localStorage.getItem('diaryData')) || {};
-let todos = JSON.parse(localStorage.getItem('todos')) || [];
-let goals = JSON.parse(localStorage.getItem('goals')) || { daily: null, weekly: null };
-let studySessions = JSON.parse(localStorage.getItem('studySessions')) || {};
+let subjects = [];
+let studyData = {};
+let subjectStudyTime = {};
+let diaryData = {};
+let todos = [];
+let goals = { daily: null, weekly: null };
+let studySessions = {};
 let currentFilter = 'all';
 let selectedMood = null;
 let uploadedImage = null;
@@ -256,15 +256,11 @@ function changeWeek(offset) {
 }
 
 function showStatsDetails(dateStr) {
-    const selectedDate = new Date(dateStr);
-    selectedDate.setDate(selectedDate.getDate() + 1);
-    const nextDateStr = selectedDate.toISOString().split('T')[0];
-    
-    currentSelectedDate = nextDateStr;
+    currentSelectedDate = dateStr;
     const statsDetails = document.getElementById('statsDetails');
-    document.getElementById('statsSelectedDate').textContent = nextDateStr;
+    document.getElementById('statsSelectedDate').textContent = dateStr;
 
-    const studyTime = studyData[nextDateStr] || 0;
+    const studyTime = studyData[dateStr] || 0;
     const hours = Math.floor(studyTime / 3600);
     const minutes = Math.floor((studyTime % 3600) / 60);
     const seconds = studyTime % 60;
@@ -276,7 +272,7 @@ function showStatsDetails(dateStr) {
 
     statsSubjects.innerHTML += '<h4>To-Do Statistics</h4>';
     const dayTodos = todos.filter(todo => 
-        new Date(todo.createdAt).toISOString().split('T')[0] === nextDateStr);
+        new Date(todo.createdAt).toISOString().split('T')[0] === dateStr);
     const completedTodos = dayTodos.filter(todo => todo.completed).length;
     const totalTodos = dayTodos.length;
     statsSubjects.innerHTML += `
@@ -288,7 +284,7 @@ function showStatsDetails(dateStr) {
 
     const statsDiary = document.getElementById('statsDiary');
     statsDiary.innerHTML = '<h4>Journal Entry</h4>';
-    const diaryEntry = diaryData[nextDateStr];
+    const diaryEntry = diaryData[dateStr];
     if (diaryEntry) {
         statsDiary.innerHTML += `
             <p>Mood: ${diaryEntry.mood}</p>
@@ -400,21 +396,19 @@ function stopTimer() {
     subjectStudyTime[selectedSubject][currentDate] = 
         (subjectStudyTime[selectedSubject][currentDate] || 0) + timerSeconds;
 
-    const lastSession = studySessions[currentDate].slice(-1)[0];
+    const lastSession = studySessions[currentDate]?.slice(-1)[0];
     if (lastSession && lastSession.subject === selectedSubject && !lastSession.endTime) {
         lastSession.endTime = new Date().toISOString();
         lastSession.duration = timerSeconds;
     }
 
-    localStorage.setItem('studySessions', JSON.stringify(studySessions));
     timerSeconds = 0;
+    saveUserData();
     updateTimerDisplay();
     updateStudyTimeDisplay();
     updateSubjectTimes();
     updateGoalsProgress();
     renderHome();
-    localStorage.setItem('studyData', JSON.stringify(studyData));
-    localStorage.setItem('subjectStudyTime', JSON.stringify(subjectStudyTime));
 }
 
 function saveDiary() {
@@ -431,7 +425,7 @@ function saveDiary() {
         memo: memo, 
         image: uploadedImage || diaryData[date]?.image || null 
     };
-    localStorage.setItem('diaryData', JSON.stringify(diaryData));
+    saveUserData();
     renderHome();
     document.getElementById('memoInput').value = '';
     document.getElementById('diaryImage').value = '';
@@ -476,14 +470,13 @@ function toggleTodo(id) {
         if (todo.id === id) return { ...todo, completed: !todo.completed };
         return todo;
     });
-    
-    localStorage.setItem('todos', JSON.stringify(todos));
+    saveUserData();
     renderTodos();
 }
 
 function deleteTodo(id) {
     todos = todos.filter(todo => todo.id !== id);
-    localStorage.setItem('todos', JSON.stringify(todos));
+    saveUserData();
     renderTodos();
 }
 
@@ -493,7 +486,7 @@ function saveGoal(type) {
     
     if (!isNaN(value) && value >= 0) {
         goals[type] = value * 3600;
-        localStorage.setItem('goals', JSON.stringify(goals));
+        saveUserData();
         updateGoalsProgress();
         renderHome();
         alert(`${type.charAt(0).toUpperCase() + type.slice(1)} goal saved!`);
@@ -509,8 +502,7 @@ function addSubject() {
         subjects.push(subjectName);
         if (!subjectStudyTime[subjectName]) subjectStudyTime[subjectName] = {};
         subjectStudyTime[subjectName][currentDate] = subjectStudyTime[subjectName][currentDate] || 0;
-        localStorage.setItem('subjects', JSON.stringify(subjects));
-        localStorage.setItem('subjectStudyTime', JSON.stringify(subjectStudyTime));
+        saveUserData();
         updateSubjectSelect();
         updateSubjectTimes();
         subjectInput.value = '';
@@ -521,8 +513,7 @@ function deleteSubject(subjectName) {
     if (subjects.includes(subjectName)) {
         subjects = subjects.filter(subject => subject !== subjectName);
         if (subjectStudyTime[subjectName]) delete subjectStudyTime[subjectName];
-        localStorage.setItem('subjects', JSON.stringify(subjects));
-        localStorage.setItem('subjectStudyTime', JSON.stringify(subjectStudyTime));
+        saveUserData();
         updateSubjectSelect();
         updateSubjectTimes();
     }
@@ -637,9 +628,8 @@ function addTodo() {
             completed: false,
             createdAt: new Date().toISOString()
         };
-        
         todos.push(newTodo);
-        localStorage.setItem('todos', JSON.stringify(todos));
+        saveUserData();
         todoInput.value = '';
         renderTodos();
     }
@@ -655,7 +645,7 @@ function filterTasks(filter) {
 
 function clearCompleted() {
     todos = todos.filter(todo => !todo.completed);
-    localStorage.setItem('todos', JSON.stringify(todos));
+    saveUserData();
     renderTodos();
 }
 
@@ -722,41 +712,45 @@ function calculateWeeklyStudyTime() {
 
 function resetAllSettings() {
     if (confirm('Are you sure you want to reset all settings? This will clear all your data.')) {
-        localStorage.clear();
-        subjects = [];
-        studyData = {};
-        subjectStudyTime = {};
-        diaryData = {};
-        todos = [];
-        goals = { daily: null, weekly: null };
-        studySessions = {};
-        currentFilter = 'all';
-        selectedMood = null;
-        uploadedImage = null;
-        timerSeconds = 0;
-        currentWeekOffset = 0;
-        if (timerInterval) {
-            clearInterval(timerInterval);
-            timerInterval = null;
+        if (window.currentUser) {
+            const userRef = ref(window.db, `users/${window.currentUser.uid}`);
+            remove(userRef).then(() => {
+                subjects = [];
+                studyData = {};
+                subjectStudyTime = {};
+                diaryData = {};
+                todos = [];
+                goals = { daily: null, weekly: null };
+                studySessions = {};
+                timerSeconds = 0;
+                if (timerInterval) clearInterval(timerInterval);
+                timerInterval = null;
+                currentFilter = 'all';
+                selectedMood = null;
+                uploadedImage = null;
+                currentWeekOffset = 0;
+                updateSubjectSelect();
+                updateSubjectTimes();
+                updateStudyTimeDisplay();
+                updateTimerDisplay();
+                updateGoalsInputs();
+                updateGoalsProgress();
+                renderHome();
+                renderTodos();
+                document.getElementById('dayDetails').classList.add('hidden');
+                document.getElementById('subjectInput').value = '';
+                document.getElementById('todoInput').value = '';
+                document.getElementById('diaryDate').value = currentDate;
+                document.getElementById('memoInput').value = '';
+                document.getElementById('diaryImage').value = '';
+                document.getElementById('imagePreview').innerHTML = '';
+                document.querySelectorAll('.mood-bean').forEach(bean => bean.classList.remove('selected'));
+                showScreen('home');
+                alert('All settings have been reset.');
+            }).catch((error) => {
+                console.error('데이터 초기화 실패:', error);
+            });
         }
-        updateSubjectSelect();
-        updateSubjectTimes();
-        updateStudyTimeDisplay();
-        updateTimerDisplay();
-        updateGoalsInputs();
-        updateGoalsProgress();
-        renderHome();
-        renderTodos();
-        document.getElementById('dayDetails').classList.add('hidden');
-        document.getElementById('subjectInput').value = '';
-        document.getElementById('todoInput').value = '';
-        document.getElementById('diaryDate').value = currentDate;
-        document.getElementById('memoInput').value = '';
-        document.getElementById('diaryImage').value = '';
-        document.getElementById('imagePreview').innerHTML = '';
-        document.querySelectorAll('.mood-bean').forEach(bean => bean.classList.remove('selected'));
-        showScreen('home');
-        alert('All settings have been reset.');
     }
 }
 

@@ -185,46 +185,42 @@
                     </div>
                 </div>
             </section>
-<section id="settingsScreen" class="hidden">
-    <div class="settings-section">
-        <h3>Settings</h3>
-        <div class="nickname-section">
-            <h4>Change Nickname</h4>
-            <div class="nickname-input-group">
-                <input type="text" id="settingsNicknameInput" placeholder="Enter new nickname" maxlength="20">
-                <button class="btn nickname-save-btn" onclick="changeNickname()">Save</button>
-            </div>
-            <p id="settingsNicknameError" class="error hidden"></p>
-        </div>
-        <div class="settings-actions">
-            <button class="btn" id="logout-btn" style="display: none; background-color: #EA4335; margin-top: 20px;" onclick="signOut(auth).then(() => console.log('Logout successful')).catch((error) => { console.error('Logout failed:', error.message); alert('로그아웃에 실패했습니다.'); })">Logout</button>
-            <button class="btn" id="reset-all-btn" style="background-color: #4285F4; margin-top: 20px;" onclick="resetAllSettings()">Reset All Settings</button>
-        </div>
-    </div>
-</section>
+            <section id="settingsScreen" class="hidden">
+                <div class="settings-section">
+                    <h3>Settings</h3>
+                    <div class="nickname-section">
+                        <h4>Change Nickname</h4>
+                        <input type="text" id="settingsNicknameInput" placeholder="Enter new nickname" maxlength="20">
+                        <button class="btn" onclick="changeNickname()">Save</button>
+                        <p id="settingsNicknameError" class="error hidden"></p>
+                    </div>
+                    <div class="settings-actions">
+                        <button class="btn" id="logout-btn" style="display: none; background-color: #EA4335; margin-top: 20px;" onclick="signOut(auth).then(() => console.log('Logout successful')).catch((error) => { console.error('Logout failed:', error.message); alert('로그아웃에 실패했습니다.'); })">Logout</button>
+                        <button class="btn" id="reset-all-btn" style="background-color: #4285F4; margin-top: 20px;" onclick="resetAllSettings()">Reset All Settings</button>
+                    </div>
+                </div>
+            </section>
             <section id="groupsScreen" class="hidden">
-                <div class="container">
-                    <div class="groups-section group-actions-box">
-                        <h3>Group Actions</h3>
-                        <div class="group-actions">
-                            <div class="group-create">
-                                <h4>Create a Group</h4>
-                                <input type="text" id="groupNameInput" placeholder="Enter group name" maxlength="30">
-                                <button class="btn" onclick="createGroup()">Create</button>
-                                <p id="groupCodeDisplay" class="hidden"></p>
-                                <p id="groupCreateError" class="error hidden"></p>
-                            </div>
-                            <div class="group-join">
-                                <h4>Join a Group</h4>
-                                <input type="text" id="groupCodeInput" placeholder="Enter group code" maxlength="6">
-                                <button class="btn" onclick="joinGroup()">Join</button>
-                                <p id="groupJoinError" class="error hidden"></p>
-                            </div>
+                <div class="groups-section">
+                    <h3>Groups</h3>
+                    <div id="groupActions" class="group-actions">
+                        <div class="group-create">
+                            <h4>Create a Group</h4>
+                            <input type="text" id="groupNameInput" placeholder="Enter group name" maxlength="50">
+                            <button class="btn" onclick="createGroup()">Create Group</button>
+                            <p id="groupCodeDisplay" class="hidden"></p>
+                            <p id="groupCreateError" class="error hidden"></p>
+                        </div>
+                        <div class="group-join">
+                            <h4>Join a Group</h4>
+                            <input type="text" id="groupCodeInput" placeholder="Enter 6-digit code" maxlength="6">
+                            <button class="btn" onclick="joinGroup()">Join Group</button>
+                            <p id="groupJoinError" class="error hidden"></p>
                         </div>
                     </div>
-                    <div class="groups-section group-dashboard-box" id="groupDashboard">
-                        <h3 id="currentGroupName"></h3>
-                        <div class="group-members" id="groupMembers"></div>
+                    <div id="groupDashboard" class="group-dashboard hidden">
+                        <h4 id="currentGroupName"></h4>
+                        <div id="groupMembers" class="group-members"></div>
                         <button class="btn leave-btn" onclick="leaveGroup()">Leave Group</button>
                     </div>
                 </div>

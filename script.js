@@ -44,7 +44,7 @@ function closeDrawer() {
 }
 
 function showScreen(screen) {
-    const screens = ['home', 'study', 'diary', 'todo', 'goals', 'stats', 'settings'];
+    const screens = ['home', 'study', 'diary', 'todo', 'goals', 'stats'];
     screens.forEach(s => {
         const el = document.getElementById(`${s}Screen`);
         el.classList.add('hidden');
@@ -61,8 +61,7 @@ function showScreen(screen) {
         'todo': 'To-Do',
         'diary': 'Journal',
         'goals': 'Goals',
-        'stats': 'Statistics',
-        'settings': 'Settings'
+        'stats': 'Statistics'
     };
 
     document.querySelectorAll('.nav-item').forEach(btn => {
@@ -98,10 +97,6 @@ function showScreen(screen) {
         updateGoalsInputs();
         updateGoalsProgress();
     } else if (screen === 'stats') renderStats();
-    else if (screen === 'settings') {
-        document.getElementById('settingsNicknameInput').value = window.nickname || 'User';
-        document.getElementById('settingsNicknameError').classList.add('hidden');
-    }
 }
 
 function renderHome() {
@@ -746,15 +741,78 @@ async function resetAllSettings() {
                 updateSubjectTimes();
                 updateStudyTimeDisplay();
                 updateTimerDisplay();
+                updateGoalsInputs();
+                updateGoalsProgress();
                 renderHome();
                 renderTodos();
-                updateGoalsProgress();
+                document.getElementById('dayDetails').classList.add('hidden');
+                document.getElementById('subjectInput').value = '';
+                document.getElementById('todoInput').value = '';
+                document.getElementById('diaryDate').value = currentDate;
+                document.getElementById('memoInput').value = '';
+                document.getElementById('diaryImage').value = '';
+                document.getElementById('imagePreview').innerHTML = '';
+                document.querySelectorAll('.mood-bean').forEach(bean => bean.classList.remove('selected'));
                 showScreen('home');
                 alert('All settings have been reset.');
             } catch (error) {
-                console.error('Reset failed:', error);
-                alert('Failed to reset settings.');
+                console.error('데이터 초기화 실패:', error.code, error.message);
             }
         }
     }
 }
+
+document.getElementById('diaryDate').addEventListener('change', function() {
+    const selectedDate = this.value;
+    loadDiaryData(selectedDate);
+});
+
+document.getElementById('subjectInput').addEventListener('keypress', function(event) {
+    if (event.key === 'Enter') {
+        event.preventDefault();
+        addSubject();
+    }
+});
+
+document.getElementById('todoInput').addEventListener('keypress', function(event) {
+    if (event.key === 'Enter') {
+        event.preventDefault();
+        addTodo();
+    }
+});
+
+const style = document.createElement('style');
+style.textContent = `
+.delete-subject-btn {
+    background: none;
+    border: none;
+    color: #EA4335;
+    cursor: pointer;
+    font-size: 16px;
+    margin-left: 8px;
+    padding: 2px 6px;
+    border-radius: 50%;
+}
+.delete-subject-btn:hover {
+    background-color: rgba(234, 67, 53, 0.1);
+}
+.subject-time {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 0;
+}
+.pulse {
+    animation: pulse 0.2s ease-in-out;
+}
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+`;
+
+document.head.appendChild(style);
+
+updateSubjectSelect();
+updateSubjectTimes();

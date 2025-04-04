@@ -37,6 +37,7 @@
             <div class="nav-item" onclick="showScreen('diary')">Journal</div>
             <div class="nav-item" onclick="showScreen('goals')">Goals</div>
             <div class="nav-item" onclick="showScreen('stats')">Statistics</div>
+            <div class="nav-item" onclick="showScreen('settings')">Settings</div> <!-- 설정 버튼 추가 -->
             <div class="nav-item" id="login-btn">Login</div>
             <div class="nav-item" id="logout-btn" style="display: none;">Logout</div>
             <button class="reset-btn" onclick="resetAllSettings()">Reset All Settings</button>
@@ -189,6 +190,18 @@
                     </div>
                 </div>
             </section>
+            <!-- 설정 섹션 추가 -->
+            <section id="settingsScreen" class="hidden">
+                <div class="settings-section">
+                    <h3>Settings</h3>
+                    <div class="setting-item">
+                        <h4>Change Nickname</h4>
+                        <input type="text" id="settingsNicknameInput" placeholder="Enter new nickname" maxlength="20">
+                        <button class="btn" onclick="changeNickname()">Save</button>
+                        <p id="settingsNicknameError" class="error hidden"></p>
+                    </div>
+                </div>
+            </section>
         </div>
     </main>
 
@@ -198,13 +211,13 @@
         import { getFirestore, doc, setDoc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
 
         const firebaseConfig = {
-            apiKey: "AIzaSyDx_BBG73R3FReoFsRPuIKcDb754LAxTCI",
-            authDomain: "sean0157-92c62.firebaseapp.com",
-            projectId: "sean0157-92c62",
-            storageBucket: "sean0157-92c62.firebasestorage.app",
-            messagingSenderId: "1052880240716",
-            appId: "1:1052880240716:web:13289245ada3ff291174e9",
-            measurementId: "G-HRWSZ6MSNB"
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_AUTH_DOMAIN",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_STORAGE_BUCKET",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID",
+            measurementId: "YOUR_MEASUREMENT_ID"
         };
 
         const app = initializeApp(firebaseConfig);
@@ -326,6 +339,9 @@
                     window.studySessions = data.studySessions || {};
                     window.nickname = data.nickname || 'User';
                     console.log("Loaded data with nickname:", window.nickname);
+                    if (document.getElementById('settingsNicknameInput')) {
+                        document.getElementById('settingsNicknameInput').value = window.nickname;
+                    }
                 } else {
                     window.subjects = [];
                     window.studyData = {};
@@ -370,6 +386,30 @@
         }
 
         window.saveUserData = saveUserData;
+        window.changeNickname = changeNickname; // 전역 함수로 추가
+
+        async function changeNickname() {
+            const input = document.getElementById('settingsNicknameInput');
+            const error = document.getElementById('settingsNicknameError');
+            const nickname = input.value.trim();
+
+            if (nickname.length < 2 || nickname.length > 20) {
+                error.textContent = 'Nickname must be between 2 and 20 characters.';
+                error.classList.remove('hidden');
+                return;
+            }
+
+            try {
+                await setDoc(doc(db, "users", currentUser.uid), { nickname }, { merge: true });
+                window.nickname = nickname;
+                error.classList.add('hidden');
+                alert(`Nickname changed to ${nickname}!`);
+            } catch (err) {
+                error.textContent = 'Failed to change nickname. Try again.';
+                error.classList.remove('hidden');
+                console.error('Nickname change error:', err);
+            }
+        }
     </script>
     <script src="script.js"></script>
 </body>

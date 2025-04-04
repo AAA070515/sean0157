@@ -37,8 +37,6 @@
             <div class="nav-item" onclick="showScreen('stats')">Statistics</div>
             <div class="nav-item" id="settings-btn" onclick="showScreen('settings')">Settings</div>
             <div class="nav-item" id="login-btn">Login</div>
-            <div class="nav-item" id="logout-btn" style="display: none;">Logout</div>
-            <div class="nav-item" id="reset-all-btn" onclick="resetAllSettings()">Reset All Settings</div>
         </div>
     </nav>
     <div class="overlay hidden" onclick="closeDrawer()"></div>
@@ -195,6 +193,10 @@
                         <input type="text" id="settingsNicknameInput" placeholder="Enter new nickname" maxlength="20">
                         <button class="btn" onclick="changeNickname()">Save</button>
                         <p id="settingsNicknameError" class="error hidden"></p>
+                    </div>
+                    <div class="settings-actions">
+                        <button id="logout-btn" class="btn" style="display: none; background-color: #EA4335; margin-top: 20px;" onclick="signOut(auth).then(() => console.log('Logout successful')).catch((error) => { console.error('Logout failed:', error.message); alert('로그아웃에 실패했습니다.'); })">Logout</button>
+                        <button id="reset-all-btn" class="btn" style="margin-top: 20px;" onclick="resetAllSettings()">Reset All Settings</button>
                     </div>
                 </div>
             </section>

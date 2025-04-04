@@ -27,23 +27,21 @@
         </div>
     </div>
 
-    <nav class="nav-drawer">
-        <div class="hamburger-icon" onclick="toggleDrawer()">☰</div>
-        <div class="drawer-content hidden">
-            <div class="nav-item active" onclick="showScreen('home')">Home</div>
-            <div class="nav-item" onclick="showScreen('study')">Study</div>
-            <div class="nav-item" onclick="showScreen('todo')">To-Do</div>
-            <div class="nav-item" onclick="showScreen('diary')">Journal</div>
-            <div class="nav-item" onclick="showScreen('goals')">Goals</div>
-            <div class="nav-item" onclick="showScreen('stats')">Statistics</div>
-            <!-- Settings 버튼 -->
-            <button class="reset-btn login-btn" onclick="showScreen('settings')">Settings</button>
-            <div class="nav-item" id="login-btn">Login</div>
-            <div class="nav-item" id="logout-btn" style="display: none;">Logout</div>
-            <!-- Reset All Settings 버튼 -->
-            <button class="reset-btn login-btn" onclick="resetAllSettings()">Reset All Settings</button>
-        </div>
-    </nav>
+<nav class="nav-drawer">
+    <div class="hamburger-icon" onclick="toggleDrawer()">☰</div>
+    <div class="drawer-content hidden">
+        <div class="nav-item active" onclick="showScreen('home')">Home</div>
+        <div class="nav-item" onclick="showScreen('study')">Study</div>
+        <div class="nav-item" onclick="showScreen('todo')">To-Do</div>
+        <div class="nav-item" onclick="showScreen('diary')">Journal</div>
+        <div class="nav-item" onclick="showScreen('goals')">Goals</div>
+        <div class="nav-item" onclick="showScreen('stats')">Statistics</div>
+        <div class="nav-item" onclick="showScreen('settings')">Settings</div>
+        <div class="nav-item" id="login-btn">Login</div>
+        <div class="nav-item" id="logout-btn" style="display: none;">Logout</div>
+        <div class="nav-item" onclick="resetAllSettings()">Reset All Settings</div>
+    </div>
+</nav>
     <div class="overlay hidden" onclick="closeDrawer()"></div>
 
     <!-- 메인 콘텐츠 -->

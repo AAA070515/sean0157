@@ -95,7 +95,7 @@
                         <div class="mood-bean calm" onclick="selectMood('calm')"><img src="happy.png" alt="Calm" style="width:200%" loading="lazy"></div>
                         <div class="mood-bean neutral" onclick="selectMood('neutral')"><img src="calm.png" alt="Neutral" style="width:200%" loading="lazy"></div>
                         <div class="mood-bean sad" onclick="selectMood('sad')"><img src="sad.png" alt="Sad" style="width:200%" loading="lazy"></div>
-                        <div class="mood-bean angry" onclick="selectMood('angry')"><img src="angry.png" alt="Angry" style="width:200%" loading="lazy"></div>
+                        <div class="mood-bean angry" onclick="selectMood('angry')"><img src="angry.png niepraw="lazy"></div>
                     </div>
                 </div>
                 <div class="diary-section">
@@ -173,6 +173,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
+        import { getDatabase, ref, set, onValue, remove } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDx_BBG73R3FReoFsRPuIKcDb754LAxTCI",
@@ -186,19 +187,27 @@
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
+        const db = getDatabase(app);
+
+        let currentUser = null;
 
         const loginBtn = document.getElementById('login-btn');
         const logoutBtn = document.getElementById('logout-btn');
 
         onAuthStateChanged(auth, (user) => {
             if (user) {
+                currentUser = user;
                 loginBtn.style.display = 'none';
                 logoutBtn.style.display = 'block';
                 console.log('Logged in as:', user.displayName, user.email);
+                loadUserData(user.uid);
             } else {
+                currentUser = null;
                 loginBtn.style.display = 'block';
                 logoutBtn.style.display = 'none';
                 console.log('Logged out');
+                clearLocalData();
+                showScreen('home');
             }
         });
 
@@ -206,11 +215,11 @@
             const provider = new GoogleAuthProvider();
             signInWithPopup(auth, provider)
                 .then((result) => {
-                    const user = result.user;
-                    console.log('Login successful:', user.displayName);
+                    console.log('Login successful:', result.user.displayName);
                 })
                 .catch((error) => {
                     console.error('Login failed:', error.message);
+                    alert('로그인에 실패했습니다. 다시 시도해주세요.');
                 });
         });
 
@@ -221,8 +230,72 @@
                 })
                 .catch((error) => {
                     console.error('Logout failed:', error.message);
+                    alert('로그아웃에 실패했습니다.');
                 });
         });
+
+        function loadUserData(userId) {
+            const userRef = ref(db, `users/${userId}`);
+            onValue(userRef, (snapshot) => {
+                const data = snapshot.val() || {};
+                window.subjects = data.subjects || [];
+                window.studyData = data.studyData || {};
+                window.subjectStudyTime = data.subjectStudyTime || {};
+                window.diaryData = data.diaryData || {};
+                window.todos = data.todos || [];
+                window.goals = data.goals || { daily: null, weekly: null };
+                window.studySessions = data.studySessions || {};
+
+                updateSubjectSelect();
+                updateSubjectTimes();
+                updateStudyTimeDisplay();
+                updateGoalsInputs();
+                updateGoalsProgress();
+                renderHome();
+                renderTodos();
+                showScreen('home');
+            }, (error) => {
+                console.error('데이터 불러오기 실패:', error);
+            });
+        }
+
+        function saveUserData() {
+            if (!currentUser) return;
+            const userId = currentUser.uid;
+            const userRef = ref(db, `users/${userId}`);
+            set(userRef, {
+                subjects: window.subjects,
+                studyData: window.studyData,
+                subjectStudyTime: window.subjectStudyTime,
+                diaryData: window.diaryData,
+                todos: window.todos,
+                goals: window.goals,
+                studySessions: window.studySessions
+            }).catch((error) => {
+                console.error('데이터 저장 실패:', error);
+            });
+        }
+
+        function clearLocalData() {
+            window.subjects = [];
+            window.studyData = {};
+            window.subjectStudyTime = {};
+            window.diaryData = {};
+            window.todos = [];
+            window.goals = { daily: null, weekly: null };
+            window.studySessions = {};
+            window.timerSeconds = 0;
+            if (window.timerInterval) clearInterval(window.timerInterval);
+            window.timerInterval = null;
+            updateSubjectSelect();
+            updateSubjectTimes();
+            updateStudyTimeDisplay();
+            updateTimerDisplay();
+            renderHome();
+            renderTodos();
+        }
+
+        window.saveUserData = saveUserData;
     </script>
 
     <script src="script.js"></script>

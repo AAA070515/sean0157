@@ -98,6 +98,8 @@ function showScreen(screen) {
     else if (screen === 'groups') {
         document.getElementById('groupNameInput').value = '';
         document.getElementById('groupCodeInput').value = '';
+        document.getElementById('groupPasswordInput').value = ''; // 추가
+        document.getElementById('joinPasswordInput').value = '';  // 추가
         document.getElementById('groupCreateError').classList.add('hidden');
         document.getElementById('groupJoinError').classList.add('hidden');
         renderGroupDashboard();
@@ -747,7 +749,8 @@ async function resetAllSettings() {
                     todos: [],
                     goals: { daily: null, weekly: null },
                     studySessions: {},
-                    nickname: window.nickname
+                    nickname: window.nickname,
+                    groupCode: null
                 });
                 window.subjects = [];
                 window.studyData = {};
@@ -756,6 +759,7 @@ async function resetAllSettings() {
                 window.todos = [];
                 window.goals = { daily: null, weekly: null };
                 window.studySessions = {};
+                window.currentGroupCode = null;
                 timerSeconds = 0;
                 if (timerInterval) clearInterval(timerInterval);
                 timerInterval = null;
@@ -887,30 +891,33 @@ function generateGroupCode() {
 }
 
 async function createGroup() {
-    console.log('createGroup called');
     if (!window.currentUser) {
         alert('You must be logged in to create a group.');
         return;
     }
 
     const groupNameInput = document.getElementById('groupNameInput');
+    const groupPasswordInput = document.getElementById('groupPasswordInput');
     const groupName = groupNameInput.value.trim();
+    const groupPassword = groupPasswordInput.value.trim();
     const error = document.getElementById('groupCreateError');
 
-    console.log('Group name:', groupName);
     if (!groupName) {
         error.textContent = 'Please enter a group name.';
         error.classList.remove('hidden');
         return;
     }
+    if (!groupPassword) {
+        error.textContent = 'Please set a group password.';
+        error.classList.remove('hidden');
+        return;
+    }
 
     const groupCode = generateGroupCode();
-    console.log('Generated group code:', groupCode);
     const groupRef = window.firestoreDoc(window.firestoreDb, "groups", groupCode);
 
     try {
         const groupDoc = await window.firestoreGetDoc(groupRef);
-        console.log('Group exists:', groupDoc.exists());
         if (groupDoc.exists()) {
             error.textContent = 'Group code already exists. Try again.';
             error.classList.remove('hidden');
@@ -919,6 +926,7 @@ async function createGroup() {
 
         await window.firestoreSetDoc(groupRef, {
             name: groupName,
+            password: groupPassword,
             members: {
                 [window.currentUser.uid]: {
                     nickname: window.nickname,
@@ -928,14 +936,14 @@ async function createGroup() {
             createdAt: new Date().toISOString()
         });
 
-        console.log('Group created successfully');
         window.currentGroupCode = groupCode;
         groupNameInput.value = '';
+        groupPasswordInput.value = '';
         document.getElementById('groupCodeDisplay').textContent = `Group Code: ${groupCode}`;
         document.getElementById('groupCodeDisplay').classList.remove('hidden');
         error.classList.add('hidden');
-        renderGroupDashboard();
         await window.saveUserData();
+        renderGroupDashboard();
     } catch (err) {
         error.textContent = `Error: ${err.message}`;
         error.classList.remove('hidden');
@@ -950,11 +958,18 @@ async function joinGroup() {
     }
 
     const groupCodeInput = document.getElementById('groupCodeInput');
+    const joinPasswordInput = document.getElementById('joinPasswordInput');
     const groupCode = groupCodeInput.value.trim().toUpperCase();
+    const password = joinPasswordInput.value.trim();
     const error = document.getElementById('groupJoinError');
 
     if (groupCode.length !== 6) {
         error.textContent = 'Please enter a valid 6-digit code.';
+        error.classList.remove('hidden');
+        return;
+    }
+    if (!password) {
+        error.textContent = 'Please enter the group password.';
         error.classList.remove('hidden');
         return;
     }
@@ -969,8 +984,8 @@ async function joinGroup() {
         }
 
         const groupData = groupDoc.data();
-        if (groupData.members[window.currentUser.uid]) {
-            error.textContent = 'You are already in this group.';
+        if (groupData.password !== password) {
+            error.textContent = 'Incorrect password.';
             error.classList.remove('hidden');
             return;
         }
@@ -987,9 +1002,10 @@ async function joinGroup() {
 
         window.currentGroupCode = groupCode;
         groupCodeInput.value = '';
+        joinPasswordInput.value = '';
         error.classList.add('hidden');
-        renderGroupDashboard();
         await window.saveUserData();
+        renderGroupDashboard();
     } catch (err) {
         error.textContent = `Error: ${err.message}`;
         error.classList.remove('hidden');
@@ -1007,7 +1023,13 @@ async function leaveGroup() {
     const groupData = groupDoc.data();
     delete groupData.members[window.currentUser.uid];
 
-    await window.firestoreSetDoc(groupRef, { members: groupData.members }, { merge: true });
+    if (Object.keys(groupData.members).length === 0) {
+        await window.firestoreDeleteDoc(groupRef);
+        console.log(`Group ${window.currentGroupCode} deleted as no members remain.`);
+    } else {
+        await window.firestoreSetDoc(groupRef, { members: groupData.members }, { merge: true });
+    }
+
     window.currentGroupCode = null;
     await window.saveUserData();
     renderGroupDashboard();
@@ -1021,8 +1043,8 @@ function renderGroupDashboard() {
 
     if (!window.currentGroupCode) {
         dashboard.classList.add('hidden');
-        document.getElementById('groupCodeDisplay').classList.add('hidden');
         groupActions.classList.remove('hidden');
+        document.getElementById('groupCodeDisplay').classList.add('hidden');
         return;
     }
 

@@ -865,6 +865,372 @@ style.textContent = `
 }
 `;
 
+// 랜덤 6자리 코드 생성 함수
+function generateGroupCode() {
+    return Math.random().toString(36).substr(2, 6).toUpperCase();
+}
+
+// 그룹 생성
+async function createGroup() {
+    if (!currentUser) {
+        alert('You must be logged in to create a group.');
+        return;
+    }
+
+    const groupNameInput = document.getElementById('groupNameInput');
+    const groupName = groupNameInput.value.trim();
+    const error = document.getElementById('groupCreateError');
+
+    if (!groupName) {
+        error.textContent = 'Please enter a group name.';
+        error.classList.remove('hidden');
+        return;
+    }
+
+    const groupCode = generateGroupCode();
+    const groupRef = doc(db, "groups", groupCode);
+
+    try {
+        const groupDoc = await getDoc(groupRef);
+        if (groupDoc.exists()) {
+            error.textContent = 'Group code already exists. Try again.';
+            error.classList.remove('hidden');
+            return;
+        }
+
+        await setDoc(groupRef, {
+            name: groupName,
+            members: {
+                [currentUser.uid]: {
+                    nickname: window.nickname,
+                    studyTime: window.studyData[currentDate] || 0
+                }
+            },
+            createdAt: new Date().toISOString()
+        });
+
+        currentGroupCode = groupCode;
+        groupNameInput.value = '';
+        document.getElementById('groupCodeDisplay').textContent = `Group Code: ${groupCode}`;
+        document.getElementById('groupCodeDisplay').classList.remove('hidden');
+        error.classList.add('hidden');
+        renderGroupDashboard();
+    } catch (err) {
+        error.textContent = `Error: ${err.message}`;
+        error.classList.remove('hidden');
+        console.error('Group creation error:', err);
+    }
+}
+
+// 그룹 참여
+async function joinGroup() {
+    if (!currentUser) {
+        alert('You must be logged in to join a group.');
+        return;
+    }
+
+    const groupCodeInput = document.getElementById('groupCodeInput');
+    const groupCode = groupCodeInput.value.trim().toUpperCase();
+    const error = document.getElementById('groupJoinError');
+
+    if (groupCode.length !== 6) {
+        error.textContent = 'Please enter a valid 6-digit code.';
+        error.classList.remove('hidden');
+        return;
+    }
+
+    const groupRef = doc(db, "groups", groupCode);
+    try {
+        const groupDoc = await getDoc(groupRef);
+        if (!groupDoc.exists()) {
+            error.textContent = 'Group not found.';
+            error.classList.remove('hidden');
+            return;
+        }
+
+        const groupData = groupDoc.data();
+        if (groupData.members[currentUser.uid]) {
+            error.textContent = 'You are already in this group.';
+            error.classList.remove('hidden');
+            return;
+        }
+
+        await setDoc(groupRef, {
+            members: {
+                ...groupData.members,
+                [currentUser.uid]: {
+                    nickname: window.nickname,
+                    studyTime: window.studyData[currentDate] || 0
+                }
+            }
+        }, { merge: true });
+
+        currentGroupCode = groupCode;
+        groupCodeInput.value = '';
+        error.classList.add('hidden');
+        renderGroupDashboard();
+    } catch (err) {
+        error.textContent = `Error: ${err.message}`;
+        error.classList.remove('hidden');
+        console.error('Group join error:', err);
+    }
+}
+
+// 그룹 나가기
+async function leaveGroup() {
+    if (!currentUser || !currentGroupCode) return;
+
+    const groupRef = doc(db, "groups", currentGroupCode);
+    const groupDoc = await getDoc(groupRef);
+    if (!groupDoc.exists()) return;
+
+    const groupData = groupDoc.data();
+    delete groupData.members[currentUser.uid];
+
+    await setDoc(groupRef, { members: groupData.members }, { merge: true });
+    currentGroupCode = null;
+    renderGroupDashboard();
+}
+
+// 그룹 대시보드 렌더링
+function renderGroupDashboard() {
+    const dashboard = document.getElementById('groupDashboard');
+    const membersDiv = document.getElementById('groupMembers');
+    const groupNameDiv = document.getElementById('currentGroupName');
+
+    if (!currentGroupCode) {
+        dashboard.classList.add('hidden');
+        document.getElementById('groupCodeDisplay').classList.add('hidden');
+        return;
+    }
+
+    dashboard.classList.remove('hidden');
+    const groupRef = doc(db, "groups", currentGroupCode);
+    onSnapshot(groupRef, (doc) => {
+        if (doc.exists()) {
+            const groupData = doc.data();
+            groupNameDiv.textContent = `${groupData.name} (Code: ${currentGroupCode})`;
+
+            // 멤버들을 공부 시간 내림차순으로 정렬
+            const members = Object.entries(groupData.members).map(([uid, data]) => ({
+                uid,
+                nickname: data.nickname,
+                studyTime: data.studyTime || 0
+            })).sort((a, b) => b.studyTime - a.studyTime);
+
+            membersDiv.innerHTML = '';
+            members.forEach(member => {
+                const hours = Math.floor(member.studyTime / 3600);
+                const minutes = Math.floor((member.studyTime % 3600) / 60);
+                const seconds = member.studyTime % 60;
+                membersDiv.innerHTML += `
+                    <div class="member-card">
+                        <div class="nickname">${member.nickname}</div>
+                        <div class="study-time">${hours}h ${minutes}m ${seconds}s</div>
+                    </div>
+                `;
+            });
+        } else {
+            currentGroupCode = null;
+            dashboard.classList.add('hidden');
+        }
+    });
+}
+
+// showScreen 함수에 Groups 추가
+function showScreen(screen) {
+    const screens = ['home', 'study', 'diary', 'todo', 'goals', 'stats', 'settings', 'groups'];
+    screens.forEach(s => {
+        const el = document.getElementById(`${s}Screen`);
+        el.classList.add('hidden');
+    });
+
+    const targetScreen = document.getElementById(`${screen}Screen`);
+    setTimeout(() => {
+        targetScreen.classList.remove('hidden');
+    }, 50);
+
+    const navMapping = {
+        'home': 'Home',
+        'study': 'Study',
+        'todo': 'To-Do',
+        'diary': 'Journal',
+        'goals': 'Goals',
+        'stats': 'Statistics',
+        'settings': 'Settings',
+        'groups': 'Groups'
+    };
+
+    document.querySelectorAll('.nav-item').forEach(btn => {
+        btn.classList.remove('active');
+        if (navMapping[screen] && btn.textContent.trim() === navMapping[screen]) {
+            btn.classList.add('active');
+        }
+    });
+
+    closeDrawer();
+
+    if (screen === 'home') renderHome();
+    else if (screen === 'study') {
+        updateStudyTimeDisplay();
+        updateSubjectSelect();
+        updateSubjectTimes();
+        if (timerInterval) {
+            clearInterval(timerInterval);
+            timerInterval = null;
+        }
+        timerSeconds = 0;
+        updateTimerDisplay();
+    } else if (screen === 'diary') {
+        document.getElementById('diaryDate').value = currentDate;
+        document.getElementById('memoInput').value = '';
+        document.querySelectorAll('.mood-bean').forEach(bean => bean.classList.remove('selected'));
+        selectedMood = null;
+        uploadedImage = null;
+        document.getElementById('imagePreview').innerHTML = '';
+        loadDiaryData(currentDate);
+    } else if (screen === 'todo') renderTodos();
+    else if (screen === 'goals') {
+        updateGoalsInputs();
+        updateGoalsProgress();
+    } else if (screen === 'stats') renderStats();
+    else if (screen === 'settings') loadSettings();
+    else if (screen === 'groups') {
+        document.getElementById('groupNameInput').value = '';
+        document.getElementById('groupCodeInput').value = '';
+        document.getElementById('groupCreateError').classList.add('hidden');
+        document.getElementById('groupJoinError').classList.add('hidden');
+        renderGroupDashboard();
+    }
+}
+
+// 공부 시간 저장 시 그룹 데이터 업데이트
+async function stopTimer() {
+    const selectedSubject = document.getElementById('subjectSelect').value;
+    if (!selectedSubject) return;
+
+    clearInterval(timerInterval);
+    timerInterval = null;
+
+    window.studyData[currentDate] = (window.studyData[currentDate] || 0) + timerSeconds;
+
+    if (!window.subjectStudyTime[selectedSubject]) {
+        window.subjectStudyTime[selectedSubject] = {};
+    }
+    window.subjectStudyTime[selectedSubject][currentDate] = 
+        (window.subjectStudyTime[selectedSubject][currentDate] || 0) + timerSeconds;
+
+    const lastSession = window.studySessions[currentDate]?.slice(-1)[0];
+    if (lastSession && lastSession.subject === selectedSubject && !lastSession.endTime) {
+        lastSession.endTime = new Date().toISOString();
+        lastSession.duration = timerSeconds;
+    }
+
+    // 그룹에 공부 시간 업데이트
+    if (currentGroupCode) {
+        const groupRef = doc(db, "groups", currentGroupCode);
+        const groupDoc = await getDoc(groupRef);
+        if (groupDoc.exists()) {
+            const groupData = groupDoc.data();
+            await setDoc(groupRef, {
+                members: {
+                    ...groupData.members,
+                    [currentUser.uid]: {
+                        nickname: window.nickname,
+                        studyTime: window.studyData[currentDate] || 0
+                    }
+                }
+            }, { merge: true });
+        }
+    }
+
+    timerSeconds = 0;
+    await window.saveUserData();
+    updateTimerDisplay();
+    updateStudyTimeDisplay();
+    updateSubjectTimes();
+    updateGoalsProgress();
+    renderHome();
+}
+
+// 사용자 데이터 로드 시 그룹 정보 확인
+async function loadUserData(userId) {
+    const userRef = doc(db, "users", userId);
+    onSnapshot(userRef, async (doc) => {
+        if (doc.exists()) {
+            const data = doc.data();
+            window.subjects = data.subjects || [];
+            window.studyData = data.studyData || {};
+            window.subjectStudyTime = data.subjectStudyTime || {};
+            window.diaryData = data.diaryData || {};
+            window.todos = data.todos || [];
+            window.goals = data.goals || { daily: null, weekly: null };
+            window.studySessions = data.studySessions || {};
+            window.nickname = data.nickname || 'User';
+            currentGroupCode = data.groupCode || null; // 그룹 코드 로드
+            console.log("Loaded data with nickname:", window.nickname);
+        } else {
+            window.subjects = [];
+            window.studyData = {};
+            window.subjectStudyTime = {};
+            window.diaryData = {};
+            window.todos = [];
+            window.goals = { daily: null, weekly: null };
+            window.studySessions = {};
+            currentGroupCode = null;
+        }
+        updateSubjectSelect();
+        updateSubjectTimes();
+        updateStudyTimeDisplay();
+        updateGoalsInputs();
+        updateGoalsProgress();
+        renderHome();
+        renderTodos();
+        renderGroupDashboard();
+    }, (error) => {
+        console.error("Load failed:", error.code, error.message);
+    });
+}
+
+// 사용자 데이터 저장 시 그룹 코드 저장
+async function saveUserData() {
+    if (!currentUser) return;
+    const userId = currentUser.uid;
+    const dataToSave = {
+        subjects: window.subjects || [],
+        studyData: window.studyData || {},
+        subjectStudyTime: window.subjectStudyTime || {},
+        diaryData: window.diaryData || {},
+        todos: window.todos || [],
+        goals: window.goals || { daily: null, weekly: null },
+        studySessions: window.studySessions || {},
+        nickname: window.nickname || 'User',
+        groupCode: currentGroupCode || null // 그룹 코드 저장
+    };
+    try {
+        await setDoc(doc(db, "users", userId), dataToSave, { merge: true });
+        console.log("Data saved successfully!");
+    } catch (error) {
+        console.error("Save failed:", error.code, error.message);
+        alert("Failed to save data: " + error.message);
+    }
+}
+
+// 키보드 입력 이벤트 추가
+document.getElementById('groupNameInput').addEventListener('keypress', function(event) {
+    if (event.key === 'Enter') {
+        event.preventDefault();
+        createGroup();
+    }
+});
+
+document.getElementById('groupCodeInput').addEventListener('keypress', function(event) {
+    if (event.key === 'Enter') {
+        event.preventDefault();
+        joinGroup();
+    }
+});
+
 document.head.appendChild(style);
 
 updateSubjectSelect();

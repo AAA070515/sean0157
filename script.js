@@ -1,3 +1,22 @@
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
+import { getFirestore, doc, setDoc, onSnapshot, getDoc, collection, addDoc, getDocs, query, where, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyDx_BBG73R3FReoFsRPuIKcDb754LAxTCI",
+    authDomain: "sean0157-92c62.firebaseapp.com",
+    projectId: "sean0157-92c62",
+    storageBucket: "sean0157-92c62.firebasestorage.app",
+    messagingSenderId: "1052880240716",
+    appId: "1:1052880240716:web:13289245ada3ff291174e9",
+    measurementId: "G-HRWSZ6MSNB"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+let currentUser = null;
 let timerSeconds = 0;
 let timerInterval = null;
 let currentFilter = 'all';
@@ -8,6 +27,118 @@ let currentWeekOffset = 0;
 
 const today = new Date();
 let currentDate = today.toISOString().split('T')[0];
+
+const loginBtn = document.getElementById('login-btn');
+const logoutBtn = document.getElementById('logout-btn');
+
+onAuthStateChanged(auth, (user) => {
+    if (user) {
+        currentUser = user;
+        loginBtn.style.display = 'none';
+        logoutBtn.style.display = 'block';
+        console.log('Logged in as:', user.displayName, user.email);
+        loadUserData(user.uid);
+    } else {
+        currentUser = null;
+        loginBtn.style.display = 'block';
+        logoutBtn.style.display = 'none';
+        console.log('Logged out');
+        showScreen('home');
+    }
+});
+
+loginBtn.addEventListener('click', () => {
+    const provider = new GoogleAuthProvider();
+    signInWithPopup(auth, provider)
+        .then((result) => {
+            console.log('Login successful:', result.user.displayName);
+        })
+        .catch((error) => {
+            console.error('Login failed:', error.message);
+            alert('로그인에 실패했습니다. 다시 시도해주세요.');
+        });
+});
+
+logoutBtn.addEventListener('click', () => {
+    signOut(auth)
+        .then(() => {
+            console.log('Logout successful');
+        })
+        .catch((error) => {
+            console.error('Logout failed:', error.message);
+            alert('로그아웃에 실패했습니다.');
+        });
+});
+
+function loadUserData(userId) {
+    const userRef = doc(db, "users", userId);
+    onSnapshot(userRef, (doc) => {
+        if (doc.exists()) {
+            const data = doc.data();
+            window.subjects = data.subjects || [];
+            window.studyData = data.studyData || {};
+            window.subjectStudyTime = data.subjectStudyTime || {};
+            window.diaryData = data.diaryData || {};
+            window.todos = data.todos || [];
+            window.goals = data.goals || { daily: null, weekly: null };
+            window.studySessions = data.studySessions || {};
+            window.groups = data.groups || [];
+            console.log("Loaded data:", { subjects: window.subjects, studyData: window.studyData, diaryData: window.diaryData, todos: window.todos, goals: window.goals, studySessions: window.studySessions, groups: window.groups });
+        } else {
+            console.log("No data found for user, initializing with defaults.");
+            window.subjects = [];
+            window.studyData = {};
+            window.subjectStudyTime = {};
+            window.diaryData = {};
+            window.todos = [];
+            window.goals = { daily: null, weekly: null };
+            window.studySessions = {};
+            window.groups = [];
+        }
+        updateSubjectSelect();
+        updateSubjectTimes();
+        updateStudyTimeDisplay();
+        updateGoalsInputs();
+        updateGoalsProgress();
+        renderHome();
+        renderTodos();
+    }, (error) => {
+        console.error("Load failed:", error.code, error.message);
+    });
+}
+
+async function saveUserData() {
+    if (!currentUser) {
+        console.log("No user logged in, cannot save data!");
+        return;
+    }
+    const userId = currentUser.uid;
+    const dataToSave = {
+        subjects: window.subjects || [],
+        studyData: window.studyData || {},
+        subjectStudyTime: window.subjectStudyTime || {},
+        diaryData: window.diaryData || {},
+        todos: window.todos || [],
+        goals: window.goals || { daily: null, weekly: null },
+        studySessions: window.studySessions || {},
+        groups: window.groups || []
+    };
+    console.log("Data to save:", JSON.stringify(dataToSave, null, 2));
+    try {
+        await setDoc(doc(db, "users", userId), dataToSave, { merge: true });
+        console.log("Data saved successfully!");
+        const userRef = doc(db, "users", userId);
+        const docSnap = await getDoc(userRef);
+        if (docSnap.exists()) {
+            console.log("Data after save:", docSnap.data());
+        }
+    } catch (error) {
+        console.error("Save failed:", error.code, error.message);
+        alert("Failed to save data: " + error.message);
+    }
+}
+
+window.saveUserData = saveUserData;
 
 updateStudyTimeDisplay();
 renderHome();
@@ -44,7 +175,7 @@ function closeDrawer() {
 }
 
 function showScreen(screen) {
-    const screens = ['home', 'study', 'diary', 'todo', 'goals', 'stats'];
+    const screens = ['home', 'study', 'diary', 'todo', 'goals', 'stats', 'groups'];
     screens.forEach(s => {
         const el = document.getElementById(`${s}Screen`);
         el.classList.add('hidden');
@@ -61,7 +192,8 @@ function showScreen(screen) {
         'todo': 'To-Do',
         'diary': 'Journal',
         'goals': 'Goals',
-        'stats': 'Statistics'
+        'stats': 'Statistics',
+        'groups': 'Groups'
     };
 
     document.querySelectorAll('.nav-item').forEach(btn => {
@@ -97,6 +229,7 @@ function showScreen(screen) {
         updateGoalsInputs();
         updateGoalsProgress();
     } else if (screen === 'stats') renderStats();
+    else if (screen === 'groups') renderGroups();
 }
 
 function renderHome() {
@@ -496,7 +629,6 @@ async function addSubject() {
         window.subjects.push(subjectName);
         if (!window.subjectStudyTime[subjectName]) window.subjectStudyTime[subjectName] = {};
         window.subjectStudyTime[subjectName][currentDate] = window.subjectStudyTime[subjectName][currentDate] || 0;
-        console.log("After adding subject:", window.subjects); // 디버깅 로그 추가
         await window.saveUserData();
         updateSubjectSelect();
         updateSubjectTimes();
@@ -711,8 +843,8 @@ function calculateWeeklyStudyTime() {
 
 async function resetAllSettings() {
     if (confirm('Are you sure you want to reset all settings? This will clear all your data.')) {
-        if (window.currentUser) {
-            const userRef = doc(window.db, "users", window.currentUser.uid);
+        if (currentUser) {
+            const userRef = doc(db, "users", currentUser.uid);
             try {
                 await setDoc(userRef, {
                     subjects: [],
@@ -721,7 +853,8 @@ async function resetAllSettings() {
                     diaryData: {},
                     todos: [],
                     goals: { daily: null, weekly: null },
-                    studySessions: {}
+                    studySessions: {},
+                    groups: []
                 });
                 window.subjects = [];
                 window.studyData = {};
@@ -730,6 +863,7 @@ async function resetAllSettings() {
                 window.todos = [];
                 window.goals = { daily: null, weekly: null };
                 window.studySessions = {};
+                window.groups = [];
                 timerSeconds = 0;
                 if (timerInterval) clearInterval(timerInterval);
                 timerInterval = null;
@@ -745,6 +879,7 @@ async function resetAllSettings() {
                 updateGoalsProgress();
                 renderHome();
                 renderTodos();
+                renderGroups();
                 document.getElementById('dayDetails').classList.add('hidden');
                 document.getElementById('subjectInput').value = '';
                 document.getElementById('todoInput').value = '';
@@ -767,6 +902,7 @@ async function resetAllSettings() {
             window.todos = [];
             window.goals = { daily: null, weekly: null };
             window.studySessions = {};
+            window.groups = [];
             timerSeconds = 0;
             if (timerInterval) clearInterval(timerInterval);
             timerInterval = null;
@@ -782,6 +918,7 @@ async function resetAllSettings() {
             updateGoalsProgress();
             renderHome();
             renderTodos();
+            renderGroups();
             document.getElementById('dayDetails').classList.add('hidden');
             document.getElementById('subjectInput').value = '';
             document.getElementById('todoInput').value = '';
@@ -796,57 +933,198 @@ async function resetAllSettings() {
     }
 }
 
-document.getElementById('diaryDate').addEventListener('change', function() {
-    const selectedDate = this.value;
-    loadDiaryData(selectedDate);
-});
-
-document.getElementById('subjectInput').addEventListener('keypress', function(event) {
-    if (event.key === 'Enter') {
-        event.preventDefault();
-        addSubject();
+async function renderGroups() {
+    if (!currentUser) {
+        alert('Please log in to view groups!');
+        showScreen('home');
+        return;
     }
-});
 
-document.getElementById('todoInput').addEventListener('keypress', function(event) {
-    if (event.key === 'Enter') {
-        event.preventDefault();
-        addTodo();
+    const groupList = document.getElementById('groupList');
+    groupList.innerHTML = '';
+    document.getElementById('groupDetails').classList.add('hidden');
+
+    const userRef = doc(db, "users", currentUser.uid);
+    const userSnap = await getDoc(userRef);
+    window.groups = userSnap.data().groups || [];
+
+    if (window.groups.length === 0) {
+        groupList.innerHTML = '<p>No groups joined yet.</p>';
+        return;
     }
-});
 
-const style = document.createElement('style');
-style.textContent = `
-.delete-subject-btn {
-    background: none;
-    border: none;
-    color: #EA4335;
-    cursor: pointer;
-    font-size: 16px;
-    margin-left: 8px;
-    padding: 2px 6px;
-    border-radius: 50%;
+    for (const groupId of window.groups) {
+        const groupRef = doc(db, "groups", groupId);
+        const groupSnap = await getDoc(groupRef);
+        if (groupSnap.exists()) {
+            const groupData = groupSnap.data();
+            groupList.innerHTML += `
+                <div class="group-item" onclick="showGroupDetails('${groupId}')">
+                    ${groupData.name} (Code: ${groupData.code})
+                </div>`;
+        }
+    }
 }
-.delete-subject-btn:hover {
-    background-color: rgba(234, 67, 53, 0.1);
-}
-.subject-time {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 5px 0;
-}
-.pulse {
-    animation: pulse 0.2s ease-in-out;
-}
-@keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-    100% { transform: scale(1); }
-}
-`;
 
-document.head.appendChild(style);
+async function createGroup() {
+    if (!currentUser) {
+        alert('Please log in to create a group!');
+        return;
+    }
 
-updateSubjectSelect();
-updateSubjectTimes();
+    const groupName = prompt('Enter group name:');
+    if (!groupName) return;
+
+    const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+    const groupRef = await addDoc(collection(db, "groups"), {
+        name: groupName,
+        code: code,
+        members: {
+            [currentUser.uid]: {
+                displayName: currentUser.displayName,
+                joinedAt: new Date().toISOString()
+            }
+        }
+    });
+
+    const userRef = doc(db, "users", currentUser.uid);
+    const userSnap = await getDoc(userRef);
+    const userGroups = userSnap.data().groups || [];
+    userGroups.push(groupRef.id);
+    await updateDoc(userRef, { groups: userGroups });
+
+    window.groups = userGroups;
+    renderGroups();
+    alert(`Group created! Code: ${code}`);
+}
+
+async function joinGroup() {
+    if (!currentUser) {
+        alert('Please log in to join a group!');
+        return;
+    }
+
+    const code = document.getElementById('groupCodeInput').value.trim();
+    if (!code) {
+        alert('Please enter a group code!');
+        return;
+    }
+
+    const q = query(collection(db, "groups"), where("code", "==", code));
+    const querySnapshot = await getDocs(q);
+    if (querySnapshot.empty) {
+        alert('Invalid group code!');
+        return;
+    }
+
+    const groupDoc = querySnapshot.docs[0];
+    const groupId = groupDoc.id;
+    const groupRef = doc(db, "groups", groupId);
+    const groupSnap = await getDoc(groupRef);
+    const groupData = groupSnap.data();
+
+    if (groupData.members[currentUser.uid]) {
+        alert('You are already in this group!');
+        return;
+    }
+
+    await updateDoc(groupRef, {
+        [`members.${currentUser.uid}`]: {
+            displayName: currentUser.displayName,
+            joinedAt: new Date().toISOString()
+        }
+    });
+
+    const userRef = doc(db, "users", currentUser.uid);
+    const userSnap = await getDoc(userRef);
+    const userGroups = userSnap.data().groups || [];
+    if (!userGroups.includes(groupId)) {
+        userGroups.push(groupId);
+        await updateDoc(userRef, { groups: userGroups });
+        window.groups = userGroups;
+    }
+
+    document.getElementById('groupCodeInput').value = '';
+    renderGroups();
+    showGroupDetails(groupId);
+}
+
+async function showGroupDetails(groupId) {
+    const groupRef = doc(db, "groups", groupId);
+    const groupSnap = await getDoc(groupRef);
+    const groupData = groupSnap.data();
+
+    document.getElementById('groupName').textContent = `${groupData.name} (Code: ${groupData.code})`;
+    const rankingsDiv = document.getElementById('groupRankings');
+    const subjectTimesDiv = document.getElementById('groupSubjectTimes');
+    rankingsDiv.innerHTML = '';
+    subjectTimesDiv.innerHTML = '';
+
+    const memberStats = {};
+    for (const [uid, member] of Object.entries(groupData.members)) {
+        const userRef = doc(db, "users", uid);
+        const userSnap = await getDoc(userRef);
+        const userData = userSnap.data();
+        const totalStudyTime = Object.values(userData.studyData || {}).reduce((sum, time) => sum + time, 0);
+        memberStats[uid] = { name: member.displayName, totalStudyTime };
+    }
+
+    const sortedMembers = Object.entries(memberStats)
+        .sort(([, a], [, b]) => b.totalStudyTime - a.totalStudyTime);
+    sortedMembers.forEach(([uid, { name, totalStudyTime }], index) => {
+        const hours = Math.floor(totalStudyTime / 3600);
+        const minutes = Math.floor((totalStudyTime % 3600) / 60);
+        rankingsDiv.innerHTML += `
+            <div class="ranking-item">
+                <span>${index + 1}. ${name}</span>
+                <span>${hours}h ${minutes}m</span>
+            </div>`;
+    });
+
+    const subjectTotals = {};
+    for (const uid of Object.keys(groupData.members)) {
+        const userRef = doc(db, "users", uid);
+        const userSnap = await getDoc(userRef);
+        const userData = userSnap.data();
+        for (const [subject, times] of Object.entries(userData.subjectStudyTime || {})) {
+            const totalTime = Object.values(times).reduce((sum, time) => sum + time, 0);
+            subjectTotals[subject] = (subjectTotals[subject] || 0) + totalTime;
+        }
+    }
+
+    for (const [subject, totalTime] of Object.entries(subjectTotals)) {
+        const hours = Math.floor(totalTime / 3600);
+        const minutes = Math.floor((totalTime % 3600) / 60);
+        subjectTimesDiv.innerHTML += `
+            <div class="ranking-item">
+                <span>${subject}</span>
+                <span>${hours}h ${minutes}m</span>
+            </div>`;
+    }
+
+    document.getElementById('groupDetails').classList.remove('hidden');
+}
+
+async function leaveGroup() {
+    if (!currentUser || !window.groups.length) return;
+
+    const groupId = window.groups.find(id => {
+        const groupItem = document.querySelector(`.group-item[onclick="showGroupDetails('${id}')"]`);
+        return groupItem && !document.getElementById('groupDetails').classList.contains('hidden');
+    });
+
+    if (!groupId) return;
+
+    const groupRef = doc(db, "groups", groupId);
+    await updateDoc(groupRef, {
+        [`members.${currentUser.uid}`]: firebase.firestore.FieldValue.delete()
+    });
+
+    const userRef = doc(db, "users", currentUser.uid);
+    const userSnap = await getDoc(userRef);
+    const userGroups = userSnap.data().groups.filter(id => id !== groupId);
+    await updateDoc(userRef, { groups: userGroups });
+
+    window.groups = userGroups;
+    renderGroups();
+}

@@ -359,17 +359,21 @@ function updateStudyTimeDisplay() {
 
 function startTimer() {
     const selectedSubject = document.getElementById('subjectSelect').value;
-    if (!selectedSubject) {
+
+    // 타이머가 실행 중이 아닌 경우에만 과목 선택을 확인
+    if (!timerInterval && !selectedSubject) {
         alert('Please select a subject!');
         return;
     }
-    if (!timerInterval) {
+
+    // 타이머가 이미 실행 중이면 새로 시작하지 않음
+    if (!timerInterval && selectedSubject) {
         const startTime = new Date();
         timerInterval = setInterval(() => {
             timerSeconds++;
             updateTimerDisplay();
 
-            // 10초마다 그룹 데이터 업데이트 (선택 사항)
+            // (선택 사항) 실시간 그룹 업데이트 로직 추가 시 여기서 처리
             if (timerSeconds % 1 === 0 && window.currentGroupCode) {
                 const groupRef = window.firestoreDoc(window.firestoreDb, "groups", window.currentGroupCode);
                 window.firestoreGetDoc(groupRef).then(groupDoc => {
@@ -1087,16 +1091,20 @@ function renderGroupDashboard() {
             const groupData = doc.data();
             groupNameDiv.textContent = `${groupData.name} (Code: ${window.currentGroupCode})`;
 
-            // 멤버 데이터를 공부 시간 기준으로 정렬하고 랭킹 부여
+            // 멤버 데이터를 공부 시간 기준으로 내림차순 정렬, 시간이 같으면 uid 오름차순 정렬
             const members = Object.entries(groupData.members)
-                .map(([uid, data], index) => ({
+                .map(([uid, data]) => ({
                     uid,
                     nickname: data.nickname,
-                    studyTime: data.studyTime || 0,
-                    rank: index + 1
+                    studyTime: data.studyTime || 0
                 }))
-                .sort((a, b) => b.studyTime - a.studyTime) // 공부 시간 내림차순 정렬
-                .map((member, index) => ({ ...member, rank: index + 1 })); // 정렬 후 순위 재설정
+                .sort((a, b) => {
+                    if (b.studyTime !== a.studyTime) {
+                        return b.studyTime - a.studyTime; // 공부 시간 내림차순
+                    }
+                    return a.uid.localeCompare(b.uid); // 시간이 같으면 uid 오름차순
+                })
+                .map((member, index) => ({ ...member, rank: index + 1 })); // 정렬 후 순위 부여
 
             membersDiv.innerHTML = '';
             members.forEach(member => {
@@ -1121,6 +1129,7 @@ function renderGroupDashboard() {
         console.error('Group dashboard render error:', error);
     });
 }
+
 document.getElementById('groupNameInput').addEventListener('keypress', function(event) {
     if (event.key === 'Enter') {
         event.preventDefault();

@@ -406,40 +406,63 @@ function stopTimer() {
         lastSession.duration = timerSeconds;
     }
 
-    saveDataToFirestore();
-    timerSeconds = 0;
-    updateTimerDisplay();
-    updateStudyTimeDisplay();
-    updateSubjectTimes();
-    updateGoalsProgress();
-    renderHome();
+    saveDataToFirestore().then(() => {
+        timerSeconds = 0;
+        updateTimerDisplay();
+        updateStudyTimeDisplay();
+        updateSubjectTimes();
+        updateGoalsProgress();
+        renderHome();
+    }).catch((error) => {
+        console.error("Failed to save timer data:", error);
+    });
 }
 
-function saveDiary() {
+async function saveDiary() {
+    console.log("saveDiary() called");
     const date = document.getElementById('diaryDate').value;
     const memo = document.getElementById('memoInput').value.trim();
+    console.log("Date:", date, "Mood:", selectedMood, "Memo:", memo, "Image:", uploadedImage);
+
     if (!date || !selectedMood || !memo) {
-        if (!selectedMood) alert('Please select your mood for today!');
-        if (!memo) alert('Please write a memo for your journal entry!');
+        if (!date) console.log("Validation failed: Date is missing");
+        if (!selectedMood) {
+            console.log("Validation failed: Mood is missing");
+            alert('Please select your mood for today!');
+        }
+        if (!memo) {
+            console.log("Validation failed: Memo is missing");
+            alert('Please write a memo for your journal entry!');
+        }
         return;
     }
 
-    console.log("Saving diary for date:", date, "Mood:", selectedMood, "Memo:", memo, "Image:", uploadedImage);
-
-    diaryData[date] = { 
+    if (!window.diaryData) window.diaryData = {};
+    window.diaryData[date] = { 
         mood: selectedMood,
         memo: memo, 
-        image: uploadedImage || diaryData[date]?.image || null 
+        image: uploadedImage || window.diaryData[date]?.image || null 
     };
-    saveDataToFirestore();
-    renderHome();
-    document.getElementById('memoInput').value = '';
-    document.getElementById('diaryImage').value = '';
-    document.querySelectorAll('.mood-bean').forEach(bean => bean.classList.remove('selected'));
-    selectedMood = null;
-    uploadedImage = null;
-    document.getElementById('imagePreview').innerHTML = '';
-    alert('Journal entry saved!');
+    console.log("Updated diaryData before saving:", window.diaryData);
+
+    try {
+        await saveDataToFirestore();
+        console.log("Diary data saved successfully:", window.diaryData[date]);
+        if (window.syncDataFromFirestore) {
+            syncDataFromFirestore();
+        }
+        renderHome();
+        document.getElementById('memoInput').value = '';
+        document.getElementById('diaryImage').value = '';
+        document.querySelectorAll('.mood-bean').forEach(bean => bean.classList.remove('selected'));
+        selectedMood = null;
+        uploadedImage = null;
+        document.getElementById('imagePreview').innerHTML = '';
+        alert('Journal entry saved!');
+    } catch (error) {
+        console.error("Failed to save diary:", error);
+        alert("Failed to save journal entry. Check console for details.");
+    }
 }
 
 function renderTodos() {
@@ -477,14 +500,20 @@ function toggleTodo(id) {
         return todo;
     });
     
-    saveDataToFirestore();
-    renderTodos();
+    saveDataToFirestore().then(() => {
+        renderTodos();
+    }).catch((error) => {
+        console.error("Failed to save todo toggle:", error);
+    });
 }
 
 function deleteTodo(id) {
     todos = todos.filter(todo => todo.id !== id);
-    saveDataToFirestore();
-    renderTodos();
+    saveDataToFirestore().then(() => {
+        renderTodos();
+    }).catch((error) => {
+        console.error("Failed to save todo deletion:", error);
+    });
 }
 
 function saveGoal(type) {
@@ -493,10 +522,13 @@ function saveGoal(type) {
     
     if (!isNaN(value) && value >= 0) {
         goals[type] = value * 3600;
-        saveDataToFirestore();
-        updateGoalsProgress();
-        renderHome();
-        alert(`${type.charAt(0).toUpperCase() + type.slice(1)} goal saved!`);
+        saveDataToFirestore().then(() => {
+            updateGoalsProgress();
+            renderHome();
+            alert(`${type.charAt(0).toUpperCase() + type.slice(1)} goal saved!`);
+        }).catch((error) => {
+            console.error("Failed to save goal:", error);
+        });
     } else {
         alert('Please enter a valid number of hours.');
     }
@@ -509,10 +541,13 @@ function addSubject() {
         subjects.push(subjectName);
         if (!subjectStudyTime[subjectName]) subjectStudyTime[subjectName] = {};
         subjectStudyTime[subjectName][currentDate] = subjectStudyTime[subjectName][currentDate] || 0;
-        saveDataToFirestore();
-        updateSubjectSelect();
-        updateSubjectTimes();
-        subjectInput.value = '';
+        saveDataToFirestore().then(() => {
+            updateSubjectSelect();
+            updateSubjectTimes();
+            subjectInput.value = '';
+        }).catch((error) => {
+            console.error("Failed to save subject:", error);
+        });
     }
 }
 
@@ -520,9 +555,12 @@ function deleteSubject(subjectName) {
     if (subjects.includes(subjectName)) {
         subjects = subjects.filter(subject => subject !== subjectName);
         if (subjectStudyTime[subjectName]) delete subjectStudyTime[subjectName];
-        saveDataToFirestore();
-        updateSubjectSelect();
-        updateSubjectTimes();
+        saveDataToFirestore().then(() => {
+            updateSubjectSelect();
+            updateSubjectTimes();
+        }).catch((error) => {
+            console.error("Failed to delete subject:", error);
+        });
     }
 }
 
@@ -574,6 +612,7 @@ function selectMood(mood) {
     document.querySelectorAll('.mood-bean').forEach(bean => bean.classList.remove('selected'));
     document.querySelector(`.mood-bean.${mood}`).classList.add('selected');
     selectedMood = mood;
+    console.log("Mood selected:", mood);
 }
 
 function triggerFileInput() {
@@ -589,6 +628,11 @@ function uploadImage() {
     const fileInput = document.getElementById('diaryImage');
     const file = fileInput.files[0];
     if (file) {
+        if (!window.userUID) {
+            console.error("Cannot upload image: No user UID available");
+            alert("Please log in to upload an image.");
+            return;
+        }
         const storageRef = ref(window.storage, `users/${window.userUID}/diaryImages/${Date.now()}_${file.name}`);
         uploadBytes(storageRef, file).then((snapshot) => {
             getDownloadURL(snapshot.ref).then((downloadURL) => {
@@ -596,6 +640,8 @@ function uploadImage() {
                 const preview = document.getElementById('imagePreview');
                 preview.innerHTML = `<img src="${uploadedImage}" alt="Uploaded Image">`;
                 fileInput.value = '';
+            }).catch((error) => {
+                console.error("Failed to get download URL:", error);
             });
         }).catch((error) => {
             console.error("Image upload failed:", error);
@@ -640,9 +686,12 @@ function addTodo() {
         };
         
         todos.push(newTodo);
-        saveDataToFirestore();
-        todoInput.value = '';
-        renderTodos();
+        saveDataToFirestore().then(() => {
+            todoInput.value = '';
+            renderTodos();
+        }).catch((error) => {
+            console.error("Failed to save todo:", error);
+        });
     }
 }
 
@@ -656,8 +705,11 @@ function filterTasks(filter) {
 
 function clearCompleted() {
     todos = todos.filter(todo => !todo.completed);
-    saveDataToFirestore();
-    renderTodos();
+    saveDataToFirestore().then(() => {
+        renderTodos();
+    }).catch((error) => {
+        console.error("Failed to clear completed todos:", error);
+    });
 }
 
 function updateGoalsInputs() {
@@ -739,25 +791,28 @@ function resetAllSettings() {
             clearInterval(timerInterval);
             timerInterval = null;
         }
-        saveDataToFirestore();
-        updateSubjectSelect();
-        updateSubjectTimes();
-        updateStudyTimeDisplay();
-        updateTimerDisplay();
-        updateGoalsInputs();
-        updateGoalsProgress();
-        renderHome();
-        renderTodos();
-        document.getElementById('dayDetails').classList.add('hidden');
-        document.getElementById('subjectInput').value = '';
-        document.getElementById('todoInput').value = '';
-        document.getElementById('diaryDate').value = currentDate;
-        document.getElementById('memoInput').value = '';
-        document.getElementById('diaryImage').value = '';
-        document.getElementById('imagePreview').innerHTML = '';
-        document.querySelectorAll('.mood-bean').forEach(bean => bean.classList.remove('selected'));
-        showScreen('home');
-        alert('All settings have been reset.');
+        saveDataToFirestore().then(() => {
+            updateSubjectSelect();
+            updateSubjectTimes();
+            updateStudyTimeDisplay();
+            updateTimerDisplay();
+            updateGoalsInputs();
+            updateGoalsProgress();
+            renderHome();
+            renderTodos();
+            document.getElementById('dayDetails').classList.add('hidden');
+            document.getElementById('subjectInput').value = '';
+            document.getElementById('todoInput').value = '';
+            document.getElementById('diaryDate').value = currentDate;
+            document.getElementById('memoInput').value = '';
+            document.getElementById('diaryImage').value = '';
+            document.getElementById('imagePreview').innerHTML = '';
+            document.querySelectorAll('.mood-bean').forEach(bean => bean.classList.remove('selected'));
+            showScreen('home');
+            alert('All settings have been reset.');
+        }).catch((error) => {
+            console.error("Failed to reset settings:", error);
+        });
     }
 }
 
@@ -779,39 +834,3 @@ document.getElementById('todoInput').addEventListener('keypress', function(event
         addTodo();
     }
 });
-
-const style = document.createElement('style');
-style.textContent = `
-.delete-subject-btn {
-    background: none;
-    border: none;
-    color: #EA4335;
-    cursor: pointer;
-    font-size: 16px;
-    margin-left: 8px;
-    padding: 2px 6px;
-    border-radius: 50%;
-}
-.delete-subject-btn:hover {
-    background-color: rgba(234, 67, 53, 0.1);
-}
-.subject-time {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 5px 0;
-}
-.pulse {
-    animation: pulse 0.2s ease-in-out;
-}
-@keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-    100% { transform: scale(1); }
-}
-`;
-
-document.head.appendChild(style);
-
-updateSubjectSelect();
-updateSubjectTimes();

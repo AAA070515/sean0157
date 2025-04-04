@@ -994,25 +994,25 @@ body {
     color: #4285F4;
 }
 
-.group-actions {
-    display: flex;
-    justify-content: space-around;
-    flex-wrap: wrap;
-    gap: 20px;
+.group-create-section,
+.group-join-section {
+    background-color: white;
+    border-radius: 12px;
+    padding: 4%;
     margin-bottom: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    text-align: center;
 }
 
-.group-create, .group-join {
-    flex: 1;
-    min-width: 200px;
-}
-
-.group-create h4, .group-join h4 {
+.group-create-section h4,
+.group-join-section h4 {
     font-size: clamp(14px, 2.5vw, 16px);
     margin-bottom: 15px;
+    color: #4285F4;
 }
 
-#groupNameInput, #groupCodeInput {
+#groupNameInput,
+#groupCodeInput {
     width: 100%;
     padding: clamp(8px, 2vw, 12px);
     border-radius: 8px;
@@ -1021,13 +1021,18 @@ body {
     margin-bottom: 15px;
 }
 
-.group-actions .btn {
+.group-create-section .btn,
+.group-join-section .btn {
     background-color: #4285F4;
     color: white;
     font-size: clamp(14px, 2.5vw, 16px);
+    width: 100%;
+    padding: clamp(10px, 2.5vw, 15px);
+    border-radius: 25px;
 }
 
-.group-actions .btn:hover {
+.group-create-section .btn:hover,
+.group-join-section .btn:hover {
     background-color: #3367D6;
 }
 
@@ -1079,6 +1084,9 @@ body {
     background-color: #EA4335;
     color: white;
     font-size: clamp(14px, 2.5vw, 16px);
+    width: 100%;
+    padding: clamp(10px, 2.5vw, 15px);
+    border-radius: 25px;
 }
 
 .leave-btn:hover {

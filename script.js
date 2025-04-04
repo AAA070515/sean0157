@@ -61,13 +61,13 @@ function showScreen(screen) {
         'todo': 'To-Do',
         'diary': 'Journal',
         'goals': 'Goals',
-        'stats': 'Statistics',
-        'settings': 'Settings'
+        'stats': 'Statistics'
+        // 'settings'는 버튼이므로 navMapping에서 제외
     };
 
     document.querySelectorAll('.nav-item').forEach(btn => {
         btn.classList.remove('active');
-        if (btn.textContent.trim() === navMapping[screen]) {
+        if (navMapping[screen] && btn.textContent.trim() === navMapping[screen]) {
             btn.classList.add('active');
         }
     });

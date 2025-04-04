@@ -202,7 +202,7 @@
                     </div>
                 </div>
             </section>
-            <section id="groupsScreen" class="hidden">
+            <section id="groupsScreen" class="hidden"> <!-- 새로 추가 -->
                 <div class="groups-section">
                     <h3>Groups</h3>
                     <div id="groupOptions" class="group-options">
@@ -234,7 +234,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot, getDoc, collection, addDoc, getDocs, query, where, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDx_BBG73R3FReoFsRPuIKcDb754LAxTCI",
@@ -364,7 +364,6 @@
                     window.goals = data.goals || { daily: null, weekly: null };
                     window.studySessions = data.studySessions || {};
                     window.nickname = data.nickname || 'User';
-                    window.currentGroupId = data.groupId || null; // 그룹 ID 로드
                     console.log("Loaded data with nickname:", window.nickname);
                 } else {
                     window.subjects = [];
@@ -374,7 +373,6 @@
                     window.todos = [];
                     window.goals = { daily: null, weekly: null };
                     window.studySessions = {};
-                    window.currentGroupId = null;
                 }
                 updateSubjectSelect();
                 updateSubjectTimes();
@@ -383,9 +381,6 @@
                 updateGoalsProgress();
                 renderHome();
                 renderTodos();
-                if (document.getElementById('groupsScreen') && !document.getElementById('groupsScreen').classList.contains('hidden')) {
-                    renderGroups();
-                }
             }, (error) => {
                 console.error("Load failed:", error.code, error.message);
             });
@@ -402,8 +397,7 @@
                 todos: window.todos || [],
                 goals: window.goals || { daily: null, weekly: null },
                 studySessions: window.studySessions || {},
-                nickname: window.nickname || 'User',
-                groupId: window.currentGroupId || null
+                nickname: window.nickname || 'User'
             };
             try {
                 await setDoc(doc(db, "users", userId), dataToSave, { merge: true });

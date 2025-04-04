@@ -214,7 +214,6 @@ body {
     transform: translateX(5px);
 }
 
-/* 메인 콘텐츠 */
 .main-content {
     flex: 1;
     width: 100%;

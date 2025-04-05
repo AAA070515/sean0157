@@ -993,7 +993,7 @@ async function joinGroup() {
         groupCodeInput.value = '';
         error.classList.add('hidden');
         await window.saveUserData();
-        renderGroupDashboard(); // 그룹 가입 후 대시보드 표시
+        renderGroupDashboard();
     } catch (err) {
         error.textContent = `Error: ${err.message}`;
         error.classList.remove('hidden');
@@ -1068,7 +1068,7 @@ async function leaveGroup() {
 
     window.currentGroupCode = null;
     await window.saveUserData();
-    renderGroupDashboard(); // 그룹 나가기 후 "그룹 만들기/참가" 표시
+    renderGroupDashboard();
 }
 
 function renderGroupDashboard() {
@@ -1093,7 +1093,6 @@ function renderGroupDashboard() {
             const groupData = doc.data();
             groupNameDiv.textContent = `${groupData.name} (Code: ${window.currentGroupCode})`;
 
-            // 멤버 데이터를 공부 시간 기준으로 내림차순 정렬, 시간이 같으면 uid 오름차순 정렬
             const members = Object.entries(groupData.members)
                 .map(([uid, data]) => ({
                     uid,
@@ -1102,11 +1101,11 @@ function renderGroupDashboard() {
                 }))
                 .sort((a, b) => {
                     if (b.studyTime !== a.studyTime) {
-                        return b.studyTime - a.studyTime; // 공부 시간 내림차순
+                        return b.studyTime - a.studyTime;
                     }
-                    return a.uid.localeCompare(b.uid); // 시간이 같으면 uid 오름차순
+                    return a.uid.localeCompare(b.uid);
                 })
-                .map((member, index) => ({ ...member, rank: index + 1 })); // 정렬 후 순위 부여
+                .map((member, index) => ({ ...member, rank: index + 1 }));
 
             membersDiv.innerHTML = '';
             members.forEach(member => {

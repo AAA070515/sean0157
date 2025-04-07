@@ -1242,24 +1242,30 @@ function renderGroupContent() {
     const joinCreateBox = document.querySelector('.group-join-create-box');
     const contentBox = document.querySelector('.group-content-box');
 
+    if (!joinCreateBox || !contentBox) {
+        console.error('Error: .group-join-create-box or .group-content-box not found');
+        return;
+    }
+
     console.log('currentGroupCode:', window.currentGroupCode);
     console.log('joinCreateBox hidden:', joinCreateBox.classList.contains('hidden'));
     console.log('contentBox hidden:', contentBox.classList.contains('hidden'));
 
     if (!window.currentGroupCode) {
-        // 그룹에 참가하지 않은 경우: 참가/만들기 박스만 보임
         joinCreateBox.classList.remove('hidden');
         contentBox.classList.add('hidden');
     } else {
-        // 그룹에 참가한 경우: 대시보드/채팅 박스만 보임
         joinCreateBox.classList.add('hidden');
         contentBox.classList.remove('hidden');
-        renderGroupDashboard(); // 대시보드 데이터 렌더링
-        renderGroupChat(); // 채팅 데이터 렌더링
-        showGroupTab('dashboard'); // 처음엔 Dashboard 탭 활성화
+        renderGroupDashboard();
+        renderGroupChat();
+        showGroupTab('dashboard');
     }
-}
 
+    // 상태 변경 후 다시 확인
+    console.log('After update - joinCreateBox hidden:', joinCreateBox.classList.contains('hidden'));
+    console.log('After update - contentBox hidden:', contentBox.classList.contains('hidden'));
+}
 document.head.appendChild(style);
 
 updateSubjectSelect();

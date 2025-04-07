@@ -953,11 +953,6 @@ async function createGroup() {
         error.classList.remove('hidden');
         return;
     }
-    if (!groupPassword) {
-        error.textContent = 'Please set a group password.';
-        error.classList.remove('hidden');
-        return;
-    }
 
     const groupCode = generateGroupCode();
     const groupRef = window.firestoreDoc(window.firestoreDb, "groups", groupCode);
@@ -970,9 +965,10 @@ async function createGroup() {
             return;
         }
 
+        // 비밀번호가 비어 있으면 null로 저장
         await window.firestoreSetDoc(groupRef, {
             name: groupName,
-            password: groupPassword,
+            password: groupPassword || null, // 비밀번호가 없으면 null
             members: {
                 [window.currentUser.uid]: {
                     nickname: window.nickname,
@@ -1015,11 +1011,6 @@ async function joinGroup() {
         error.classList.remove('hidden');
         return;
     }
-    if (!groupPassword) {
-        error.textContent = 'Please enter the group password.';
-        error.classList.remove('hidden');
-        return;
-    }
 
     const groupRef = window.firestoreDoc(window.firestoreDb, "groups", groupCode);
     try {
@@ -1031,7 +1022,9 @@ async function joinGroup() {
         }
 
         const groupData = groupDoc.data();
-        if (groupData.password !== groupPassword) {
+
+        // 비밀번호가 null이면 비밀번호 입력 없이 가입 가능
+        if (groupData.password !== null && groupData.password !== groupPassword) {
             error.textContent = 'Incorrect password.';
             error.classList.remove('hidden');
             return;

@@ -126,6 +126,8 @@ function showScreen(screen) {
     } else if (screen === 'groups') {
         document.getElementById('groupNameInput').value = '';
         document.getElementById('groupCodeInput').value = '';
+        document.getElementById('groupPasswordInput').value = '';
+        document.getElementById('groupPasswordInputJoin').value = '';
         document.getElementById('groupCreateError').classList.add('hidden');
         document.getElementById('groupJoinError').classList.add('hidden');
         document.getElementById('groupCodeDisplay').classList.add('hidden');
@@ -1237,24 +1239,21 @@ function showGroupTab(tab) {
 }
 
 function renderGroupContent() {
-    const tabs = document.querySelector('.group-tabs');
-    const actions = document.querySelector('.group-actions');
-    const dashboard = document.querySelector('.group-dashboard');
-    const chat = document.querySelector('.group-chat');
+    const joinCreateBox = document.querySelector('.group-join-create-box');
+    const contentBox = document.querySelector('.group-content-box');
+
     console.log('currentGroupCode:', window.currentGroupCode);
-    console.log('actions hidden:', actions.classList.contains('hidden'));
+    console.log('joinCreateBox hidden:', joinCreateBox.classList.contains('hidden'));
+    console.log('contentBox hidden:', contentBox.classList.contains('hidden'));
+
     if (!window.currentGroupCode) {
-        // 그룹에 참가하지 않은 경우: 그룹 생성/참가만 보임
-        tabs.classList.add('hidden');
-        actions.classList.remove('hidden');
-        dashboard.classList.add('hidden');
-        chat.classList.add('hidden');
+        // 그룹에 참가하지 않은 경우: 참가/만들기 박스만 보임
+        joinCreateBox.classList.remove('hidden');
+        contentBox.classList.add('hidden');
     } else {
-        // 그룹에 참가한 경우: 탭과 대시보드/채팅만 보임
-        tabs.classList.remove('hidden');
-        actions.classList.add('hidden'); // 그룹 생성/참가 숨김
-        dashboard.classList.remove('hidden'); // 기본적으로 Dashboard 표시
-        chat.classList.add('hidden');
+        // 그룹에 참가한 경우: 대시보드/채팅 박스만 보임
+        joinCreateBox.classList.add('hidden');
+        contentBox.classList.remove('hidden');
         renderGroupDashboard(); // 대시보드 데이터 렌더링
         renderGroupChat(); // 채팅 데이터 렌더링
         showGroupTab('dashboard'); // 처음엔 Dashboard 탭 활성화

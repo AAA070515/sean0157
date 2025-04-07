@@ -6,6 +6,7 @@
     <meta name="google-adsense-account" content="ca-pub-3772859818676570">
     <title>BerryGood</title>
     <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <div id="loginScreen" class="login-screen">
@@ -183,6 +184,10 @@
                         <div id="statsStudyTime"></div>
                         <div id="statsSubjects"></div>
                         <div id="statsDiary" class="stats-diary"></div>
+                    </div>
+                    <div class="study-chart-section">
+                        <h3>Study Session Analysis</h3>
+                        <canvas id="studyChart" style="max-height: 300px;"></canvas>
                     </div>
                 </div>
             </section>

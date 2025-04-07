@@ -8,6 +8,8 @@ let currentWeekOffset = 0;
 let currentSelectedSubject = null;
 let lastCheckedDate = new Date().toISOString().split('T')[0];
 
+window.ddays = [];
+
 const today = new Date();
 let currentDate = today.toISOString().split('T')[0];
 

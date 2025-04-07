@@ -140,7 +140,7 @@ function renderHome() {
     const hours = Math.floor(studyTime / 3600);
     const minutes = Math.floor((studyTime % 3600) / 60);
     const seconds = studyTime % 60;
-    document.getElementById('dashboardStudyTime').textContent = `${hours}h ${minutes}m ${seconds}s`;
+    document.getElementById('dashboardStudyTime').textContent encyclopedia= `${hours}h ${minutes}m ${seconds}s`;
 
     const todoPreview = document.getElementById('dashboardTodoPreview');
     todoPreview.innerHTML = '';
@@ -361,7 +361,43 @@ function updateStudyTimeDisplay() {
     }
 }
 
+function resetDailyStudyTime() {
+    const now = new Date();
+    const todayStr = now.toISOString().split('T')[0];
+    
+    if (currentDate !== todayStr) {
+        currentDate = todayStr;
+        window.studyData[currentDate] = 0;
+        
+        Object.keys(window.subjectStudyTime).forEach(subject => {
+            window.subjectStudyTime[subject][currentDate] = 0;
+        });
+        
+        if (window.currentGroupCode && window.currentUser) {
+            const groupRef = window.firestoreDoc(window.firestoreDb, "groups", window.currentGroupCode);
+            window.firestoreGetDoc(groupRef).then(groupDoc => {
+                if (groupDoc.exists()) {
+                    const groupData = groupDoc.data();
+                    const updatedMembers = {
+                        ...groupData.members,
+                        [window.currentUser.uid]: {
+                            nickname: window.nickname,
+                            studyTime: 0
+                        }
+                    };
+                    window.firestoreSetDoc(groupRef, { members: updatedMembers }, { merge: true });
+                }
+            });
+        }
+        
+        window.saveUserData();
+        updateStudyTimeDisplay();
+        updateSubjectTimes();
+    }
+}
+
 function startTimer() {
+    resetDailyStudyTime();
     const selectedSubject = document.getElementById('subjectSelect').value;
 
     if (!timerInterval && !selectedSubject) {
@@ -372,6 +408,7 @@ function startTimer() {
     if (!timerInterval && selectedSubject) {
         currentSelectedSubject = selectedSubject;
         const startTime = new Date();
+        timerSeconds = 0;
         timerInterval = setInterval(() => {
             timerSeconds++;
             updateTimerDisplay();
@@ -381,7 +418,7 @@ function startTimer() {
                 window.firestoreGetDoc(groupRef).then(groupDoc => {
                     if (groupDoc.exists()) {
                         const groupData = groupDoc.data();
-                        const tempStudyTime = (window.studyData[currentDate] || 0) + timerSeconds;
+                        const tempStudyTime = timerSeconds;
                         window.firestoreSetDoc(groupRef, {
                             members: {
                                 ...groupData.members,
@@ -409,19 +446,19 @@ function startTimer() {
 }
 
 async function stopTimer() {
+    resetDailyStudyTime();
     const selectedSubject = document.getElementById('subjectSelect').value;
     if (!selectedSubject) return;
 
     clearInterval(timerInterval);
     timerInterval = null;
 
-    window.studyData[currentDate] = ((window.studyData && window.studyData[currentDate]) || 0) + timerSeconds;
+    window.studyData[currentDate] = timerSeconds;
 
     if (!window.subjectStudyTime[selectedSubject]) {
         window.subjectStudyTime[selectedSubject] = {};
     }
-    window.subjectStudyTime[selectedSubject][currentDate] = 
-        (window.subjectStudyTime[selectedSubject][currentDate] || 0) + timerSeconds;
+    window.subjectStudyTime[selectedSubject][currentDate] = timerSeconds;
 
     const lastSession = window.studySessions[currentDate]?.slice(-1)[0];
     if (lastSession && lastSession.subject === selectedSubject && !lastSession.endTime) {
@@ -438,7 +475,7 @@ async function stopTimer() {
                 ...groupData.members,
                 [window.currentUser.uid]: {
                     nickname: window.nickname,
-                    studyTime: window.studyData[currentDate] || 0
+                    studyTime: timerSeconds
                 }
             };
             await window.firestoreSetDoc(groupRef, { members: updatedMembers }, { merge: true });
@@ -945,59 +982,11 @@ async function createGroup() {
         document.getElementById('groupCodeDisplay').classList.remove('hidden');
         error.classList.add('hidden');
         await window.saveUserData();
-        renderGroupDashboard(); // 그룹 생성 후 대시보드 표시
-    } catch (err) {
-        error.textContent = `Error: ${err.message}`;
-        error.classList.remove('hidden');
-        console.error('Group creation error:', err);
-    }
-}
-
-async function joinGroup() {
-    if (!window.currentUser) {
-        alert('You must be logged in to join a group.');
-        return;
-    }
-
-    const groupCodeInput = document.getElementById('groupCodeInput');
-    const groupCode = groupCodeInput.value.trim().toUpperCase();
-    const error = document.getElementById('groupJoinError');
-
-    if (groupCode.length !== 6) {
-        error.textContent = 'Please enter a valid 6-digit code.';
-        error.classList.remove('hidden');
-        return;
-    }
-
-    const groupRef = window.firestoreDoc(window.firestoreDb, "groups", groupCode);
-    try {
-        const groupDoc = await window.firestoreGetDoc(groupRef);
-        if (!groupDoc.exists()) {
-            error.textContent = 'Group not found.';
-            error.classList.remove('hidden');
-            return;
-        }
-
-        const groupData = groupDoc.data();
-        await window.firestoreSetDoc(groupRef, {
-            members: {
-                ...groupData.members,
-                [window.currentUser.uid]: {
-                    nickname: window.nickname,
-                    studyTime: (window.studyData && window.studyData[currentDate]) || 0
-                }
-            }
-        }, { merge: true });
-
-        window.currentGroupCode = groupCode;
-        groupCodeInput.value = '';
-        error.classList.add('hidden');
-        await window.saveUserData();
         renderGroupDashboard();
     } catch (err) {
         error.textContent = `Error: ${err.message}`;
         error.classList.remove('hidden');
-        console.error('Group join error:', err);
+        console.error('Group creation error:', err);
     }
 }
 
@@ -1099,16 +1088,23 @@ function renderGroupDashboard() {
                     nickname: data.nickname,
                     studyTime: data.studyTime || 0
                 }))
-                .sort((a, b) => {
-                    if (b.studyTime !== a.studyTime) {
-                        return b.studyTime - a.studyTime;
-                    }
-                    return a.uid.localeCompare(b.uid);
-                })
-                .map((member, index) => ({ ...member, rank: index + 1 }));
+                .sort((a, b) => b.studyTime - a.studyTime);
+
+            let currentRank = 1;
+            let lastStudyTime = null;
+            
+            const rankedMembers = members.map((member, index) => {
+                if (index > 0 && member.studyTime === lastStudyTime) {
+                    // Same rank for equal study time
+                } else if (index > 0) {
+                    currentRank = index + 1;
+                }
+                lastStudyTime = member.studyTime;
+                return { ...member, rank: currentRank };
+            });
 
             membersDiv.innerHTML = '';
-            members.forEach(member => {
+            rankedMembers.forEach(member => {
                 const hours = Math.floor(member.studyTime / 3600);
                 const minutes = Math.floor((member.studyTime % 3600) / 60);
                 const seconds = member.studyTime % 60;
@@ -1143,6 +1139,10 @@ document.getElementById('groupCodeInput').addEventListener('keypress', function(
         event.preventDefault();
         joinGroup();
     }
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+    resetDailyStudyTime();
 });
 
 document.head.appendChild(style);

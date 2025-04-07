@@ -1326,23 +1326,24 @@ body {
     transition: opacity 0.3s ease;
 }
 
-.dday-input-section,
-.dday-list-section {
+.dday-input-section {
     margin-bottom: 20px;
     display: flex;
     flex-direction: column;
-    gap: 15px; /* Consistent spacing between elements */
+    gap: 10px; /* Consistent gap between all elements */
+    align-items: stretch; /* Ensure all children take full width */
 }
 
 #ddayNameInput,
 #ddayDateInput,
 .dday-add-btn {
-    width: 100%;
-    padding: 12px;
+    width: 100%; /* Full width for consistency */
+    padding: 12px; /* Uniform padding */
     border-radius: 8px;
     border: 1px solid #ddd;
     font-size: 16px;
-    box-sizing: border-box; /* Ensures padding doesn’t affect width */
+    box-sizing: border-box; /* Include padding in width */
+    margin: 0; /* Remove any default margins */
 }
 
 .dday-add-btn {

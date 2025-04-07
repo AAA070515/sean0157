@@ -1006,11 +1006,18 @@ async function joinGroup() {
     }
 
     const groupCodeInput = document.getElementById('groupCodeInput');
+    const groupPasswordInputJoin = document.getElementById('groupPasswordInputJoin');
     const groupCode = groupCodeInput.value.trim().toUpperCase();
+    const groupPassword = groupPasswordInputJoin.value.trim();
     const error = document.getElementById('groupJoinError');
 
     if (groupCode.length !== 6) {
         error.textContent = 'Please enter a valid 6-digit code.';
+        error.classList.remove('hidden');
+        return;
+    }
+    if (!groupPassword) {
+        error.textContent = 'Please enter the group password.';
         error.classList.remove('hidden');
         return;
     }
@@ -1025,54 +1032,12 @@ async function joinGroup() {
         }
 
         const groupData = groupDoc.data();
-        await window.firestoreSetDoc(groupRef, {
-            members: {
-                ...groupData.members,
-                [window.currentUser.uid]: {
-                    nickname: window.nickname,
-                    studyTime: (window.studyData && window.studyData[currentDate]) || 0
-                }
-            }
-        }, { merge: true });
-
-        window.currentGroupCode = groupCode;
-        groupCodeInput.value = '';
-        error.classList.add('hidden');
-        await window.saveUserData();
-        renderGroupDashboard();
-    } catch (err) {
-        error.textContent = `Error: ${err.message}`;
-        error.classList.remove('hidden');
-        console.error('Group join error:', err);
-    }
-}
-
-async function joinGroup() {
-    if (!window.currentUser) {
-        alert('You must be logged in to join a group.');
-        return;
-    }
-
-    const groupCodeInput = document.getElementById('groupCodeInput');
-    const groupCode = groupCodeInput.value.trim().toUpperCase();
-    const error = document.getElementById('groupJoinError');
-
-    if (groupCode.length !== 6) {
-        error.textContent = 'Please enter a valid 6-digit code.';
-        error.classList.remove('hidden');
-        return;
-    }
-
-    const groupRef = window.firestoreDoc(window.firestoreDb, "groups", groupCode);
-    try {
-        const groupDoc = await window.firestoreGetDoc(groupRef);
-        if (!groupDoc.exists()) {
-            error.textContent = 'Group not found.';
+        if (groupData.password !== groupPassword) {
+            error.textContent = 'Incorrect password.';
             error.classList.remove('hidden');
             return;
         }
 
-        const groupData = groupDoc.data();
         await window.firestoreSetDoc(groupRef, {
             members: {
                 ...groupData.members,
@@ -1085,6 +1050,7 @@ async function joinGroup() {
 
         window.currentGroupCode = groupCode;
         groupCodeInput.value = '';
+        groupPasswordInputJoin.value = '';
         error.classList.add('hidden');
         await window.saveUserData();
         renderGroupDashboard();
@@ -1117,16 +1083,46 @@ async function leaveGroup() {
     renderGroupDashboard();
 }
 
+async function sendMessage() {
+    if (!window.currentUser || !window.currentGroupCode) return;
+
+    const chatInput = document.getElementById('chatInput');
+    const messageText = chatInput.value.trim();
+    if (!messageText) return;
+
+    const groupRef = window.firestoreDoc(window.firestoreDb, "groups", window.currentGroupCode);
+    try {
+        const groupDoc = await window.firestoreGetDoc(groupRef);
+        if (groupDoc.exists()) {
+            const groupData = groupDoc.data();
+            const newMessage = {
+                senderId: window.currentUser.uid,
+                senderNickname: window.nickname,
+                text: messageText,
+                timestamp: new Date().toISOString()
+            };
+            const updatedMessages = [...(groupData.messages || []), newMessage];
+            await window.firestoreSetDoc(groupRef, { messages: updatedMessages }, { merge: true });
+            chatInput.value = '';
+        }
+    } catch (err) {
+        console.error('Message send error:', err);
+        alert('Failed to send message: ' + err.message);
+    }
+}
+
 function renderGroupDashboard() {
     const dashboard = document.querySelector('.group-dashboard');
     const actions = document.querySelector('.group-actions');
     const membersDiv = document.getElementById('groupMembers');
     const groupNameDiv = document.getElementById('currentGroupName');
+    const chatMessagesDiv = document.getElementById('chatMessages');
 
     if (!window.currentGroupCode) {
         dashboard.classList.add('hidden');
         actions.classList.remove('hidden');
         document.getElementById('groupCodeDisplay').classList.add('hidden');
+        chatMessagesDiv.innerHTML = '';
         return;
     }
 
@@ -1166,17 +1162,39 @@ function renderGroupDashboard() {
                     </div>
                 `;
             });
+
+            // 채팅 메시지 렌더링
+            chatMessagesDiv.innerHTML = '';
+            const messages = groupData.messages || [];
+            messages.forEach(msg => {
+                const date = new Date(msg.timestamp);
+                const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                chatMessagesDiv.innerHTML += `
+                    <div class="chat-message">
+                        <span class="sender">${msg.senderNickname}</span> (${timeStr}): ${msg.text}
+                    </div>
+                `;
+            });
+            chatMessagesDiv.scrollTop = chatMessagesDiv.scrollHeight; // 자동 스크롤
         } else {
             window.currentGroupCode = null;
             dashboard.classList.add('hidden');
             actions.classList.remove('hidden');
             document.getElementById('groupCodeDisplay').classList.add('hidden');
+            chatMessagesDiv.innerHTML = '';
         }
     }, (error) => {
         console.error('Group dashboard render error:', error);
     });
 }
 
+// 채팅 입력란 Enter 키 이벤트
+document.getElementById('chatInput').addEventListener('keypress', function(event) {
+    if (event.key === 'Enter') {
+        event.preventDefault();
+        sendMessage();
+    }
+});
 document.getElementById('groupNameInput').addEventListener('keypress', function(event) {
     if (event.key === 'Enter') {
         event.preventDefault();

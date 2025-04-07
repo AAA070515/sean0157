@@ -8,33 +8,31 @@ let currentWeekOffset = 0;
 let currentSelectedSubject = null;
 let lastCheckedDate = new Date().toISOString().split('T')[0];
 
-window.ddays = [];
-
 const today = new Date();
 let currentDate = today.toISOString().split('T')[0];
 
 window.ddays = window.ddays || []; // Ensure it's initialized globally
 
-// In loadUserData:
 async function loadUserData(userId) {
     const userRef = doc(db, "users", userId);
     window.firestoreOnSnapshot(userRef, (doc) => {
         if (doc.exists()) {
             const data = doc.data();
+            console.log("Firestore에서 가져온 원시 데이터:", data); // 디버깅: Firestore 데이터 확인
             window.subjects = data.subjects || [];
             window.studyData = data.studyData || {};
             window.subjectStudyTime = data.subjectStudyTime || {};
             window.diaryData = data.diaryData || {};
             window.todos = data.todos || [];
-            window.ddays = data.ddays || []; // Load D-Days from Firestore
+            window.ddays = data.ddays || []; // D-Day 데이터 로드
             window.goals = data.goals || { daily: null, weekly: null };
             window.studySessions = data.studySessions || {};
             window.nickname = data.nickname || 'User';
             window.currentGroupCode = data.groupCode || null;
-            console.log("Loaded data:", data); // Debug: Check all loaded data
-            console.log("D-Days after load:", window.ddays); // Debug: Confirm D-Days
 
-            // Update UI after data is loaded
+            console.log("로드된 D-Days:", window.ddays); // 디버깅: D-Day 확인
+
+            // 데이터 로드 후 UI 업데이트
             updateSubjectSelect();
             updateSubjectTimes();
             updateStudyTimeDisplay();
@@ -42,10 +40,10 @@ async function loadUserData(userId) {
             updateGoalsProgress();
             renderHome();
             renderTodos();
-            renderDDays(); // Ensure D-Days are rendered
+            renderDDays(); // D-Day 렌더링
             renderGroupDashboard();
         } else {
-            // Initialize with defaults if no data exists
+            console.log("Firestore에 데이터 없음, 기본값 초기화");
             window.subjects = [];
             window.studyData = {};
             window.subjectStudyTime = {};
@@ -55,8 +53,8 @@ async function loadUserData(userId) {
             window.goals = { daily: null, weekly: null };
             window.studySessions = {};
             window.currentGroupCode = null;
-            console.log("Initialized empty data, ddays:", window.ddays);
 
+            // 초기화 후 UI 업데이트
             updateSubjectSelect();
             updateSubjectTimes();
             updateStudyTimeDisplay();
@@ -64,15 +62,14 @@ async function loadUserData(userId) {
             updateGoalsProgress();
             renderHome();
             renderTodos();
-            renderDDays(); // Render empty D-Days
+            renderDDays(); // 빈 D-Day 렌더링
             renderGroupDashboard();
         }
     }, (error) => {
-        console.error("Load failed:", error.code, error.message);
+        console.error("데이터 로드 실패:", error.code, error.message);
     });
 }
 
-// Ensure saveUserData includes ddays
 window.saveUserData = async function() {
     if (!window.currentUser) return;
     const userId = window.currentUser.uid;
@@ -1369,14 +1366,22 @@ async function addDDay() {
     };
 
     window.ddays.push(newDDay);
-    console.log("Added D-Day:", newDDay); // Debug: Check new D-Day
-    console.log("Current ddays array:", window.ddays); // Debug: Check array state
-    await window.saveUserData(); // Save to Firestore
-    nameInput.value = '';
-    dateInput.value = '';
-    error.classList.add('hidden');
-    renderDDays(); // Render immediately after adding
-    renderHome(); // Update dashboard preview
+    console.log("추가된 D-Day:", newDDay); // 디버깅
+    console.log("현재 D-Days 배열:", window.ddays); // 디버깅
+
+    try {
+        await window.saveUserData(); // Firestore에 저장
+        console.log("Firestore에 D-Day 저장 완료");
+        nameInput.value = '';
+        dateInput.value = '';
+        error.classList.add('hidden');
+        renderDDays(); // 즉시 렌더링
+        renderHome(); // 대시보드 업데이트
+    } catch (err) {
+        console.error("D-Day 저장 실패:", err);
+        error.textContent = 'Failed to save D-Day. Please try again.';
+        error.classList.remove('hidden');
+    }
 }
 
 function renderDDays() {

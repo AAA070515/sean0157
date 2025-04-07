@@ -268,6 +268,7 @@ function renderStats() {
     }
 
     document.getElementById('statsDetails').classList.add('hidden');
+    renderStudyChart(); // 차트 렌더링 호출
 }
 
 function getWeekStartDate(offset) {
@@ -1105,6 +1106,73 @@ async function leaveGroup() {
     window.currentGroupCode = null;
     await window.saveUserData();
     renderGroupDashboard();
+}
+
+function renderStudyChart() {
+    const ctx = document.getElementById('studyChart').getContext('2d');
+    
+    // 지난 7일 데이터 가져오기
+    const today = new Date();
+    const dates = [];
+    const studyTimes = [];
+    
+    for (let i = 6; i >= 0; i--) {
+        const date = new Date(today);
+        date.setDate(today.getDate() - i);
+        const dateStr = date.toISOString().split('T')[0];
+        dates.push(dateStr);
+        
+        // 해당 날짜의 총 공부 시간 계산
+        const totalTime = window.studySessions[dateStr]?.reduce((sum, session) => {
+            return sum + (session.duration || 0);
+        }, 0) || 0;
+        studyTimes.push(totalTime / 3600); // 시간을 시간 단위로 변환
+    }
+
+    // Chart.js로 차트 생성
+    new Chart(ctx, {
+        type: 'bar', // 막대 차트 (필요 시 'line'으로 변경 가능)
+        data: {
+            labels: dates.map(date => new Date(date).toLocaleDateString('en-US', { weekday: 'short' })),
+            datasets: [{
+                label: 'Study Time (hours)',
+                data: studyTimes,
+                backgroundColor: 'rgba(66, 133, 244, 0.6)', // #4285F4 투명도 조정
+                borderColor: '#4285F4',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Hours'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Day'
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top'
+                },
+                tooltip: {
+                    callbacks: {
+                        label: (context) => `${context.parsed.y.toFixed(2)} hours`
+                    }
+                }
+            }
+        }
+    });
 }
 
 function renderGroupDashboard() {

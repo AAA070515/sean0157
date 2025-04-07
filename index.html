@@ -208,11 +208,8 @@
             <section id="groupsScreen" class="hidden">
                 <div class="groups">
                     <h3>Groups</h3>
-                    <div class="group-tabs hidden">
-                        <button class="tab-btn active" onclick="showGroupTab('dashboard')">Dashboard</button>
-                        <button class="tab-btn" onclick="showGroupTab('chat')">Chat</button>
-                    </div>
-                    <div class="group-actions">
+                    <!-- 그룹 참가/만들기 박스 -->
+                    <div class="group-join-create-box">
                         <div class="group-create">
                             <input type="text" id="groupNameInput" placeholder="Enter group name" maxlength="50">
                             <input type="password" id="groupPasswordInput" placeholder="Set group password" maxlength="20">
@@ -227,16 +224,23 @@
                             <p id="groupJoinError" class="error hidden"></p>
                         </div>
                     </div>
-                    <div class="group-dashboard hidden">
-                        <h4 id="currentGroupName"></h4>
-                        <div id="groupMembers" class="group-members"></div>
-                        <button class="btn leave-btn" onclick="leaveGroup()">Leave Group</button>
-                    </div>
-                    <div class="group-chat hidden">
-                        <div id="chatMessages" class="chat-messages"></div>
-                        <div class="chat-input">
-                            <input type="text" id="chatInput" placeholder="Type a message..." maxlength="200">
-                            <button class="btn chat-send-btn" onclick="sendMessage()">Send</button>
+                    <!-- 대시보드/채팅 박스 -->
+                    <div class="group-content-box hidden">
+                        <div class="group-tabs">
+                            <button class="tab-btn active" onclick="showGroupTab('dashboard')">Dashboard</button>
+                            <button class="tab-btn" onclick="showGroupTab('chat')">Chat</button>
+                        </div>
+                        <div class="group-dashboard">
+                            <h4 id="currentGroupName"></h4>
+                            <div id="groupMembers" class="group-members"></div>
+                            <button class="btn leave-btn" onclick="leaveGroup()">Leave Group</button>
+                        </div>
+                        <div class="group-chat hidden">
+                            <div id="chatMessages" class="chat-messages"></div>
+                            <div class="chat-input">
+                                <input type="text" id="chatInput" placeholder="Type a message..." maxlength="200">
+                                <button class="btn chat-send-btn" onclick="sendMessage()">Send</button>
+                            </div>
                         </div>
                     </div>
                 </div>

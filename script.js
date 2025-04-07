@@ -9,6 +9,7 @@ let currentSelectedSubject = null;
 let lastCheckedDate = new Date().toISOString().split('T')[0];
 
 window.ddays = [];
+window.ddays = window.ddays || [];
 
 const today = new Date();
 let currentDate = today.toISOString().split('T')[0];
@@ -23,12 +24,12 @@ async function loadUserData(userId) {
             window.subjectStudyTime = data.subjectStudyTime || {};
             window.diaryData = data.diaryData || {};
             window.todos = data.todos || [];
-            window.ddays = data.ddays || []; // Ensure ddays is loaded
+            window.ddays = data.ddays || []; // Load ddays from Firebase
             window.goals = data.goals || { daily: null, weekly: null };
             window.studySessions = data.studySessions || {};
             window.nickname = data.nickname || 'User';
             window.currentGroupCode = data.groupCode || null;
-            // Update UI after loading
+            console.log("Loaded ddays:", window.ddays); // Debug: Check loaded data
             updateSubjectSelect();
             updateSubjectTimes();
             updateStudyTimeDisplay();
@@ -36,19 +37,19 @@ async function loadUserData(userId) {
             updateGoalsProgress();
             renderHome();
             renderTodos();
-            renderDDays(); // Add this to render D-Days on load
+            renderDDays(); // Ensure D-Days are rendered
             renderGroupDashboard();
         } else {
-            // Initialize with empty ddays if no data exists
             window.subjects = [];
             window.studyData = {};
             window.subjectStudyTime = {};
             window.diaryData = {};
             window.todos = [];
-            window.ddays = []; // Ensure ddays is initialized
+            window.ddays = []; // Initialize empty if no data
             window.goals = { daily: null, weekly: null };
             window.studySessions = {};
             window.currentGroupCode = null;
+            console.log("No data exists, initialized ddays:", window.ddays);
             updateSubjectSelect();
             updateSubjectTimes();
             updateStudyTimeDisplay();
@@ -73,7 +74,7 @@ window.saveUserData = async function() {
         subjectStudyTime: window.subjectStudyTime || {},
         diaryData: window.diaryData || {},
         todos: window.todos || [],
-        ddays: window.ddays || [], // Ensure ddays is saved
+        ddays: window.ddays || [], // Ensure ddays is included in save
         goals: window.goals || { daily: null, weekly: null },
         studySessions: window.studySessions || {},
         nickname: window.nickname || 'User',
@@ -81,7 +82,7 @@ window.saveUserData = async function() {
     };
     try {
         await window.firestoreSetDoc(window.firestoreDoc(db, "users", userId), dataToSave, { merge: true });
-        console.log("Data saved successfully!");
+        console.log("Data saved successfully! ddays:", window.ddays); // Debug: Confirm save
     } catch (error) {
         console.error("Save failed:", error.code, error.message);
         alert("Failed to save data: " + error.message);
@@ -1356,11 +1357,12 @@ async function addDDay() {
     };
 
     window.ddays.push(newDDay);
-    await window.saveUserData();
+    console.log("Added D-Day, current ddays:", window.ddays); // Debug: Check array
+    await window.saveUserData(); // Save to Firebase
     nameInput.value = '';
     dateInput.value = '';
     error.classList.add('hidden');
-    renderDDays();
+    renderDDays(); // Render immediately after adding
     renderHome();
 }
 

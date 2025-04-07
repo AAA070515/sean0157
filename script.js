@@ -362,7 +362,6 @@ function updateStudyTimeDisplay() {
 }
 
 function startTimer() {
-    resetDailyStudyTime();
     const selectedSubject = document.getElementById('subjectSelect').value;
 
     if (!timerInterval && !selectedSubject) {
@@ -373,7 +372,6 @@ function startTimer() {
     if (!timerInterval && selectedSubject) {
         currentSelectedSubject = selectedSubject;
         const startTime = new Date();
-        timerSeconds = 0;  // Reset timer seconds each time we start
         timerInterval = setInterval(() => {
             timerSeconds++;
             updateTimerDisplay();
@@ -383,7 +381,7 @@ function startTimer() {
                 window.firestoreGetDoc(groupRef).then(groupDoc => {
                     if (groupDoc.exists()) {
                         const groupData = groupDoc.data();
-                        const tempStudyTime = timerSeconds;  // Only current session time
+                        const tempStudyTime = (window.studyData[currentDate] || 0) + timerSeconds;
                         window.firestoreSetDoc(groupRef, {
                             members: {
                                 ...groupData.members,
@@ -411,29 +409,26 @@ function startTimer() {
 }
 
 async function stopTimer() {
-    resetDailyStudyTime();
     const selectedSubject = document.getElementById('subjectSelect').value;
     if (!selectedSubject) return;
 
     clearInterval(timerInterval);
     timerInterval = null;
 
-    // 이전 데이터에 현재 세션 시간을 더함
-    window.studyData[currentDate] = (window.studyData[currentDate] || 0) + timerSeconds;
+    window.studyData[currentDate] = ((window.studyData && window.studyData[currentDate]) || 0) + timerSeconds;
+
     if (!window.subjectStudyTime[selectedSubject]) {
         window.subjectStudyTime[selectedSubject] = {};
     }
     window.subjectStudyTime[selectedSubject][currentDate] = 
         (window.subjectStudyTime[selectedSubject][currentDate] || 0) + timerSeconds;
 
-    // 세션 기록
     const lastSession = window.studySessions[currentDate]?.slice(-1)[0];
     if (lastSession && lastSession.subject === selectedSubject && !lastSession.endTime) {
         lastSession.endTime = new Date().toISOString();
         lastSession.duration = timerSeconds;
     }
 
-    // 그룹 데이터 업데이트
     if (window.currentGroupCode) {
         const groupRef = window.firestoreDoc(window.firestoreDb, "groups", window.currentGroupCode);
         const groupDoc = await window.firestoreGetDoc(groupRef);
@@ -443,7 +438,7 @@ async function stopTimer() {
                 ...groupData.members,
                 [window.currentUser.uid]: {
                     nickname: window.nickname,
-                    studyTime: (groupData.members[window.currentUser.uid]?.studyTime || 0) + timerSeconds
+                    studyTime: window.studyData[currentDate] || 0
                 }
             };
             await window.firestoreSetDoc(groupRef, { members: updatedMembers }, { merge: true });
@@ -1098,31 +1093,22 @@ function renderGroupDashboard() {
             const groupData = doc.data();
             groupNameDiv.textContent = `${groupData.name} (Code: ${window.currentGroupCode})`;
 
-            // Sort members by study time and assign ranks
             const members = Object.entries(groupData.members)
                 .map(([uid, data]) => ({
                     uid,
                     nickname: data.nickname,
                     studyTime: data.studyTime || 0
                 }))
-                .sort((a, b) => b.studyTime - a.studyTime);
-
-            // Assign ranks with ties
-            let currentRank = 1;
-            let lastStudyTime = null;
-            
-            const rankedMembers = members.map((member, index) => {
-                if (index > 0 && member.studyTime === lastStudyTime) {
-                    // Same study time, keep same rank
-                } else if (index > 0) {
-                    currentRank = index + 1;
-                }
-                lastStudyTime = member.studyTime;
-                return { ...member, rank: currentRank };
-            });
+                .sort((a, b) => {
+                    if (b.studyTime !== a.studyTime) {
+                        return b.studyTime - a.studyTime;
+                    }
+                    return a.uid.localeCompare(b.uid);
+                })
+                .map((member, index) => ({ ...member, rank: index + 1 }));
 
             membersDiv.innerHTML = '';
-            rankedMembers.forEach(member => {
+            members.forEach(member => {
                 const hours = Math.floor(member.studyTime / 3600);
                 const minutes = Math.floor((member.studyTime % 3600) / 60);
                 const seconds = member.studyTime % 60;
@@ -1144,6 +1130,7 @@ function renderGroupDashboard() {
         console.error('Group dashboard render error:', error);
     });
 }
+
 document.getElementById('groupNameInput').addEventListener('keypress', function(event) {
     if (event.key === 'Enter') {
         event.preventDefault();
@@ -1158,48 +1145,6 @@ document.getElementById('groupCodeInput').addEventListener('keypress', function(
     }
 });
 
-function resetDailyStudyTime() {
-    const now = new Date();
-    const todayStr = now.toISOString().split('T')[0];
-    
-    if (currentDate !== todayStr) {
-        // Reset previous day's data
-        currentDate = todayStr;
-        window.studyData[currentDate] = 0;
-        
-        // Reset subject times for new day
-        Object.keys(window.subjectStudyTime).forEach(subject => {
-            window.subjectStudyTime[subject][currentDate] = 0;
-        });
-        
-        // Reset group study time for current user
-        if (window.currentGroupCode && window.currentUser) {
-            const groupRef = window.firestoreDoc(window.firestoreDb, "groups", window.currentGroupCode);
-            window.firestoreGetDoc(groupRef).then(groupDoc => {
-                if (groupDoc.exists()) {
-                    const groupData = groupDoc.data();
-                    const updatedMembers = {
-                        ...groupData.members,
-                        [window.currentUser.uid]: {
-                            nickname: window.nickname,
-                            studyTime: 0
-                        }
-                    };
-                    window.firestoreSetDoc(groupRef, { members: updatedMembers }, { merge: true });
-                }
-            });
-        }
-        
-        window.saveUserData();
-        updateStudyTimeDisplay();
-        updateSubjectTimes();
-    }
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-    resetDailyStudyTime();
-    // ... existing initialization code
-});
 document.head.appendChild(style);
 
 updateSubjectSelect();

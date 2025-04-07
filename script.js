@@ -6,19 +6,10 @@ let uploadedImage = null;
 let currentSelectedDate = null;
 let currentWeekOffset = 0;
 let currentSelectedSubject = null;
-let studyChartInstance = null;
 let lastCheckedDate = new Date().toISOString().split('T')[0];
 
 const today = new Date();
 let currentDate = today.toISOString().split('T')[0];
-
-import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-storage.js";
-
-const storage = getStorage(app);
-window.storage = storage;
-window.storageRef = storageRef;
-window.uploadBytes = uploadBytes;
-window.getDownloadURL = getDownloadURL;
 
 function checkAndResetDailyData() {
     const today = new Date().toISOString().split('T')[0];
@@ -277,7 +268,6 @@ function renderStats() {
     }
 
     document.getElementById('statsDetails').classList.add('hidden');
-    renderStudyChart(); // 차트 렌더링 호출
 }
 
 function getWeekStartDate(offset) {
@@ -516,13 +506,13 @@ async function saveDiary() {
     };
     await window.saveUserData();
     renderHome();
-    alert('Journal entry saved!');
     document.getElementById('memoInput').value = '';
     document.getElementById('diaryImage').value = '';
     document.querySelectorAll('.mood-bean').forEach(bean => bean.classList.remove('selected'));
     selectedMood = null;
     uploadedImage = null;
     document.getElementById('imagePreview').innerHTML = '';
+    alert('Journal entry saved!');
 }
 
 function renderTodos() {
@@ -668,33 +658,29 @@ document.getElementById('diaryImage').addEventListener('change', function() {
     uploadImage();
 });
 
-async function uploadImage() {
+function uploadImage() {
     const fileInput = document.getElementById('diaryImage');
     const file = fileInput.files[0];
     if (file) {
-        const storagePath = `diary_images/${window.currentUser.uid}/${Date.now()}_${file.name}`;
-        const imageRef = window.storageRef(window.storage, storagePath);
-        try {
-            await window.uploadBytes(imageRef, file);
-            uploadedImage = await window.getDownloadURL(imageRef);
+        const reader = new FileReader();
+        reader.on = function(e) {
+            upedImage = e.target.result;
             const preview = document.getElementById('imagePreview');
-            preview.innerHTML = `<img src="${uploadedImage}" alt="Uploaded Image">`;
-            fileInput.value = '';
-        } catch (error) {
-            console.error("Image upload failed:", error);
-            alert("Failed to upload image.");
-        }
+            preview.innerHTML = `<img src="${upedImage}" alt="Uped Image">`;
+        };
+        reader.readAsDataURL(file);
+        fileInput.value = '';
     }
 }
 
-function loadDiaryData(selectedDate) {
+function DiaryData(selectedDate) {
     const diaryEntry = window.diaryData[selectedDate];
     
     document.querySelectorAll('.mood-bean').forEach(bean => bean.classList.remove('selected'));
     document.getElementById('memoInput').value = '';
     document.getElementById('imagePreview').innerHTML = '';
     selectedMood = null;
-    uploadedImage = null;
+    upedImage = null;
     
     if (diaryEntry) {
         const mood = diaryEntry.mood;
@@ -706,7 +692,7 @@ function loadDiaryData(selectedDate) {
         document.getElementById('memoInput').value = diaryEntry.memo || '';
         if (diaryEntry.image) {
             document.getElementById('imagePreview').innerHTML = `<img src="${diaryEntry.image}" alt="Diary Image">`;
-            uploadedImage = diaryEntry.image;
+            upedImage = diaryEntry.image;
         }
     }
 }
@@ -1051,6 +1037,54 @@ async function joinGroup() {
     }
 }
 
+async function joinGroup() {
+    if (!window.currentUser) {
+        alert('You must be logged in to join a group.');
+        return;
+    }
+
+    const groupCodeInput = document.getElementById('groupCodeInput');
+    const groupCode = groupCodeInput.value.trim().toUpperCase();
+    const error = document.getElementById('groupJoinError');
+
+    if (groupCode.length !== 6) {
+        error.textContent = 'Please enter a valid 6-digit code.';
+        error.classList.remove('hidden');
+        return;
+    }
+
+    const groupRef = window.firestoreDoc(window.firestoreDb, "groups", groupCode);
+    try {
+        const groupDoc = await window.firestoreGetDoc(groupRef);
+        if (!groupDoc.exists()) {
+            error.textContent = 'Group not found.';
+            error.classList.remove('hidden');
+            return;
+        }
+
+        const groupData = groupDoc.data();
+        await window.firestoreSetDoc(groupRef, {
+            members: {
+                ...groupData.members,
+                [window.currentUser.uid]: {
+                    nickname: window.nickname,
+                    studyTime: (window.studyData && window.studyData[currentDate]) || 0
+                }
+            }
+        }, { merge: true });
+
+        window.currentGroupCode = groupCode;
+        groupCodeInput.value = '';
+        error.classList.add('hidden');
+        await window.saveUserData();
+        renderGroupDashboard();
+    } catch (err) {
+        error.textContent = `Error: ${err.message}`;
+        error.classList.remove('hidden');
+        console.error('Group join error:', err);
+    }
+}
+
 async function leaveGroup() {
     if (!window.currentUser || !window.currentGroupCode) return;
 
@@ -1071,100 +1105,6 @@ async function leaveGroup() {
     window.currentGroupCode = null;
     await window.saveUserData();
     renderGroupDashboard();
-}
-
-function renderStudyChart() {
-    const ctx = document.getElementById('studyChart').getContext('2d');
-    
-    if (studyChartInstance) {
-        studyChartInstance.destroy();
-    }
-    
-    const today = new Date();
-    const dates = [];
-    const studyTimes = [];
-    
-    for (let i = 6; i >= 0; i--) {
-        const date = new Date(today);
-        date.setDate(today.getDate() - i);
-        const dateStr = date.toISOString().split('T')[0];
-        dates.push(dateStr);
-        
-        const totalTime = window.studySessions[dateStr]?.reduce((sum, session) => {
-            return sum + (session.duration || 0);
-        }, 0) || 0;
-        studyTimes.push(totalTime / 3600);
-    }
-
-    studyChartInstance = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: dates.map(date => new Date(date).toLocaleDateString('en-US', { weekday: 'short' })),
-            datasets: [{
-                label: 'Study Time (hours)',
-                data: studyTimes,
-                backgroundColor: 'rgba(66, 133, 244, 0.6)',
-                borderColor: '#4285F4',
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: { beginAtZero: true, title: { display: true, text: 'Hours' } },
-                x: { title: { display: true, text: 'Day' } }
-            },
-            plugins: {
-                legend: { display: true, position: 'top' },
-                tooltip: { callbacks: { label: (context) => `${context.parsed.y.toFixed(2)} hours` } }
-            }
-        }
-    });
-}
-
-function sendMessage() {
-    if (!window.currentUser || !window.currentGroupCode) {
-        alert("You must be in a group to send messages.");
-        return;
-    }
-
-    const chatInput = document.getElementById('chatInput');
-    const message = chatInput.value.trim();
-    if (!message) return;
-
-    const chatRef = window.realtimeRef(window.realtimeDb, `groups/${window.currentGroupCode}/chat`);
-    window.realtimePush(chatRef, {
-        user: window.nickname,
-        message,
-        timestamp: new Date().toISOString()
-    }).then(() => {
-        chatInput.value = '';
-    }).catch((error) => {
-        console.error("Failed to send message:", error);
-        alert("Failed to send message.");
-    });
-}
-
-function listenToChat() {
-    if (!window.currentGroupCode) return;
-
-    const chatRef = window.realtimeRef(window.realtimeDb, `groups/${window.currentGroupCode}/chat`);
-    window.realtimeOnValue(chatRef, (snapshot) => {
-        const messages = snapshot.val();
-        const chatDiv = document.getElementById('chatMessages');
-        chatDiv.innerHTML = '';
-
-        if (messages) {
-            Object.values(messages).sort((a, b) => a.timestamp.localeCompare(b.timestamp))
-                .forEach(msg => {
-                    chatDiv.innerHTML += `<p><strong>${msg.user}</strong>: ${msg.message}</p>`;
-                });
-            chatDiv.scrollTop = chatDiv.scrollHeight; // 자동 스크롤
-        }
-    }, (error) => {
-        console.error("Chat listen error:", error);
-    });
 }
 
 function renderGroupDashboard() {
@@ -1195,7 +1135,12 @@ function renderGroupDashboard() {
                     nickname: data.nickname,
                     studyTime: data.studyTime || 0
                 }))
-                .sort((a, b) => b.studyTime - a.studyTime || a.uid.localeCompare(b.uid))
+                .sort((a, b) => {
+                    if (b.studyTime !== a.studyTime) {
+                        return b.studyTime - a.studyTime;
+                    }
+                    return a.uid.localeCompare(b.uid);
+                })
                 .map((member, index) => ({ ...member, rank: index + 1 }));
 
             membersDiv.innerHTML = '';
@@ -1211,8 +1156,6 @@ function renderGroupDashboard() {
                     </div>
                 `;
             });
-
-            listenToChat(); // 채팅 리스너 활성화
         } else {
             window.currentGroupCode = null;
             dashboard.classList.add('hidden');
@@ -1223,13 +1166,6 @@ function renderGroupDashboard() {
         console.error('Group dashboard render error:', error);
     });
 }
-
-document.getElementById('chatInput').addEventListener('keypress', function(event) {
-    if (event.key === 'Enter') {
-        event.preventDefault();
-        sendMessage();
-    }
-});
 
 document.getElementById('groupNameInput').addEventListener('keypress', function(event) {
     if (event.key === 'Enter') {
@@ -1244,37 +1180,6 @@ document.getElementById('groupCodeInput').addEventListener('keypress', function(
         joinGroup();
     }
 });
-
-window.saveUserData = debounce(async function() {
-    if (!window.currentUser) return;
-    const userId = window.currentUser.uid;
-    const dataToSave = {
-        subjects: window.subjects || [],
-        studyData: window.studyData || {},
-        subjectStudyTime: window.subjectStudyTime || {},
-        diaryData: window.diaryData || {},
-        todos: window.todos || [],
-        goals: window.goals || { daily: null, weekly: null },
-        studySessions: window.studySessions || {},
-        nickname: window.nickname || 'User',
-        groupCode: window.currentGroupCode || null
-    };
-    try {
-        await window.firestoreSetDoc(window.firestoreDoc(db, "users", userId), dataToSave, { merge: true });
-        console.log("Data saved successfully!");
-    } catch (error) {
-        console.error("Save failed:", error.code, error.message);
-        alert("Failed to save data: " + error.message);
-    }
-}, 1000);
-
-function debounce(func, wait) {
-    let timeout;
-    return function executedFunction(...args) {
-        clearTimeout(timeout);
-        timeout = setTimeout(() => func(...args), wait);
-    };
-}
 
 document.head.appendChild(style);
 

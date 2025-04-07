@@ -23,11 +23,12 @@ async function loadUserData(userId) {
             window.subjectStudyTime = data.subjectStudyTime || {};
             window.diaryData = data.diaryData || {};
             window.todos = data.todos || [];
-            window.ddays = data.ddays || []; // D-Day 추가
+            window.ddays = data.ddays || []; // Ensure ddays is loaded
             window.goals = data.goals || { daily: null, weekly: null };
             window.studySessions = data.studySessions || {};
             window.nickname = data.nickname || 'User';
             window.currentGroupCode = data.groupCode || null;
+            // Update UI after loading
             updateSubjectSelect();
             updateSubjectTimes();
             updateStudyTimeDisplay();
@@ -35,14 +36,16 @@ async function loadUserData(userId) {
             updateGoalsProgress();
             renderHome();
             renderTodos();
+            renderDDays(); // Add this to render D-Days on load
             renderGroupDashboard();
         } else {
+            // Initialize with empty ddays if no data exists
             window.subjects = [];
             window.studyData = {};
             window.subjectStudyTime = {};
             window.diaryData = {};
             window.todos = [];
-            window.ddays = []; // D-Day 초기화
+            window.ddays = []; // Ensure ddays is initialized
             window.goals = { daily: null, weekly: null };
             window.studySessions = {};
             window.currentGroupCode = null;
@@ -53,6 +56,7 @@ async function loadUserData(userId) {
             updateGoalsProgress();
             renderHome();
             renderTodos();
+            renderDDays(); // Render D-Days here too
             renderGroupDashboard();
         }
     }, (error) => {
@@ -69,7 +73,7 @@ window.saveUserData = async function() {
         subjectStudyTime: window.subjectStudyTime || {},
         diaryData: window.diaryData || {},
         todos: window.todos || [],
-        ddays: window.ddays || [], // D-Day 추가
+        ddays: window.ddays || [], // Ensure ddays is saved
         goals: window.goals || { daily: null, weekly: null },
         studySessions: window.studySessions || {},
         nickname: window.nickname || 'User',
@@ -349,15 +353,11 @@ function changeWeek(offset) {
 }
 
 function showStatsDetails(dateStr) {
-    const selectedDate = new Date(dateStr);
-    selectedDate.setDate(selectedDate.getDate() + 1);
-    const nextDayStr = selectedDate.toISOString().split('T')[0];
-    
-    currentSelectedDate = nextDayStr;
+    currentSelectedDate = dateStr; // Use the exact date passed
     const statsDetails = document.getElementById('statsDetails');
-    document.getElementById('statsSelectedDate').textContent = nextDayStr;
+    document.getElementById('statsSelectedDate').textContent = dateStr;
 
-    const studyTime = (window.studyData && window.studyData[nextDayStr]) || 0;
+    const studyTime = (window.studyData && window.studyData[dateStr]) || 0;
     const hours = Math.floor(studyTime / 3600);
     const minutes = Math.floor((studyTime % 3600) / 60);
     const seconds = studyTime % 60;
@@ -369,7 +369,7 @@ function showStatsDetails(dateStr) {
 
     statsSubjects.innerHTML += '<h4>To-Do Statistics</h4>';
     const dayTodos = window.todos.filter(todo => 
-        new Date(todo.createdAt).toISOString().split('T')[0] === nextDayStr);
+        new Date(todo.createdAt).toISOString().split('T')[0] === dateStr);
     const completedTodos = dayTodos.filter(todo => todo.completed).length;
     const totalTodos = dayTodos.length;
     statsSubjects.innerHTML += `
@@ -381,7 +381,7 @@ function showStatsDetails(dateStr) {
 
     const statsDiary = document.getElementById('statsDiary');
     statsDiary.innerHTML = '<h4>Journal Entry</h4>';
-    const diaryEntry = window.diaryData[nextDayStr];
+    const diaryEntry = window.diaryData[dateStr];
     if (diaryEntry) {
         statsDiary.innerHTML += `
             <p>Mood: ${diaryEntry.mood}</p>
@@ -1383,6 +1383,41 @@ function renderDDays() {
 
     if (sortedDDays.length === 0) {
         ddayList.innerHTML = '<li>No D-Days set</li>';
+    }
+}
+
+function renderStats() {
+    const weekStart = getWeekStartDate(currentWeekOffset);
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekStart.getDate() + 6);
+
+    const weekRange = document.getElementById('weekRange');
+    weekRange.textContent = `${weekStart.toLocaleDateString()} - ${weekEnd.toLocaleDateString()}`;
+
+    const weekCalendar = document.getElementById('weekCalendar');
+    weekCalendar.innerHTML = '';
+
+    for (let i = 0; i < 7; i++) {
+        const date = new Date(weekStart);
+        date.setDate(weekStart.getDate() + i);
+        const dateStr = date.toISOString().split('T')[0];
+        const studyTime = (window.studyData && window.studyData[dateStr]) || 0;
+        const hours = Math.floor(studyTime / 3600);
+        const minutes = Math.floor((studyTime % 3600) / 60);
+        const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+
+        weekCalendar.innerHTML += `
+            <div class="week-day" onclick="showStatsDetails('${dateStr}')">
+                <div>${dayName}</div>
+                <div>${date.getDate()}</div>
+                <div>${hours}h ${minutes}m</div>
+            </div>
+        `;
+    }
+    if (currentSelectedDate) {
+        showStatsDetails(currentSelectedDate);
+    } else {
+        document.getElementById('statsDetails').classList.add('hidden');
     }
 }
 

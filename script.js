@@ -1134,22 +1134,58 @@ function renderGroupDashboard() {
             const groupData = doc.data();
             groupNameDiv.textContent = `${groupData.name} (Code: ${window.currentGroupCode})`;
 
-            const members = Object.entries(groupData.members)
-                .map(([uid, data]) => ({
-                    uid,
-                    nickname: data.nickname,
-                    studyTime: data.studyTime || 0
-                }))
-                .sort((a, b) => {
-                    if (b.studyTime !== a.studyTime) {
-                        return b.studyTime - a.studyTime;
-                    }
-                    return a.uid.localeCompare(b.uid);
-                })
-                .map((member, index) => ({ ...member, rank: index + 1 }));
+            // 멤버 데이터를 배열로 변환
+            const membersArray = Object.entries(groupData.members).map(([uid, data]) => ({
+                uid,
+                nickname: data.nickname,
+                studyTime: data.studyTime || 0
+            }));
 
+            // 공부 시간 기준으로 내림차순 정렬
+            membersArray.sort((a, b) => b.studyTime - a.studyTime);
+
+            // 순위 부여: 같은 공부 시간이면 같은 순위
+            let currentRank = 1;
+            for (let i = 0; i < membersArray.length; i++) {
+                if (i > 0 && membersArray[i].studyTime < membersArray[i - 1].studyTime) {
+                    currentRank = i + 1;
+                }
+                membersArray[i].rank = currentRank;
+            }
+
+            // 같은 순위 내에서 현재 사용자 우선, 나머지 UID로 정렬
+            const rankedMembers = [];
+            const rankGroups = {};
+
+            // 순위별로 그룹화
+            membersArray.forEach(member => {
+                if (!rankGroups[member.rank]) {
+                    rankGroups[member.rank] = [];
+                }
+                rankGroups[member.rank].push(member);
+            });
+
+            // 각 순위 그룹을 정렬
+            for (const rank in rankGroups) {
+                const group = rankGroups[rank];
+                // 현재 사용자를 찾아서 맨 앞으로 이동
+                const currentUserIndex = group.findIndex(m => m.uid === window.currentUser.uid);
+                let currentUserMember = null;
+                if (currentUserIndex !== -1) {
+                    currentUserMember = group.splice(currentUserIndex, 1)[0];
+                }
+                // 나머지를 UID 기준으로 오름차순 정렬
+                group.sort((a, b) => a.uid.localeCompare(b.uid));
+                // 현재 사용자가 있으면 맨 앞에 추가
+                if (currentUserMember) {
+                    group.unshift(currentUserMember);
+                }
+                rankedMembers.push(...group);
+            }
+
+            // 멤버 렌더링
             membersDiv.innerHTML = '';
-            members.forEach(member => {
+            rankedMembers.forEach(member => {
                 const hours = Math.floor(member.studyTime / 3600);
                 const minutes = Math.floor((member.studyTime % 3600) / 60);
                 const seconds = member.studyTime % 60;
@@ -1162,6 +1198,7 @@ function renderGroupDashboard() {
                 `;
             });
 
+            // 채팅 메시지 렌더링
             chatMessagesDiv.innerHTML = '';
             const messages = groupData.messages || [];
             messages.forEach(msg => {

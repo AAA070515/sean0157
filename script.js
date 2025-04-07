@@ -131,7 +131,7 @@ function showScreen(screen) {
         document.getElementById('groupCreateError').classList.add('hidden');
         document.getElementById('groupJoinError').classList.add('hidden');
         document.getElementById('groupCodeDisplay').classList.add('hidden');
-        renderGroupContent(); // 그룹 화면 렌더링 호출
+        renderGroupContent();
     }
 }
 
@@ -444,26 +444,22 @@ async function stopTimer() {
     clearInterval(timerInterval);
     timerInterval = null;
 
-    // 과목별 시간 누적
     if (!window.subjectStudyTime[selectedSubject]) {
         window.subjectStudyTime[selectedSubject] = {};
     }
     window.subjectStudyTime[selectedSubject][currentDate] = 
         (window.subjectStudyTime[selectedSubject][currentDate] || 0) + timerSeconds;
 
-    // 모든 과목의 합계를 studyData에 반영
     window.studyData[currentDate] = window.subjects.reduce((total, subject) => {
         return total + (window.subjectStudyTime[subject]?.[currentDate] || 0);
     }, 0);
 
-    // 공부 세션 기록
     const lastSession = window.studySessions[currentDate]?.slice(-1)[0];
     if (lastSession && lastSession.subject === selectedSubject && !lastSession.endTime) {
         lastSession.endTime = new Date().toISOString();
         lastSession.duration = timerSeconds;
     }
 
-    // 그룹 데이터 업데이트
     if (window.currentGroupCode) {
         const groupRef = window.firestoreDoc(window.firestoreDb, "groups", window.currentGroupCode);
         const groupDoc = await window.firestoreGetDoc(groupRef);
@@ -987,7 +983,7 @@ async function createGroup() {
         document.getElementById('groupCodeDisplay').classList.remove('hidden');
         error.classList.add('hidden');
         await window.saveUserData();
-        renderGroupContent(); // 그룹 생성 후 UI 갱신
+        renderGroupContent();
     } catch (err) {
         error.textContent = `Error: ${err.message}`;
         error.classList.remove('hidden');
@@ -1045,7 +1041,7 @@ async function joinGroup() {
         groupPasswordInputJoin.value = '';
         error.classList.add('hidden');
         await window.saveUserData();
-        renderGroupContent(); // 그룹 참가 후 UI 갱신
+        renderGroupContent();
     } catch (err) {
         error.textContent = `Error: ${err.message}`;
         error.classList.remove('hidden');
@@ -1072,7 +1068,7 @@ async function leaveGroup() {
 
     window.currentGroupCode = null;
     await window.saveUserData();
-    renderGroupContent(); // 그룹 나가기 후 UI 갱신
+    renderGroupContent();
 }
 
 async function sendMessage() {
@@ -1253,20 +1249,19 @@ function renderGroupContent() {
 
     if (!window.currentGroupCode) {
         joinCreateBox.classList.remove('hidden');
-        joinCreateBox.style.display = 'flex'; // 강제로 표시
+        joinCreateBox.style.display = 'flex';
         contentBox.classList.add('hidden');
-        contentBox.style.display = 'none'; // 강제로 숨김
+        contentBox.style.display = 'none';
     } else {
         joinCreateBox.classList.add('hidden');
-        joinCreateBox.style.display = 'none'; // 강제로 숨김
+        joinCreateBox.style.display = 'none';
         contentBox.classList.remove('hidden');
-        contentBox.style.display = 'block'; // 강제로 표시
+        contentBox.style.display = 'block';
         renderGroupDashboard();
         renderGroupChat();
         showGroupTab('dashboard');
     }
 
-    // 상태 변경 후 다시 확인
     console.log('After update - joinCreateBox hidden:', joinCreateBox.classList.contains('hidden'));
     console.log('After update - contentBox hidden:', contentBox.classList.contains('hidden'));
 }

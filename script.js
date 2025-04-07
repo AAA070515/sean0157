@@ -6,9 +6,37 @@ let uploadedImage = null;
 let currentSelectedDate = null;
 let currentWeekOffset = 0;
 let currentSelectedSubject = null;
+let lastCheckedDate = new Date().toISOString().split('T')[0];
 
 const today = new Date();
 let currentDate = today.toISOString().split('T')[0];
+
+function checkAndResetDailyData() {
+    const today = new Date().toISOString().split('T')[0];
+    if (today !== lastCheckedDate) {
+        currentDate = today;
+        window.studyData[currentDate] = 0;
+        window.subjects.forEach(subject => {
+            if (!window.subjectStudyTime[subject]) {
+                window.subjectStudyTime[subject] = {};
+            }
+            window.subjectStudyTime[subject][currentDate] = 0;
+        });
+        timerSeconds = 0;
+        if (timerInterval) clearInterval(timerInterval);
+        timerInterval = null;
+        lastCheckedDate = today;
+        updateStudyTimeDisplay();
+        updateSubjectTimes();
+        updateTimerDisplay();
+        renderHome();
+        window.saveUserData();
+    }
+}
+
+checkAndResetDailyData();
+
+setInterval(checkAndResetDailyData, 60000);
 
 function getMoodImage(mood) {
     const moodImages = {
@@ -351,7 +379,7 @@ function toggleDayDetails(date) {
 }
 
 function updateStudyTimeDisplay() {
-    const studyTime = (window.studyData && window.studyData[currentDate]) || 0;
+    const studyTime = window.studyData[currentDate] || 0;
     const hours = Math.floor(studyTime / 3600);
     const minutes = Math.floor((studyTime % 3600) / 60);
     const seconds = studyTime % 60;
@@ -410,25 +438,31 @@ function startTimer() {
 
 async function stopTimer() {
     const selectedSubject = document.getElementById('subjectSelect').value;
-    if (!selectedSubject) return;
+    if (!selectedSubject || !timerInterval) return;
 
     clearInterval(timerInterval);
     timerInterval = null;
 
-    window.studyData[currentDate] = ((window.studyData && window.studyData[currentDate]) || 0) + timerSeconds;
-
+    // 과목별 시간 누적
     if (!window.subjectStudyTime[selectedSubject]) {
         window.subjectStudyTime[selectedSubject] = {};
     }
     window.subjectStudyTime[selectedSubject][currentDate] = 
         (window.subjectStudyTime[selectedSubject][currentDate] || 0) + timerSeconds;
 
+    // 모든 과목의 합계를 studyData에 반영
+    window.studyData[currentDate] = window.subjects.reduce((total, subject) => {
+        return total + (window.subjectStudyTime[subject]?.[currentDate] || 0);
+    }, 0);
+
+    // 공부 세션 기록
     const lastSession = window.studySessions[currentDate]?.slice(-1)[0];
     if (lastSession && lastSession.subject === selectedSubject && !lastSession.endTime) {
         lastSession.endTime = new Date().toISOString();
         lastSession.duration = timerSeconds;
     }
 
+    // 그룹 데이터 업데이트
     if (window.currentGroupCode) {
         const groupRef = window.firestoreDoc(window.firestoreDb, "groups", window.currentGroupCode);
         const groupDoc = await window.firestoreGetDoc(groupRef);
@@ -545,8 +579,10 @@ async function addSubject() {
     const subjectName = subjectInput.value.trim();
     if (subjectName && !window.subjects.includes(subjectName)) {
         window.subjects.push(subjectName);
-        if (!window.subjectStudyTime[subjectName]) window.subjectStudyTime[subjectName] = {};
-        window.subjectStudyTime[subjectName][currentDate] = window.subjectStudyTime[subjectName][currentDate] || 0;
+        if (!window.subjectStudyTime[subjectName]) {
+            window.subjectStudyTime[subjectName] = {};
+        }
+        window.subjectStudyTime[subjectName][currentDate] = 0;
         await window.saveUserData();
         updateSubjectSelect();
         updateSubjectTimes();
@@ -580,7 +616,7 @@ function updateSubjectTimes() {
     const subjectTimesDiv = document.getElementById('subjectTimes');
     subjectTimesDiv.innerHTML = '';
     window.subjects.forEach(subject => {
-        const time = window.subjectStudyTime[subject][currentDate] || 0;
+        const time = window.subjectStudyTime[subject]?.[currentDate] || 0;
         const hours = Math.floor(time / 3600);
         const minutes = Math.floor((time % 3600) / 60);
         const seconds = time % 60;
@@ -627,24 +663,24 @@ function uploadImage() {
     const file = fileInput.files[0];
     if (file) {
         const reader = new FileReader();
-        reader.onload = function(e) {
-            uploadedImage = e.target.result;
+        reader.on = function(e) {
+            upedImage = e.target.result;
             const preview = document.getElementById('imagePreview');
-            preview.innerHTML = `<img src="${uploadedImage}" alt="Uploaded Image">`;
+            preview.innerHTML = `<img src="${upedImage}" alt="Uped Image">`;
         };
         reader.readAsDataURL(file);
         fileInput.value = '';
     }
 }
 
-function loadDiaryData(selectedDate) {
+function DiaryData(selectedDate) {
     const diaryEntry = window.diaryData[selectedDate];
     
     document.querySelectorAll('.mood-bean').forEach(bean => bean.classList.remove('selected'));
     document.getElementById('memoInput').value = '';
     document.getElementById('imagePreview').innerHTML = '';
     selectedMood = null;
-    uploadedImage = null;
+    upedImage = null;
     
     if (diaryEntry) {
         const mood = diaryEntry.mood;
@@ -656,7 +692,7 @@ function loadDiaryData(selectedDate) {
         document.getElementById('memoInput').value = diaryEntry.memo || '';
         if (diaryEntry.image) {
             document.getElementById('imagePreview').innerHTML = `<img src="${diaryEntry.image}" alt="Diary Image">`;
-            uploadedImage = diaryEntry.image;
+            upedImage = diaryEntry.image;
         }
     }
 }

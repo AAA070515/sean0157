@@ -129,7 +129,7 @@ function showScreen(screen) {
         document.getElementById('groupCreateError').classList.add('hidden');
         document.getElementById('groupJoinError').classList.add('hidden');
         document.getElementById('groupCodeDisplay').classList.add('hidden');
-        renderGroupContent();
+        renderGroupContent(); // 그룹 화면 렌더링 호출
     }
 }
 
@@ -1241,15 +1241,18 @@ function renderGroupContent() {
     const actions = document.querySelector('.group-actions');
     const dashboard = document.querySelector('.group-dashboard');
     const chat = document.querySelector('.group-chat');
-
+    console.log('currentGroupCode:', window.currentGroupCode);
+    console.log('actions hidden:', actions.classList.contains('hidden'));
     if (!window.currentGroupCode) {
+        // 그룹에 참가하지 않은 경우: 그룹 생성/참가만 보임
         tabs.classList.add('hidden');
         actions.classList.remove('hidden');
         dashboard.classList.add('hidden');
         chat.classList.add('hidden');
     } else {
+        // 그룹에 참가한 경우: 탭과 대시보드/채팅만 보임
         tabs.classList.remove('hidden');
-        actions.classList.add('hidden');
+        actions.classList.add('hidden'); // 그룹 생성/참가 숨김
         dashboard.classList.remove('hidden'); // 기본적으로 Dashboard 표시
         chat.classList.add('hidden');
         renderGroupDashboard(); // 대시보드 데이터 렌더링

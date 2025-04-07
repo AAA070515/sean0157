@@ -1253,10 +1253,14 @@ function renderGroupContent() {
 
     if (!window.currentGroupCode) {
         joinCreateBox.classList.remove('hidden');
+        joinCreateBox.style.display = 'flex'; // 강제로 표시
         contentBox.classList.add('hidden');
+        contentBox.style.display = 'none'; // 강제로 숨김
     } else {
         joinCreateBox.classList.add('hidden');
+        joinCreateBox.style.display = 'none'; // 강제로 숨김
         contentBox.classList.remove('hidden');
+        contentBox.style.display = 'block'; // 강제로 표시
         renderGroupDashboard();
         renderGroupChat();
         showGroupTab('dashboard');

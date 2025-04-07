@@ -225,6 +225,15 @@
                     <div class="group-dashboard hidden">
                         <h4 id="currentGroupName"></h4>
                         <div id="groupMembers" class="group-members"></div>
+                        <!-- 채팅 영역 추가 -->
+                        <div class="group-chat">
+                            <h4>Group Chat</h4>
+                            <div id="chatMessages" class="chat-messages"></div>
+                            <div class="chat-input">
+                                <input type="text" id="chatInput" placeholder="Type a message..." maxlength="200">
+                                <button class="btn chat-send-btn" onclick="sendMessage()">Send</button>
+                            </div>
+                        </div>
                         <button class="btn leave-btn" onclick="leaveGroup()">Leave Group</button>
                     </div>
                 </div>
@@ -250,7 +259,14 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot, getDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
-
+        import { getDatabase, ref as dbRef, push, onValue } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-database.js";
+        
+        const rtdb = getDatabase(app);
+        window.realtimeDb = rtdb;
+        window.realtimeRef = dbRef;
+        window.realtimePush = push;
+        window.realtimeOnValue = onValue;
+        
         const firebaseConfig = {
             apiKey: "AIzaSyDx_BBG73R3FReoFsRPuIKcDb754LAxTCI",
             authDomain: "sean0157-92c62.firebaseapp.com",

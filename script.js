@@ -1223,9 +1223,10 @@ function renderGroupChat() {
             messages.forEach(msg => {
                 const date = new Date(msg.timestamp);
                 const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                const isMine = msg.senderId === window.currentUser.uid;
                 chatMessagesDiv.innerHTML += `
-                    <div class="chat-message">
-                        <span class="sender">${msg.senderNickname}</span> (${timeStr}): ${msg.text}
+                    <div class="chat-message ${isMine ? 'mine' : 'other'}">
+                        <strong>${msg.senderNickname}</strong> (${timeStr}): ${msg.text}
                     </div>
                 `;
             });

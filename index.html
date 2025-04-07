@@ -141,39 +141,43 @@
             </section>
             <section id="todoScreen" class="hidden">
                 <div class="todo-section">
+                    <h2>To-Do & D-Day</h2>
                     <div class="todo-tabs">
                         <button class="tab-btn active" onclick="showTodoTab('todo')">To-Do</button>
                         <button class="tab-btn" onclick="showTodoTab('dday')">D-Day</button>
                     </div>
+                    
                     <div id="todoTabContent" class="todo-content">
-                        <div style="display: flex;">
-                            <label for="todoInput" class="hidden-label">Add new task</label>
-                            <input type="text" class="todo-input" id="todoInput" placeholder="Add new task">
-                            <button class="todo-add-btn btn" onclick="addTodo()">Add</button>
+                        <div class="todo-input-group">
+                            <input type="text" class="todo-input" id="todoInput" placeholder="Add a new task...">
+                            <button class="todo-add-btn btn" onclick="addTodo()">+</button>
                         </div>
                         <div class="task-filters">
-                            <button class="filter-btn active" onclick="filterTasks('all')">All</button>
-                            <button class="filter-btn" onclick="filterTasks('active')">Active</button>
-                            <button class="filter-btn" onclick="filterTasks('completed')">Completed</button>
+                            <label class="filter-toggle">
+                                <input type="radio" name="filter" onclick="filterTasks('all')" checked> All
+                            </label>
+                            <label class="filter-toggle">
+                                <input type="radio" name="filter" onclick="filterTasks('active')"> Active
+                            </label>
+                            <label class="filter-toggle">
+                                <input type="radio" name="filter" onclick="filterTasks('completed')"> Completed
+                            </label>
                         </div>
                         <ul id="todoList" class="todo-list"></ul>
-                        <div class="todo-stats">
+                        <div class="todo-footer">
                             <span id="todoCount">0 tasks remaining</span>
-                            <button class="clear-btn" onclick="clearCompleted()">Clear completed</button>
+                            <button class="clear-btn btn" onclick="clearCompleted()">Clear Completed</button>
                         </div>
                     </div>
+                    
                     <div id="ddayTabContent" class="dday-content hidden">
-                        <div class="dday-input-section">
-                            <h3>Add D-Day</h3>
-                            <input type="text" id="ddayNameInput" placeholder="Enter D-Day name" maxlength="50">
-                            <input type="date" id="ddayDateInput" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd; margin-top: 15px; font-size: 16px;">
-                            <button class="btn dday-add-btn" onclick="addDDay()">Add D-Day</button>
-                            <p id="ddayError" class="error hidden"></p>
+                        <div class="dday-input-group">
+                            <input type="text" id="ddayNameInput" placeholder="D-Day name (e.g., Exam Day)">
+                            <input type="date" id="ddayDateInput">
+                            <button class="dday-add-btn btn" onclick="addDDay()">Add</button>
                         </div>
-                        <div class="dday-list-section">
-                            <h3>Your D-Days</h3>
-                            <ul id="ddayList" class="dday-list"></ul>
-                        </div>
+                        <p id="ddayError" class="error hidden"></p>
+                        <ul id="ddayList" class="dday-list"></ul>
                     </div>
                 </div>
             </section>
@@ -232,36 +236,39 @@
             </section>
             <section id="groupsScreen" class="hidden">
                 <div class="groups">
-                    <h3>Groups</h3>
+                    <h2>Groups</h2>
                     <div class="group-join-create-box">
-                        <div class="group-create">
-                            <input type="text" id="groupNameInput" placeholder="Enter group name" maxlength="50">
-                            <input type="password" id="groupPasswordInput" placeholder="Set group password" maxlength="20">
-                            <button class="btn group-action-btn" onclick="createGroup()">Create Group</button>
+                        <div class="group-card">
+                            <h3>Create a Group</h3>
+                            <input type="text" id="groupNameInput" placeholder="Group Name">
+                            <input type="password" id="groupPasswordInput" placeholder="Password (optional)">
+                            <button class="btn group-action-btn" onclick="createGroup()">Create</button>
                             <p id="groupCodeDisplay" class="hidden"></p>
                             <p id="groupCreateError" class="error hidden"></p>
                         </div>
-                        <div class="group-join">
-                            <input type="text" id="groupCodeInput" placeholder="Enter 6-digit code" maxlength="6">
-                            <input type="password" id="groupPasswordInputJoin" placeholder="Enter group password" maxlength="20">
-                            <button class="btn group-action-btn" onclick="joinGroup()">Join Group</button>
+                        <div class="group-card">
+                            <h3>Join a Group</h3>
+                            <input type="text" id="groupCodeInput" placeholder="6-digit Code">
+                            <input type="password" id="groupPasswordInputJoin" placeholder="Password (if set)">
+                            <button class="btn group-action-btn" onclick="joinGroup()">Join</button>
                             <p id="groupJoinError" class="error hidden"></p>
                         </div>
                     </div>
+                    
                     <div class="group-content-box hidden">
                         <div class="group-tabs">
                             <button class="tab-btn active" onclick="showGroupTab('dashboard')">Dashboard</button>
                             <button class="tab-btn" onclick="showGroupTab('chat')">Chat</button>
                         </div>
                         <div class="group-dashboard">
-                            <h4 id="currentGroupName"></h4>
+                            <h3 id="currentGroupName"></h3>
                             <div id="groupMembers" class="group-members"></div>
                             <button class="btn leave-btn" onclick="leaveGroup()">Leave Group</button>
                         </div>
                         <div class="group-chat hidden">
                             <div id="chatMessages" class="chat-messages"></div>
-                            <div class="chat-input">
-                                <input type="text" id="chatInput" placeholder="Type a message..." maxlength="200">
+                            <div class="chat-input-group">
+                                <input type="text" id="chatInput" placeholder="Type a message...">
                                 <button class="btn chat-send-btn" onclick="sendMessage()">Send</button>
                             </div>
                         </div>

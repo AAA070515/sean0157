@@ -8,65 +8,72 @@ let currentWeekOffset = 0;
 let currentSelectedSubject = null;
 let lastCheckedDate = new Date().toISOString().split('T')[0];
 
+window.ddays = window.ddays || []; 
+
 const today = new Date();
 let currentDate = today.toISOString().split('T')[0];
 
-window.ddays = window.ddays || []; 
-
 async function loadUserData(userId) {
     const userRef = doc(db, "users", userId);
-    window.firestoreOnSnapshot(userRef, (doc) => {
-        if (doc.exists()) {
-            const data = doc.data();
-            console.log("Firestore에서 가져온 원시 데이터:", data); // 디버깅: Firestore 데이터 확인
-            window.subjects = data.subjects || [];
-            window.studyData = data.studyData || {};
-            window.subjectStudyTime = data.subjectStudyTime || {};
-            window.diaryData = data.diaryData || {};
-            window.todos = data.todos || [];
-            window.ddays = data.ddays || []; // D-Day 데이터 로드
-            window.goals = data.goals || { daily: null, weekly: null };
-            window.studySessions = data.studySessions || {};
-            window.nickname = data.nickname || 'User';
-            window.currentGroupCode = data.groupCode || null;
+    return new Promise((resolve, reject) => {
+        window.firestoreOnSnapshot(userRef, (doc) => {
+            if (doc.exists()) {
+                const data = doc.data();
+                console.log("Firestore에서 가져온 원시 데이터:", data);
+                window.subjects = data.subjects || [];
+                window.studyData = data.studyData || {};
+                window.subjectStudyTime = data.subjectStudyTime || {};
+                window.diaryData = data.diaryData || {};
+                window.todos = data.todos || [];
+                window.ddays = data.ddays || []; // D-Day 데이터 로드
+                window.goals = data.goals || { daily: null, weekly: null };
+                window.studySessions = data.studySessions || {};
+                window.nickname = data.nickname || 'User';
+                window.currentGroupCode = data.groupCode || null;
 
-            console.log("로드된 D-Days:", window.ddays); // 디버깅: D-Day 확인
+                console.log("로드된 D-Days:", window.ddays);
 
-            // 데이터 로드 후 UI 업데이트
-            updateSubjectSelect();
-            updateSubjectTimes();
-            updateStudyTimeDisplay();
-            updateGoalsInputs();
-            updateGoalsProgress();
-            renderHome();
-            renderTodos();
-            renderDDays(); // D-Day 렌더링
-            renderGroupDashboard();
-        } else {
-            console.log("Firestore에 데이터 없음, 기본값 초기화");
-            window.subjects = [];
-            window.studyData = {};
-            window.subjectStudyTime = {};
-            window.diaryData = {};
-            window.todos = [];
-            window.ddays = [];
-            window.goals = { daily: null, weekly: null };
-            window.studySessions = {};
-            window.currentGroupCode = null;
+                // UI 업데이트
+                updateSubjectSelect();
+                updateSubjectTimes();
+                updateStudyTimeDisplay();
+                updateGoalsInputs();
+                updateGoalsProgress();
+                renderHome();
+                renderTodos();
+                renderDDays();
+                renderGroupDashboard();
 
-            // 초기화 후 UI 업데이트
-            updateSubjectSelect();
-            updateSubjectTimes();
-            updateStudyTimeDisplay();
-            updateGoalsInputs();
-            updateGoalsProgress();
-            renderHome();
-            renderTodos();
-            renderDDays(); // 빈 D-Day 렌더링
-            renderGroupDashboard();
-        }
-    }, (error) => {
-        console.error("데이터 로드 실패:", error.code, error.message);
+                resolve(); // 초기 로드 완료
+            } else {
+                console.log("Firestore에 데이터 없음, 기본값 초기화");
+                window.subjects = [];
+                window.studyData = {};
+                window.subjectStudyTime = {};
+                window.diaryData = {};
+                window.todos = [];
+                window.ddays = []; // 초기화
+                window.goals = { daily: null, weekly: null };
+                window.studySessions = {};
+                window.currentGroupCode = null;
+
+                // UI 업데이트
+                updateSubjectSelect();
+                updateSubjectTimes();
+                updateStudyTimeDisplay();
+                updateGoalsInputs();
+                updateGoalsProgress();
+                renderHome();
+                renderTodos();
+                renderDDays();
+                renderGroupDashboard();
+
+                resolve(); // 초기 로드 완료
+            }
+        }, (error) => {
+            console.error("데이터 로드 실패:", error.code, error.message);
+            reject(error);
+        });
     });
 }
 

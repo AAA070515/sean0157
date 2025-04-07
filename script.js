@@ -50,20 +50,16 @@ function getMoodImage(mood) {
 }
 
 function toggleDrawer() {
-    const drawerContent = document.querySelector('.drawer-content');
+    const drawer = document.querySelector('.nav-drawer');
     const overlay = document.querySelector('.overlay');
-    drawerContent.classList.toggle('hidden');
-    drawerContent.classList.toggle('visible');
-    overlay.classList.toggle('hidden');
+    drawer.classList.toggle('open');
     overlay.classList.toggle('visible');
 }
 
 function closeDrawer() {
-    const drawerContent = document.querySelector('.drawer-content');
+    const drawer = document.querySelector('.nav-drawer');
     const overlay = document.querySelector('.overlay');
-    drawerContent.classList.add('hidden');
-    drawerContent.classList.remove('visible');
-    overlay.classList.add('hidden');
+    drawer.classList.remove('open');
     overlay.classList.remove('visible');
 }
 

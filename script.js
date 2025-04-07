@@ -7,7 +7,7 @@ let currentSelectedDate = null;
 let currentWeekOffset = 0;
 let currentSelectedSubject = null;
 let lastCheckedDate = new Date().toISOString().split('T')[0];
-
+window.ddays = [];
 const today = new Date();
 let currentDate = today.toISOString().split('T')[0];
 
@@ -66,7 +66,7 @@ function closeDrawer() {
 }
 
 
-function showScreen(screen) {
+function showScreen(screen, subTab = null) {
     const screens = ['home', 'study', 'diary', 'todo', 'goals', 'stats', 'settings', 'groups'];
     screens.forEach(s => {
         const el = document.getElementById(`${s}Screen`);
@@ -98,8 +98,9 @@ function showScreen(screen) {
 
     closeDrawer();
 
-    if (screen === 'home') renderHome();
-    else if (screen === 'study') {
+    if (screen === 'home') {
+        renderHome();
+    } else if (screen === 'study') {
         updateStudyTimeDisplay();
         updateSubjectSelect();
         updateSubjectTimes();
@@ -115,12 +116,15 @@ function showScreen(screen) {
         uploadedImage = null;
         document.getElementById('imagePreview').innerHTML = '';
         loadDiaryData(currentDate);
-    } else if (screen === 'todo') renderTodos();
-    else if (screen === 'goals') {
+    } else if (screen === 'todo') {
+        renderTodos();
+        showTodoTab(subTab || 'todo'); // 서브 탭 지정
+    } else if (screen === 'goals') {
         updateGoalsInputs();
         updateGoalsProgress();
-    } else if (screen === 'stats') renderStats();
-    else if (screen === 'settings') {
+    } else if (screen === 'stats') {
+        renderStats();
+    } else if (screen === 'settings') {
         loadSettings();
         document.getElementById('logout-btn').style.display = window.currentUser ? 'block' : 'none';
     } else if (screen === 'groups') {
@@ -238,6 +242,23 @@ function renderHome() {
     }
     if (window.goals.daily === null && window.goals.weekly === null && totalTodayTodos === 0) {
         goalProgress.innerHTML = '<p>No goals or tasks set</p>';
+    }
+
+    // D-Day 위젯 렌더링
+    const ddayPreview = document.getElementById('dashboardDDayPreview');
+    ddayPreview.innerHTML = '';
+    const sortedDDays = window.ddays
+        .filter(dday => new Date(dday.date) >= new Date(currentDate))
+        .sort((a, b) => new Date(a.date) - new Date(b.date));
+    if (sortedDDays.length > 0) {
+        const nearestDDay = sortedDDays[0];
+        const daysLeft = Math.ceil((new Date(nearestDDay.date) - new Date(currentDate)) / (1000 * 60 * 60 * 24));
+        ddayPreview.innerHTML = `
+            <p><strong>${nearestDDay.name}</strong></p>
+            <p>${nearestDDay.date} (${daysLeft} days left)</p>
+        `;
+    } else {
+        ddayPreview.innerHTML = '<p>No D-Days set</p>';
     }
 }
 
@@ -1233,6 +1254,229 @@ function showGroupTab(tab) {
         chatBtn.classList.add('active');
     }
 }
+
+async function loadUserData(userId) {
+    const userRef = doc(db, "users", userId);
+    window.firestoreOnSnapshot(userRef, (doc) => {
+        if (doc.exists()) {
+            const data = doc.data();
+            window.subjects = data.subjects || [];
+            window.studyData = data.studyData || {};
+            window.subjectStudyTime = data.subjectStudyTime || {};
+            window.diaryData = data.diaryData || {};
+            window.todos = data.todos || [];
+            window.ddays = data.ddays || []; // D-Day 추가
+            window.goals = data.goals || { daily: null, weekly: null };
+            window.studySessions = data.studySessions || {};
+            window.nickname = data.nickname || 'User';
+            window.currentGroupCode = data.groupCode || null;
+            updateSubjectSelect();
+            updateSubjectTimes();
+            updateStudyTimeDisplay();
+            updateGoalsInputs();
+            updateGoalsProgress();
+            renderHome();
+            renderTodos();
+            renderGroupDashboard();
+        } else {
+            window.subjects = [];
+            window.studyData = {};
+            window.subjectStudyTime = {};
+            window.diaryData = {};
+            window.todos = [];
+            window.ddays = []; // D-Day 초기화
+            window.goals = { daily: null, weekly: null };
+            window.studySessions = {};
+            window.currentGroupCode = null;
+            updateSubjectSelect();
+            updateSubjectTimes();
+            updateStudyTimeDisplay();
+            updateGoalsInputs();
+            updateGoalsProgress();
+            renderHome();
+            renderTodos();
+            renderGroupDashboard();
+        }
+    }, (error) => {
+        console.error("Load failed:", error.code, error.message);
+    });
+}
+
+window.saveUserData = async function() {
+    if (!window.currentUser) return;
+    const userId = window.currentUser.uid;
+    const dataToSave = {
+        subjects: window.subjects || [],
+        studyData: window.studyData || {},
+        subjectStudyTime: window.subjectStudyTime || {},
+        diaryData: window.diaryData || {},
+        todos: window.todos || [],
+        ddays: window.ddays || [], // D-Day 추가
+        goals: window.goals || { daily: null, weekly: null },
+        studySessions: window.studySessions || {},
+        nickname: window.nickname || 'User',
+        groupCode: window.currentGroupCode || null
+    };
+    try {
+        await window.firestoreSetDoc(window.firestoreDoc(db, "users", userId), dataToSave, { merge: true });
+        console.log("Data saved successfully!");
+    } catch (error) {
+        console.error("Save failed:", error.code, error.message);
+        alert("Failed to save data: " + error.message);
+    }
+};
+
+function showTodoTab(tab) {
+    const todoContent = document.getElementById('todoTabContent');
+    const ddayContent = document.getElementById('ddayTabContent');
+    const todoBtn = document.querySelector('.todo-tabs .tab-btn[onclick="showTodoTab(\'todo\')"]');
+    const ddayBtn = document.querySelector('.todo-tabs .tab-btn[onclick="showTodoTab(\'dday\')"]');
+
+    if (tab === 'todo') {
+        todoContent.classList.remove('hidden');
+        ddayContent.classList.add('hidden');
+        todoBtn.classList.add('active');
+        ddayBtn.classList.remove('active');
+        renderTodos();
+    } else if (tab === 'dday') {
+        todoContent.classList.add('hidden');
+        ddayContent.classList.remove('hidden');
+        todoBtn.classList.remove('active');
+        ddayBtn.classList.add('active');
+        renderDDays();
+    }
+}
+
+async function addDDay() {
+    const nameInput = document.getElementById('ddayNameInput');
+    const dateInput = document.getElementById('ddayDateInput');
+    const error = document.getElementById('ddayError');
+    const name = nameInput.value.trim();
+    const date = dateInput.value;
+
+    if (!name || !date) {
+        error.textContent = 'Please enter a name and date for the D-Day.';
+        error.classList.remove('hidden');
+        return;
+    }
+
+    const selectedDate = new Date(date);
+    const today = new Date(currentDate);
+    if (selectedDate < today) {
+        error.textContent = 'D-Day date must be today or in the future.';
+        error.classList.remove('hidden');
+        return;
+    }
+
+    const newDDay = {
+        id: Date.now(),
+        name: name,
+        date: date,
+        createdAt: new Date().toISOString()
+    };
+
+    window.ddays.push(newDDay);
+    await window.saveUserData();
+    nameInput.value = '';
+    dateInput.value = '';
+    error.classList.add('hidden');
+    renderDDays();
+    renderHome();
+}
+
+function renderDDays() {
+    const ddayList = document.getElementById('ddayList');
+    ddayList.innerHTML = '';
+
+    const sortedDDays = window.ddays.sort((a, b) => new Date(a.date) - new Date(b.date));
+    sortedDDays.forEach(dday => {
+        const daysLeft = Math.ceil((new Date(dday.date) - new Date(currentDate)) / (1000 * 60 * 60 * 24));
+        const ddayItem = document.createElement('li');
+        ddayItem.className = 'dday-item';
+        ddayItem.innerHTML = `
+            <span class="dday-text">${dday.name} (${dday.date})</span>
+            <span class="dday-days">${daysLeft} days</span>
+            <button class="delete-dday" onclick="deleteDDay(${dday.id})">×</button>
+        `;
+        ddayList.appendChild(ddayItem);
+    });
+
+    if (sortedDDays.length === 0) {
+        ddayList.innerHTML = '<li>No D-Days set</li>';
+    }
+}
+
+async function deleteDDay(id) {
+    window.ddays = window.ddays.filter(dday => dday.id !== id);
+    await window.saveUserData();
+    renderDDays();
+    renderHome();
+}
+
+async function resetAllSettings() {
+    if (confirm('Are you sure you want to reset all settings? This will clear all your data.')) {
+        if (window.currentUser) {
+            const userRef = window.firestoreDoc(window.firestoreDb, "users", window.currentUser.uid);
+            try {
+                await window.firestoreSetDoc(userRef, {
+                    subjects: [],
+                    studyData: {},
+                    subjectStudyTime: {},
+                    diaryData: {},
+                    todos: [],
+                    ddays: [], // D-Day 초기화
+                    goals: { daily: null, weekly: null },
+                    studySessions: {},
+                    nickname: window.nickname,
+                    groupCode: null
+                });
+                window.subjects = [];
+                window.studyData = {};
+                window.subjectStudyTime = {};
+                window.diaryData = {};
+                window.todos = [];
+                window.ddays = [];
+                window.goals = { daily: null, weekly: null };
+                window.studySessions = {};
+                window.currentGroupCode = null;
+                timerSeconds = 0;
+                if (timerInterval) clearInterval(timerInterval);
+                timerInterval = null;
+                currentFilter = 'all';
+                selectedMood = null;
+                uploadedImage = null;
+                currentWeekOffset = 0;
+                updateSubjectSelect();
+                updateSubjectTimes();
+                updateStudyTimeDisplay();
+                updateTimerDisplay();
+                updateGoalsInputs();
+                updateGoalsProgress();
+                renderHome();
+                renderTodos();
+                document.getElementById('dayDetails').classList.add('hidden');
+                document.getElementById('subjectInput').value = '';
+                document.getElementById('todoInput').value = '';
+                document.getElementById('diaryDate').value = currentDate;
+                document.getElementById('memoInput').value = '';
+                document.getElementById('diaryImage').value = '';
+                document.getElementById('imagePreview').innerHTML = '';
+                document.querySelectorAll('.mood-bean').forEach(bean => bean.classList.remove('selected'));
+                showScreen('home');
+                alert('All settings have been reset.');
+            } catch (error) {
+                console.error('데이터 초기화 실패:', error.code, error.message);
+            }
+        }
+    }
+}
+
+document.getElementById('ddayNameInput').addEventListener('keypress', function(event) {
+    if (event.key === 'Enter') {
+        event.preventDefault();
+        addDDay();
+    }
+});
 
 function renderGroupContent() {
     const joinCreateBox = document.querySelector('.group-join-create-box');

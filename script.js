@@ -129,7 +129,7 @@ function showScreen(screen) {
         document.getElementById('groupCreateError').classList.add('hidden');
         document.getElementById('groupJoinError').classList.add('hidden');
         document.getElementById('groupCodeDisplay').classList.add('hidden');
-        renderGroupDashboard();
+        renderGroupContent();
     }
 }
 
@@ -965,10 +965,9 @@ async function createGroup() {
             return;
         }
 
-        // 비밀번호가 비어 있으면 null로 저장
         await window.firestoreSetDoc(groupRef, {
             name: groupName,
-            password: groupPassword || null, // 비밀번호가 없으면 null
+            password: groupPassword || null,
             members: {
                 [window.currentUser.uid]: {
                     nickname: window.nickname,
@@ -986,7 +985,7 @@ async function createGroup() {
         document.getElementById('groupCodeDisplay').classList.remove('hidden');
         error.classList.add('hidden');
         await window.saveUserData();
-        renderGroupDashboard();
+        renderGroupContent(); // 그룹 생성 후 UI 갱신
     } catch (err) {
         error.textContent = `Error: ${err.message}`;
         error.classList.remove('hidden');
@@ -1023,7 +1022,6 @@ async function joinGroup() {
 
         const groupData = groupDoc.data();
 
-        // 비밀번호가 null이면 비밀번호 입력 없이 가입 가능
         if (groupData.password !== null && groupData.password !== groupPassword) {
             error.textContent = 'Incorrect password.';
             error.classList.remove('hidden');
@@ -1045,7 +1043,7 @@ async function joinGroup() {
         groupPasswordInputJoin.value = '';
         error.classList.add('hidden');
         await window.saveUserData();
-        renderGroupDashboard();
+        renderGroupContent(); // 그룹 참가 후 UI 갱신
     } catch (err) {
         error.textContent = `Error: ${err.message}`;
         error.classList.remove('hidden');
@@ -1072,7 +1070,7 @@ async function leaveGroup() {
 
     window.currentGroupCode = null;
     await window.saveUserData();
-    renderGroupDashboard();
+    renderGroupContent(); // 그룹 나가기 후 UI 갱신
 }
 
 async function sendMessage() {
@@ -1105,21 +1103,13 @@ async function sendMessage() {
 
 function renderGroupDashboard() {
     const dashboard = document.querySelector('.group-dashboard');
-    const actions = document.querySelector('.group-actions');
     const membersDiv = document.getElementById('groupMembers');
     const groupNameDiv = document.getElementById('currentGroupName');
-    const chatMessagesDiv = document.getElementById('chatMessages');
 
     if (!window.currentGroupCode) {
         dashboard.classList.add('hidden');
-        actions.classList.remove('hidden');
-        document.getElementById('groupCodeDisplay').classList.add('hidden');
-        chatMessagesDiv.innerHTML = '';
         return;
     }
-
-    dashboard.classList.remove('hidden');
-    actions.classList.add('hidden');
 
     const groupRef = window.firestoreDoc(window.firestoreDb, "groups", window.currentGroupCode);
     window.firestoreOnSnapshot(groupRef, (doc) => {
@@ -1127,17 +1117,13 @@ function renderGroupDashboard() {
             const groupData = doc.data();
             groupNameDiv.textContent = `${groupData.name} (Code: ${window.currentGroupCode})`;
 
-            // 멤버 데이터를 배열로 변환
             const membersArray = Object.entries(groupData.members).map(([uid, data]) => ({
                 uid,
                 nickname: data.nickname,
                 studyTime: data.studyTime || 0
             }));
 
-            // 공부 시간 기준으로 내림차순 정렬
             membersArray.sort((a, b) => b.studyTime - a.studyTime);
-
-            // 순위 부여: 같은 공부 시간이면 같은 순위
             let currentRank = 1;
             for (let i = 0; i < membersArray.length; i++) {
                 if (i > 0 && membersArray[i].studyTime < membersArray[i - 1].studyTime) {
@@ -1146,37 +1132,24 @@ function renderGroupDashboard() {
                 membersArray[i].rank = currentRank;
             }
 
-            // 같은 순위 내에서 현재 사용자 우선, 나머지 UID로 정렬
             const rankedMembers = [];
             const rankGroups = {};
-
-            // 순위별로 그룹화
             membersArray.forEach(member => {
-                if (!rankGroups[member.rank]) {
-                    rankGroups[member.rank] = [];
-                }
+                if (!rankGroups[member.rank]) rankGroups[member.rank] = [];
                 rankGroups[member.rank].push(member);
             });
-
-            // 각 순위 그룹을 정렬
             for (const rank in rankGroups) {
                 const group = rankGroups[rank];
-                // 현재 사용자를 찾아서 맨 앞으로 이동
                 const currentUserIndex = group.findIndex(m => m.uid === window.currentUser.uid);
                 let currentUserMember = null;
                 if (currentUserIndex !== -1) {
                     currentUserMember = group.splice(currentUserIndex, 1)[0];
                 }
-                // 나머지를 UID 기준으로 오름차순 정렬
                 group.sort((a, b) => a.uid.localeCompare(b.uid));
-                // 현재 사용자가 있으면 맨 앞에 추가
-                if (currentUserMember) {
-                    group.unshift(currentUserMember);
-                }
+                if (currentUserMember) group.unshift(currentUserMember);
                 rankedMembers.push(...group);
             }
 
-            // 멤버 렌더링
             membersDiv.innerHTML = '';
             rankedMembers.forEach(member => {
                 const hours = Math.floor(member.studyTime / 3600);
@@ -1190,32 +1163,14 @@ function renderGroupDashboard() {
                     </div>
                 `;
             });
-
-            // 채팅 메시지 렌더링
-            chatMessagesDiv.innerHTML = '';
-            const messages = groupData.messages || [];
-            messages.forEach(msg => {
-                const date = new Date(msg.timestamp);
-                const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                chatMessagesDiv.innerHTML += `
-                    <div class="chat-message">
-                        <span class="sender">${msg.senderNickname}</span> (${timeStr}): ${msg.text}
-                    </div>
-                `;
-            });
-            chatMessagesDiv.scrollTop = chatMessagesDiv.scrollHeight;
         } else {
             window.currentGroupCode = null;
-            dashboard.classList.add('hidden');
-            actions.classList.remove('hidden');
-            document.getElementById('groupCodeDisplay').classList.add('hidden');
-            chatMessagesDiv.innerHTML = '';
+            renderGroupContent();
         }
     }, (error) => {
         console.error('Group dashboard render error:', error);
     });
 }
-
 document.getElementById('chatInput').addEventListener('keypress', function(event) {
     if (event.key === 'Enter') {
         event.preventDefault();
@@ -1235,6 +1190,73 @@ document.getElementById('groupCodeInput').addEventListener('keypress', function(
         joinGroup();
     }
 });
+
+function renderGroupChat() {
+    const chatMessagesDiv = document.getElementById('chatMessages');
+    if (!window.currentGroupCode) return;
+
+    const groupRef = window.firestoreDoc(window.firestoreDb, "groups", window.currentGroupCode);
+    window.firestoreOnSnapshot(groupRef, (doc) => {
+        if (doc.exists()) {
+            const groupData = doc.data();
+            chatMessagesDiv.innerHTML = '';
+            const messages = groupData.messages || [];
+            messages.forEach(msg => {
+                const date = new Date(msg.timestamp);
+                const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                chatMessagesDiv.innerHTML += `
+                    <div class="chat-message">
+                        <span class="sender">${msg.senderNickname}</span> (${timeStr}): ${msg.text}
+                    </div>
+                `;
+            });
+            chatMessagesDiv.scrollTop = chatMessagesDiv.scrollHeight;
+        }
+    }, (error) => {
+        console.error('Group chat render error:', error);
+    });
+}
+
+function showGroupTab(tab) {
+    const dashboard = document.querySelector('.group-dashboard');
+    const chat = document.querySelector('.group-chat');
+    const dashboardBtn = document.querySelector('.tab-btn[onclick="showGroupTab(\'dashboard\')"]');
+    const chatBtn = document.querySelector('.tab-btn[onclick="showGroupTab(\'chat\')"]');
+
+    if (tab === 'dashboard') {
+        dashboard.classList.remove('hidden');
+        chat.classList.add('hidden');
+        dashboardBtn.classList.add('active');
+        chatBtn.classList.remove('active');
+    } else if (tab === 'chat') {
+        dashboard.classList.add('hidden');
+        chat.classList.remove('hidden');
+        dashboardBtn.classList.remove('active');
+        chatBtn.classList.add('active');
+    }
+}
+
+function renderGroupContent() {
+    const tabs = document.querySelector('.group-tabs');
+    const actions = document.querySelector('.group-actions');
+    const dashboard = document.querySelector('.group-dashboard');
+    const chat = document.querySelector('.group-chat');
+
+    if (!window.currentGroupCode) {
+        tabs.classList.add('hidden');
+        actions.classList.remove('hidden');
+        dashboard.classList.add('hidden');
+        chat.classList.add('hidden');
+    } else {
+        tabs.classList.remove('hidden');
+        actions.classList.add('hidden');
+        dashboard.classList.remove('hidden'); // 기본적으로 Dashboard 표시
+        chat.classList.add('hidden');
+        renderGroupDashboard(); // 대시보드 데이터 렌더링
+        renderGroupChat(); // 채팅 데이터 렌더링
+        showGroupTab('dashboard'); // 처음엔 Dashboard 탭 활성화
+    }
+}
 
 document.head.appendChild(style);
 

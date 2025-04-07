@@ -363,14 +363,14 @@ function changeWeek(offset) {
 
 function showStatsDetails(dateStr) {
     const selectedDate = new Date(dateStr);
-    selectedDate.setDate(selectedDate.getDate() - 1); // Subtract one day
-    const previousDayStr = selectedDate.toISOString().split('T')[0];
+    selectedDate.setDate(selectedDate.getDate() + 1); // Increment to next day
+    const nextDayStr = selectedDate.toISOString().split('T')[0];
 
-    currentSelectedDate = previousDayStr;
+    currentSelectedDate = nextDayStr;
     const statsDetails = document.getElementById('statsDetails');
-    document.getElementById('statsSelectedDate').textContent = previousDayStr;
+    document.getElementById('statsSelectedDate').textContent = nextDayStr;
 
-    const studyTime = (window.studyData && window.studyData[previousDayStr]) || 0;
+    const studyTime = (window.studyData && window.studyData[nextDayStr]) || 0;
     const hours = Math.floor(studyTime / 3600);
     const minutes = Math.floor((studyTime % 3600) / 60);
     const seconds = studyTime % 60;
@@ -382,7 +382,7 @@ function showStatsDetails(dateStr) {
 
     statsSubjects.innerHTML += '<h4>To-Do Statistics</h4>';
     const dayTodos = window.todos.filter(todo => 
-        new Date(todo.createdAt).toISOString().split('T')[0] === previousDayStr);
+        new Date(todo.createdAt).toISOString().split('T')[0] === nextDayStr);
     const completedTodos = dayTodos.filter(todo => todo.completed).length;
     const totalTodos = dayTodos.length;
     statsSubjects.innerHTML += `
@@ -394,7 +394,7 @@ function showStatsDetails(dateStr) {
 
     const statsDiary = document.getElementById('statsDiary');
     statsDiary.innerHTML = '<h4>Journal Entry</h4>';
-    const diaryEntry = window.diaryData[previousDayStr];
+    const diaryEntry = window.diaryData[nextDayStr];
     if (diaryEntry) {
         statsDiary.innerHTML += `
             <p>Mood: ${diaryEntry.mood}</p>

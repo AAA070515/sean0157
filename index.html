@@ -260,13 +260,7 @@
         import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot, getDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
         import { getDatabase, ref as dbRef, push, onValue } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-database.js";
-        
-        const rtdb = getDatabase(app);
-        window.realtimeDb = rtdb;
-        window.realtimeRef = dbRef;
-        window.realtimePush = push;
-        window.realtimeOnValue = onValue;
-        
+
         const firebaseConfig = {
             apiKey: "AIzaSyDx_BBG73R3FReoFsRPuIKcDb754LAxTCI",
             authDomain: "sean0157-92c62.firebaseapp.com",
@@ -280,7 +274,9 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-
+        const rtdb = getDatabase(app);
+        const rtdb = getDatabase(app);
+        
         window.firebaseAuth = auth;
         window.firestoreDb = db;
         window.firestoreDoc = doc;
@@ -288,6 +284,10 @@
         window.firestoreSetDoc = setDoc;
         window.firestoreOnSnapshot = onSnapshot;
         window.firestoreDeleteDoc = deleteDoc;
+        window.realtimeDb = rtdb;
+        window.realtimeRef = dbRef;
+        window.realtimePush = push;
+        window.realtimeOnValue = onValue;
 
         let currentUser = null;
         let currentGroupCode = null;

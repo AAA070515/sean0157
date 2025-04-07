@@ -183,14 +183,6 @@ body {
     z-index: 1000;
 }
 
-.nav-drawer.hidden {
-    right: -250px;
-}
-
-.nav-drawer:not(.hidden) {
-    right: 0;
-}
-
 .nav-drawer .drawer-content {
     padding: 20px;
     display: flex;
@@ -200,18 +192,6 @@ body {
 }
 
 .nav-drawer:not(.hidden) {
-    right: 0;
-}
-
-.hamburger-icon {
-    font-size: 30px;
-    cursor: pointer;
-    color: #4285F4;
-    padding: 5px;
-    transition: transform 0.3s ease;
-}
-
-.drawer-content.visible {
     right: 0;
 }
 
@@ -231,6 +211,18 @@ body {
 .overlay.visible {
     opacity: 1;
     pointer-events: auto;
+}
+
+.hamburger-icon {
+    font-size: 30px;
+    cursor: pointer;
+    color: #4285F4;
+    padding: 5px;
+    transition: transform 0.3s ease;
+}
+
+.drawer-content.visible {
+    right: 0;
 }
 
 .nav-item {

@@ -1245,6 +1245,37 @@ document.getElementById('groupCodeInput').addEventListener('keypress', function(
     }
 });
 
+window.saveUserData = debounce(async function() {
+    if (!window.currentUser) return;
+    const userId = window.currentUser.uid;
+    const dataToSave = {
+        subjects: window.subjects || [],
+        studyData: window.studyData || {},
+        subjectStudyTime: window.subjectStudyTime || {},
+        diaryData: window.diaryData || {},
+        todos: window.todos || [],
+        goals: window.goals || { daily: null, weekly: null },
+        studySessions: window.studySessions || {},
+        nickname: window.nickname || 'User',
+        groupCode: window.currentGroupCode || null
+    };
+    try {
+        await window.firestoreSetDoc(window.firestoreDoc(db, "users", userId), dataToSave, { merge: true });
+        console.log("Data saved successfully!");
+    } catch (error) {
+        console.error("Save failed:", error.code, error.message);
+        alert("Failed to save data: " + error.message);
+    }
+}, 1000);
+
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func(...args), wait);
+    };
+}
+
 document.head.appendChild(style);
 
 updateSubjectSelect();

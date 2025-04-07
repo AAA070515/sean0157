@@ -1175,6 +1175,50 @@ function renderStudyChart() {
     });
 }
 
+function sendMessage() {
+    if (!window.currentUser || !window.currentGroupCode) {
+        alert("You must be in a group to send messages.");
+        return;
+    }
+
+    const chatInput = document.getElementById('chatInput');
+    const message = chatInput.value.trim();
+    if (!message) return;
+
+    const chatRef = window.realtimeRef(window.realtimeDb, `groups/${window.currentGroupCode}/chat`);
+    window.realtimePush(chatRef, {
+        user: window.nickname,
+        message,
+        timestamp: new Date().toISOString()
+    }).then(() => {
+        chatInput.value = '';
+    }).catch((error) => {
+        console.error("Failed to send message:", error);
+        alert("Failed to send message.");
+    });
+}
+
+function listenToChat() {
+    if (!window.currentGroupCode) return;
+
+    const chatRef = window.realtimeRef(window.realtimeDb, `groups/${window.currentGroupCode}/chat`);
+    window.realtimeOnValue(chatRef, (snapshot) => {
+        const messages = snapshot.val();
+        const chatDiv = document.getElementById('chatMessages');
+        chatDiv.innerHTML = '';
+
+        if (messages) {
+            Object.values(messages).sort((a, b) => a.timestamp.localeCompare(b.timestamp))
+                .forEach(msg => {
+                    chatDiv.innerHTML += `<p><strong>${msg.user}</strong>: ${msg.message}</p>`;
+                });
+            chatDiv.scrollTop = chatDiv.scrollHeight; // 자동 스크롤
+        }
+    }, (error) => {
+        console.error("Chat listen error:", error);
+    });
+}
+
 function renderGroupDashboard() {
     const dashboard = document.querySelector('.group-dashboard');
     const actions = document.querySelector('.group-actions');
@@ -1203,12 +1247,7 @@ function renderGroupDashboard() {
                     nickname: data.nickname,
                     studyTime: data.studyTime || 0
                 }))
-                .sort((a, b) => {
-                    if (b.studyTime !== a.studyTime) {
-                        return b.studyTime - a.studyTime;
-                    }
-                    return a.uid.localeCompare(b.uid);
-                })
+                .sort((a, b) => b.studyTime - a.studyTime || a.uid.localeCompare(b.uid))
                 .map((member, index) => ({ ...member, rank: index + 1 }));
 
             membersDiv.innerHTML = '';
@@ -1224,6 +1263,8 @@ function renderGroupDashboard() {
                     </div>
                 `;
             });
+
+            listenToChat(); // 채팅 리스너 활성화
         } else {
             window.currentGroupCode = null;
             dashboard.classList.add('hidden');
@@ -1234,6 +1275,13 @@ function renderGroupDashboard() {
         console.error('Group dashboard render error:', error);
     });
 }
+
+document.getElementById('chatInput').addEventListener('keypress', function(event) {
+    if (event.key === 'Enter') {
+        event.preventDefault();
+        sendMessage();
+    }
+});
 
 document.getElementById('groupNameInput').addEventListener('keypress', function(event) {
     if (event.key === 'Enter') {

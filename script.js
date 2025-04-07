@@ -50,18 +50,23 @@ function getMoodImage(mood) {
 }
 
 function toggleDrawer() {
-    const drawer = document.querySelector('.nav-drawer');
+    const drawerContent = document.querySelector('.drawer-content');
     const overlay = document.querySelector('.overlay');
-    drawer.classList.toggle('open');
+    drawerContent.classList.toggle('hidden');
+    drawerContent.classList.toggle('visible');
+    overlay.classList.toggle('hidden');
     overlay.classList.toggle('visible');
 }
 
 function closeDrawer() {
-    const drawer = document.querySelector('.nav-drawer');
+    const drawerContent = document.querySelector('.drawer-content');
     const overlay = document.querySelector('.overlay');
-    drawer.classList.remove('open');
+    drawerContent.classList.add('hidden');
+    drawerContent.classList.remove('visible');
+    overlay.classList.add('hidden');
     overlay.classList.remove('visible');
 }
+
 
 function showScreen(screen) {
     const screens = ['home', 'study', 'diary', 'todo', 'goals', 'stats', 'settings', 'groups'];

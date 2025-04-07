@@ -1163,7 +1163,6 @@ function renderGroupDashboard() {
                 `;
             });
 
-            // 채팅 메시지 렌더링
             chatMessagesDiv.innerHTML = '';
             const messages = groupData.messages || [];
             messages.forEach(msg => {
@@ -1175,7 +1174,7 @@ function renderGroupDashboard() {
                     </div>
                 `;
             });
-            chatMessagesDiv.scrollTop = chatMessagesDiv.scrollHeight; // 자동 스크롤
+            chatMessagesDiv.scrollTop = chatMessagesDiv.scrollHeight;
         } else {
             window.currentGroupCode = null;
             dashboard.classList.add('hidden');
@@ -1188,7 +1187,6 @@ function renderGroupDashboard() {
     });
 }
 
-// 채팅 입력란 Enter 키 이벤트
 document.getElementById('chatInput').addEventListener('keypress', function(event) {
     if (event.key === 'Enter') {
         event.preventDefault();

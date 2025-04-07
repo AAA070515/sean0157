@@ -944,11 +944,18 @@ async function createGroup() {
     }
 
     const groupNameInput = document.getElementById('groupNameInput');
+    const groupPasswordInput = document.getElementById('groupPasswordInput');
     const groupName = groupNameInput.value.trim();
+    const groupPassword = groupPasswordInput.value.trim();
     const error = document.getElementById('groupCreateError');
 
     if (!groupName) {
         error.textContent = 'Please enter a group name.';
+        error.classList.remove('hidden');
+        return;
+    }
+    if (!groupPassword) {
+        error.textContent = 'Please set a group password.';
         error.classList.remove('hidden');
         return;
     }
@@ -966,22 +973,25 @@ async function createGroup() {
 
         await window.firestoreSetDoc(groupRef, {
             name: groupName,
+            password: groupPassword,
             members: {
                 [window.currentUser.uid]: {
                     nickname: window.nickname,
                     studyTime: (window.studyData && window.studyData[currentDate]) || 0
                 }
             },
+            messages: [],
             createdAt: new Date().toISOString()
         });
 
         window.currentGroupCode = groupCode;
         groupNameInput.value = '';
+        groupPasswordInput.value = '';
         document.getElementById('groupCodeDisplay').textContent = `Group Code: ${groupCode}`;
         document.getElementById('groupCodeDisplay').classList.remove('hidden');
         error.classList.add('hidden');
         await window.saveUserData();
-        renderGroupDashboard(); // 그룹 생성 후 대시보드 표시
+        renderGroupDashboard();
     } catch (err) {
         error.textContent = `Error: ${err.message}`;
         error.classList.remove('hidden');

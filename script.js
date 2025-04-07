@@ -11,8 +11,9 @@ let lastCheckedDate = new Date().toISOString().split('T')[0];
 const today = new Date();
 let currentDate = today.toISOString().split('T')[0];
 
+window.ddays = window.ddays || []; 
+
 async function loadUserData(userId) {
-    window.ddays = window.ddays || []; 
     const userRef = doc(db, "users", userId);
     window.firestoreOnSnapshot(userRef, (doc) => {
         if (doc.exists()) {

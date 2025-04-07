@@ -409,6 +409,7 @@ function startTimer() {
         });
     }
 }
+
 async function stopTimer() {
     resetDailyStudyTime();
     const selectedSubject = document.getElementById('subjectSelect').value;
@@ -417,19 +418,22 @@ async function stopTimer() {
     clearInterval(timerInterval);
     timerInterval = null;
 
-    window.studyData[currentDate] = timerSeconds;  // Only current session
-
+    // 이전 데이터에 현재 세션 시간을 더함
+    window.studyData[currentDate] = (window.studyData[currentDate] || 0) + timerSeconds;
     if (!window.subjectStudyTime[selectedSubject]) {
         window.subjectStudyTime[selectedSubject] = {};
     }
-    window.subjectStudyTime[selectedSubject][currentDate] = timerSeconds;
+    window.subjectStudyTime[selectedSubject][currentDate] = 
+        (window.subjectStudyTime[selectedSubject][currentDate] || 0) + timerSeconds;
 
+    // 세션 기록
     const lastSession = window.studySessions[currentDate]?.slice(-1)[0];
     if (lastSession && lastSession.subject === selectedSubject && !lastSession.endTime) {
         lastSession.endTime = new Date().toISOString();
         lastSession.duration = timerSeconds;
     }
 
+    // 그룹 데이터 업데이트
     if (window.currentGroupCode) {
         const groupRef = window.firestoreDoc(window.firestoreDb, "groups", window.currentGroupCode);
         const groupDoc = await window.firestoreGetDoc(groupRef);
@@ -439,7 +443,7 @@ async function stopTimer() {
                 ...groupData.members,
                 [window.currentUser.uid]: {
                     nickname: window.nickname,
-                    studyTime: timerSeconds  // Only current session
+                    studyTime: (groupData.members[window.currentUser.uid]?.studyTime || 0) + timerSeconds
                 }
             };
             await window.firestoreSetDoc(groupRef, { members: updatedMembers }, { merge: true });

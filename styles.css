@@ -1330,20 +1330,19 @@ body {
     margin-bottom: 20px;
     display: flex;
     flex-direction: column;
-    gap: 10px; /* Consistent gap between all elements */
-    align-items: stretch; /* Ensure all children take full width */
+    gap: 15px;
+    align-items: stretch;
 }
 
 #ddayNameInput,
 #ddayDateInput,
 .dday-add-btn {
-    width: 100%; /* Full width for consistency */
-    padding: 12px; /* Uniform padding */
+    width: 100%;
+    padding: 12px;
     border-radius: 8px;
     border: 1px solid #ddd;
     font-size: 16px;
-    box-sizing: border-box; /* Include padding in width */
-    margin: 0; /* Remove any default margins */
+    box-sizing: border-box;
 }
 
 .dday-add-btn {
@@ -1351,10 +1350,12 @@ body {
     color: white;
     border: none;
     cursor: pointer;
+    transition: transform 0.2s ease, background-color 0.3s ease;
 }
 
 .dday-add-btn:hover {
     background-color: #3367D6;
+    transform: scale(1.05);
 }
 
 .dday-list {

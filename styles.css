@@ -183,10 +183,6 @@ body {
     z-index: 1000;
 }
 
-.nav-drawer.open {
-    right: 0;
-}
-
 .nav-drawer.hidden {
     right: -250px;
 }
@@ -1064,7 +1060,7 @@ body {
         width: 200px;
         height: calc(100% - 50px);
     }
-    .nav-drawer.open {
+    .nav-drawer:not(.hidden) {
         right: 0;
     }
 }

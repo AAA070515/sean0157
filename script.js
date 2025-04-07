@@ -6,10 +6,19 @@ let uploadedImage = null;
 let currentSelectedDate = null;
 let currentWeekOffset = 0;
 let currentSelectedSubject = null;
+let studyChartInstance = null;
 let lastCheckedDate = new Date().toISOString().split('T')[0];
 
 const today = new Date();
 let currentDate = today.toISOString().split('T')[0];
+
+import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-storage.js";
+
+const storage = getStorage(app);
+window.storage = storage;
+window.storageRef = storageRef;
+window.uploadBytes = uploadBytes;
+window.getDownloadURL = getDownloadURL;
 
 function checkAndResetDailyData() {
     const today = new Date().toISOString().split('T')[0];
@@ -507,13 +516,13 @@ async function saveDiary() {
     };
     await window.saveUserData();
     renderHome();
+    alert('Journal entry saved!');
     document.getElementById('memoInput').value = '';
     document.getElementById('diaryImage').value = '';
     document.querySelectorAll('.mood-bean').forEach(bean => bean.classList.remove('selected'));
     selectedMood = null;
     uploadedImage = null;
     document.getElementById('imagePreview').innerHTML = '';
-    alert('Journal entry saved!');
 }
 
 function renderTodos() {
@@ -659,18 +668,22 @@ document.getElementById('diaryImage').addEventListener('change', function() {
     uploadImage();
 });
 
-function uploadImage() {
+async function uploadImage() {
     const fileInput = document.getElementById('diaryImage');
     const file = fileInput.files[0];
     if (file) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            uploadedImage = e.target.result;
+        const storagePath = `diary_images/${window.currentUser.uid}/${Date.now()}_${file.name}`;
+        const imageRef = window.storageRef(window.storage, storagePath);
+        try {
+            await window.uploadBytes(imageRef, file);
+            uploadedImage = await window.getDownloadURL(imageRef);
             const preview = document.getElementById('imagePreview');
             preview.innerHTML = `<img src="${uploadedImage}" alt="Uploaded Image">`;
-        };
-        reader.readAsDataURL(file);
-        fileInput.value = '';
+            fileInput.value = '';
+        } catch (error) {
+            console.error("Image upload failed:", error);
+            alert("Failed to upload image.");
+        }
     }
 }
 
@@ -1063,7 +1076,10 @@ async function leaveGroup() {
 function renderStudyChart() {
     const ctx = document.getElementById('studyChart').getContext('2d');
     
-    // 지난 7일 데이터 가져오기
+    if (studyChartInstance) {
+        studyChartInstance.destroy();
+    }
+    
     const today = new Date();
     const dates = [];
     const studyTimes = [];
@@ -1074,22 +1090,20 @@ function renderStudyChart() {
         const dateStr = date.toISOString().split('T')[0];
         dates.push(dateStr);
         
-        // 해당 날짜의 총 공부 시간 계산
         const totalTime = window.studySessions[dateStr]?.reduce((sum, session) => {
             return sum + (session.duration || 0);
         }, 0) || 0;
-        studyTimes.push(totalTime / 3600); // 시간을 시간 단위로 변환
+        studyTimes.push(totalTime / 3600);
     }
 
-    // Chart.js로 차트 생성
-    new Chart(ctx, {
-        type: 'bar', // 막대 차트 (필요 시 'line'으로 변경 가능)
+    studyChartInstance = new Chart(ctx, {
+        type: 'bar',
         data: {
             labels: dates.map(date => new Date(date).toLocaleDateString('en-US', { weekday: 'short' })),
             datasets: [{
                 label: 'Study Time (hours)',
                 data: studyTimes,
-                backgroundColor: 'rgba(66, 133, 244, 0.6)', // #4285F4 투명도 조정
+                backgroundColor: 'rgba(66, 133, 244, 0.6)',
                 borderColor: '#4285F4',
                 borderWidth: 1
             }]
@@ -1098,30 +1112,12 @@ function renderStudyChart() {
             responsive: true,
             maintainAspectRatio: false,
             scales: {
-                y: {
-                    beginAtZero: true,
-                    title: {
-                        display: true,
-                        text: 'Hours'
-                    }
-                },
-                x: {
-                    title: {
-                        display: true,
-                        text: 'Day'
-                    }
-                }
+                y: { beginAtZero: true, title: { display: true, text: 'Hours' } },
+                x: { title: { display: true, text: 'Day' } }
             },
             plugins: {
-                legend: {
-                    display: true,
-                    position: 'top'
-                },
-                tooltip: {
-                    callbacks: {
-                        label: (context) => `${context.parsed.y.toFixed(2)} hours`
-                    }
-                }
+                legend: { display: true, position: 'top' },
+                tooltip: { callbacks: { label: (context) => `${context.parsed.y.toFixed(2)} hours` } }
             }
         }
     });

@@ -363,7 +363,7 @@ function changeWeek(offset) {
 
 function showStatsDetails(dateStr) {
     const selectedDate = new Date(dateStr);
-    selectedDate.setDate(selectedDate.getDate() + 1); // Increment to next day
+    selectedDate.setDate(selectedDate.getDate() + 1); // 다음 날로 설정
     const nextDayStr = selectedDate.toISOString().split('T')[0];
 
     currentSelectedDate = nextDayStr;

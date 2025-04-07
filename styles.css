@@ -1165,11 +1165,81 @@ body {
     margin-bottom: 5px;
 }
 
-/* 광고 푸터 스타일 추가 */
 .ads-footer {
     width: 100%;
     text-align: center;
     padding: 20px 0;
     background-color: #f5f5f5;
     margin-top: 20px;
+}
+
+#groupPasswordInput, #groupPasswordInputJoin {
+    width: 100%;
+    padding: clamp(8px, 2vw, 12px);
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    font-size: clamp(14px, 2.5vw, 16px);
+    margin-bottom: 15px;
+}
+
+.group-chat-section {
+    margin-top: 20px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    padding: 15px;
+}
+
+.chat-messages {
+    max-height: 300px;
+    overflow-y: auto;
+    margin-bottom: 15px;
+    padding: 10px;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+}
+
+.chat-messages::-webkit-scrollbar {
+    width: 8px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb {
+    background: #4285F4;
+    border-radius: 4px;
+}
+
+.chat-message {
+    padding: 8px;
+    margin: 5px 0;
+    border-radius: 5px;
+    background-color: #e9ecef;
+    font-size: clamp(12px, 2.2vw, 14px);
+}
+
+.chat-message .sender {
+    font-weight: bold;
+    color: #4285F4;
+}
+
+.chat-input {
+    display: flex;
+    gap: 10px;
+}
+
+#chatInput {
+    flex: 1;
+    padding: clamp(8px, 2vw, 12px);
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    font-size: clamp(14px, 2.5vw, 16px);
+}
+
+.chat-send-btn {
+    background-color: #4285F4;
+    color: white;
+    padding: clamp(8px, 2vw, 12px);
+    border-radius: 8px;
+}
+.chat-send-btn:hover {
+    background-color: #3367D6;
 }

@@ -9,11 +9,13 @@ let currentSelectedSubject = null;
 let lastCheckedDate = new Date().toISOString().split('T')[0];
 
 window.ddays = [];
-window.ddays = window.ddays || [];
 
 const today = new Date();
 let currentDate = today.toISOString().split('T')[0];
 
+window.ddays = window.ddays || []; // Ensure it's initialized globally
+
+// In loadUserData:
 async function loadUserData(userId) {
     const userRef = doc(db, "users", userId);
     window.firestoreOnSnapshot(userRef, (doc) => {
@@ -24,12 +26,15 @@ async function loadUserData(userId) {
             window.subjectStudyTime = data.subjectStudyTime || {};
             window.diaryData = data.diaryData || {};
             window.todos = data.todos || [];
-            window.ddays = data.ddays || []; // Load ddays from Firebase
+            window.ddays = data.ddays || []; // Load D-Days from Firestore
             window.goals = data.goals || { daily: null, weekly: null };
             window.studySessions = data.studySessions || {};
             window.nickname = data.nickname || 'User';
             window.currentGroupCode = data.groupCode || null;
-            console.log("Loaded ddays:", window.ddays); // Debug: Check loaded data
+            console.log("Loaded data:", data); // Debug: Check all loaded data
+            console.log("D-Days after load:", window.ddays); // Debug: Confirm D-Days
+
+            // Update UI after data is loaded
             updateSubjectSelect();
             updateSubjectTimes();
             updateStudyTimeDisplay();
@@ -40,16 +45,18 @@ async function loadUserData(userId) {
             renderDDays(); // Ensure D-Days are rendered
             renderGroupDashboard();
         } else {
+            // Initialize with defaults if no data exists
             window.subjects = [];
             window.studyData = {};
             window.subjectStudyTime = {};
             window.diaryData = {};
             window.todos = [];
-            window.ddays = []; // Initialize empty if no data
+            window.ddays = [];
             window.goals = { daily: null, weekly: null };
             window.studySessions = {};
             window.currentGroupCode = null;
-            console.log("No data exists, initialized ddays:", window.ddays);
+            console.log("Initialized empty data, ddays:", window.ddays);
+
             updateSubjectSelect();
             updateSubjectTimes();
             updateStudyTimeDisplay();
@@ -57,7 +64,7 @@ async function loadUserData(userId) {
             updateGoalsProgress();
             renderHome();
             renderTodos();
-            renderDDays(); // Render D-Days here too
+            renderDDays(); // Render empty D-Days
             renderGroupDashboard();
         }
     }, (error) => {
@@ -65,6 +72,7 @@ async function loadUserData(userId) {
     });
 }
 
+// Ensure saveUserData includes ddays
 window.saveUserData = async function() {
     if (!window.currentUser) return;
     const userId = window.currentUser.uid;
@@ -74,7 +82,7 @@ window.saveUserData = async function() {
         subjectStudyTime: window.subjectStudyTime || {},
         diaryData: window.diaryData || {},
         todos: window.todos || [],
-        ddays: window.ddays || [], // Ensure ddays is included in save
+        ddays: window.ddays || [], // Confirm D-Days are saved
         goals: window.goals || { daily: null, weekly: null },
         studySessions: window.studySessions || {},
         nickname: window.nickname || 'User',
@@ -82,7 +90,7 @@ window.saveUserData = async function() {
     };
     try {
         await window.firestoreSetDoc(window.firestoreDoc(db, "users", userId), dataToSave, { merge: true });
-        console.log("Data saved successfully! ddays:", window.ddays); // Debug: Confirm save
+        console.log("Data saved successfully, ddays:", window.ddays); // Debug: Confirm save
     } catch (error) {
         console.error("Save failed:", error.code, error.message);
         alert("Failed to save data: " + error.message);
@@ -1361,13 +1369,14 @@ async function addDDay() {
     };
 
     window.ddays.push(newDDay);
-    console.log("Added D-Day, current ddays:", window.ddays); // Debug: Check array
-    await window.saveUserData(); // Save to Firebase
+    console.log("Added D-Day:", newDDay); // Debug: Check new D-Day
+    console.log("Current ddays array:", window.ddays); // Debug: Check array state
+    await window.saveUserData(); // Save to Firestore
     nameInput.value = '';
     dateInput.value = '';
     error.classList.add('hidden');
     renderDDays(); // Render immediately after adding
-    renderHome();
+    renderHome(); // Update dashboard preview
 }
 
 function renderDDays() {

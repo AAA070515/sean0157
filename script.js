@@ -8,72 +8,55 @@ let currentWeekOffset = 0;
 let currentSelectedSubject = null;
 let lastCheckedDate = new Date().toISOString().split('T')[0];
 
-window.ddays = window.ddays || []; 
+window.ddays = [];
 
 const today = new Date();
 let currentDate = today.toISOString().split('T')[0];
 
 async function loadUserData(userId) {
     const userRef = doc(db, "users", userId);
-    return new Promise((resolve, reject) => {
-        window.firestoreOnSnapshot(userRef, (doc) => {
-            if (doc.exists()) {
-                const data = doc.data();
-                console.log("Firestore에서 가져온 원시 데이터:", data);
-                window.subjects = data.subjects || [];
-                window.studyData = data.studyData || {};
-                window.subjectStudyTime = data.subjectStudyTime || {};
-                window.diaryData = data.diaryData || {};
-                window.todos = data.todos || [];
-                window.ddays = data.ddays || []; // D-Day 데이터 로드
-                window.goals = data.goals || { daily: null, weekly: null };
-                window.studySessions = data.studySessions || {};
-                window.nickname = data.nickname || 'User';
-                window.currentGroupCode = data.groupCode || null;
-
-                console.log("로드된 D-Days:", window.ddays);
-
-                // UI 업데이트
-                updateSubjectSelect();
-                updateSubjectTimes();
-                updateStudyTimeDisplay();
-                updateGoalsInputs();
-                updateGoalsProgress();
-                renderHome();
-                renderTodos();
-                renderDDays();
-                renderGroupDashboard();
-
-                resolve(); // 초기 로드 완료
-            } else {
-                console.log("Firestore에 데이터 없음, 기본값 초기화");
-                window.subjects = [];
-                window.studyData = {};
-                window.subjectStudyTime = {};
-                window.diaryData = {};
-                window.todos = [];
-                window.ddays = []; // 초기화
-                window.goals = { daily: null, weekly: null };
-                window.studySessions = {};
-                window.currentGroupCode = null;
-
-                // UI 업데이트
-                updateSubjectSelect();
-                updateSubjectTimes();
-                updateStudyTimeDisplay();
-                updateGoalsInputs();
-                updateGoalsProgress();
-                renderHome();
-                renderTodos();
-                renderDDays();
-                renderGroupDashboard();
-
-                resolve(); // 초기 로드 완료
-            }
-        }, (error) => {
-            console.error("데이터 로드 실패:", error.code, error.message);
-            reject(error);
-        });
+    window.firestoreOnSnapshot(userRef, (doc) => {
+        if (doc.exists()) {
+            const data = doc.data();
+            window.subjects = data.subjects || [];
+            window.studyData = data.studyData || {};
+            window.subjectStudyTime = data.subjectStudyTime || {};
+            window.diaryData = data.diaryData || {};
+            window.todos = data.todos || [];
+            window.ddays = data.ddays || []; // D-Day 추가
+            window.goals = data.goals || { daily: null, weekly: null };
+            window.studySessions = data.studySessions || {};
+            window.nickname = data.nickname || 'User';
+            window.currentGroupCode = data.groupCode || null;
+            updateSubjectSelect();
+            updateSubjectTimes();
+            updateStudyTimeDisplay();
+            updateGoalsInputs();
+            updateGoalsProgress();
+            renderHome();
+            renderTodos();
+            renderGroupDashboard();
+        } else {
+            window.subjects = [];
+            window.studyData = {};
+            window.subjectStudyTime = {};
+            window.diaryData = {};
+            window.todos = [];
+            window.ddays = []; // D-Day 초기화
+            window.goals = { daily: null, weekly: null };
+            window.studySessions = {};
+            window.currentGroupCode = null;
+            updateSubjectSelect();
+            updateSubjectTimes();
+            updateStudyTimeDisplay();
+            updateGoalsInputs();
+            updateGoalsProgress();
+            renderHome();
+            renderTodos();
+            renderGroupDashboard();
+        }
+    }, (error) => {
+        console.error("Load failed:", error.code, error.message);
     });
 }
 
@@ -86,7 +69,7 @@ window.saveUserData = async function() {
         subjectStudyTime: window.subjectStudyTime || {},
         diaryData: window.diaryData || {},
         todos: window.todos || [],
-        ddays: window.ddays || [], // Confirm D-Days are saved
+        ddays: window.ddays || [], // D-Day 추가
         goals: window.goals || { daily: null, weekly: null },
         studySessions: window.studySessions || {},
         nickname: window.nickname || 'User',
@@ -94,7 +77,7 @@ window.saveUserData = async function() {
     };
     try {
         await window.firestoreSetDoc(window.firestoreDoc(db, "users", userId), dataToSave, { merge: true });
-        console.log("Data saved successfully, ddays:", window.ddays); // Debug: Confirm save
+        console.log("Data saved successfully!");
     } catch (error) {
         console.error("Save failed:", error.code, error.message);
         alert("Failed to save data: " + error.message);
@@ -367,9 +350,9 @@ function changeWeek(offset) {
 
 function showStatsDetails(dateStr) {
     const selectedDate = new Date(dateStr);
-    selectedDate.setDate(selectedDate.getDate() + 1); // 다음 날로 설정
+    selectedDate.setDate(selectedDate.getDate() + 1);
     const nextDayStr = selectedDate.toISOString().split('T')[0];
-
+    
     currentSelectedDate = nextDayStr;
     const statsDetails = document.getElementById('statsDetails');
     document.getElementById('statsSelectedDate').textContent = nextDayStr;
@@ -1373,22 +1356,12 @@ async function addDDay() {
     };
 
     window.ddays.push(newDDay);
-    console.log("추가된 D-Day:", newDDay); // 디버깅
-    console.log("현재 D-Days 배열:", window.ddays); // 디버깅
-
-    try {
-        await window.saveUserData(); // Firestore에 저장
-        console.log("Firestore에 D-Day 저장 완료");
-        nameInput.value = '';
-        dateInput.value = '';
-        error.classList.add('hidden');
-        renderDDays(); // 즉시 렌더링
-        renderHome(); // 대시보드 업데이트
-    } catch (err) {
-        console.error("D-Day 저장 실패:", err);
-        error.textContent = 'Failed to save D-Day. Please try again.';
-        error.classList.remove('hidden');
-    }
+    await window.saveUserData();
+    nameInput.value = '';
+    dateInput.value = '';
+    error.classList.add('hidden');
+    renderDDays();
+    renderHome();
 }
 
 function renderDDays() {
@@ -1410,41 +1383,6 @@ function renderDDays() {
 
     if (sortedDDays.length === 0) {
         ddayList.innerHTML = '<li>No D-Days set</li>';
-    }
-}
-
-function renderStats() {
-    const weekStart = getWeekStartDate(currentWeekOffset);
-    const weekEnd = new Date(weekStart);
-    weekEnd.setDate(weekStart.getDate() + 6);
-
-    const weekRange = document.getElementById('weekRange');
-    weekRange.textContent = `${weekStart.toLocaleDateString()} - ${weekEnd.toLocaleDateString()}`;
-
-    const weekCalendar = document.getElementById('weekCalendar');
-    weekCalendar.innerHTML = '';
-
-    for (let i = 0; i < 7; i++) {
-        const date = new Date(weekStart);
-        date.setDate(weekStart.getDate() + i);
-        const dateStr = date.toISOString().split('T')[0];
-        const studyTime = (window.studyData && window.studyData[dateStr]) || 0;
-        const hours = Math.floor(studyTime / 3600);
-        const minutes = Math.floor((studyTime % 3600) / 60);
-        const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
-
-        weekCalendar.innerHTML += `
-            <div class="week-day" onclick="showStatsDetails('${dateStr}')">
-                <div>${dayName}</div>
-                <div>${date.getDate()}</div>
-                <div>${hours}h ${minutes}m</div>
-            </div>
-        `;
-    }
-    if (currentSelectedDate) {
-        showStatsDetails(currentSelectedDate);
-    } else {
-        document.getElementById('statsDetails').classList.add('hidden');
     }
 }
 

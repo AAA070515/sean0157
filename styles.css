@@ -1329,23 +1329,27 @@ body {
 .dday-input-section,
 .dday-list-section {
     margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px; /* Consistent spacing between elements */
 }
 
-#ddayNameInput {
+#ddayNameInput,
+#ddayDateInput,
+.dday-add-btn {
     width: 100%;
     padding: 12px;
     border-radius: 8px;
     border: 1px solid #ddd;
-    margin-bottom: 15px;
     font-size: 16px;
+    box-sizing: border-box; /* Ensures padding doesn’t affect width */
 }
 
 .dday-add-btn {
-    width: 100%;
     background-color: #4285F4;
     color: white;
-    font-size: 16px;
-    padding: 12px;
+    border: none;
+    cursor: pointer;
 }
 
 .dday-add-btn:hover {

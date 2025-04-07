@@ -664,24 +664,24 @@ function uploadImage() {
     const file = fileInput.files[0];
     if (file) {
         const reader = new FileReader();
-        reader.on = function(e) {
-            upedImage = e.target.result;
+        reader.onload = function(e) {
+            uploadedImage = e.target.result;
             const preview = document.getElementById('imagePreview');
-            preview.innerHTML = `<img src="${upedImage}" alt="Uped Image">`;
+            preview.innerHTML = `<img src="${uploadedImage}" alt="Uploaded Image">`;
         };
         reader.readAsDataURL(file);
         fileInput.value = '';
     }
 }
 
-function DiaryData(selectedDate) {
+function loadDiaryData(selectedDate) {
     const diaryEntry = window.diaryData[selectedDate];
     
     document.querySelectorAll('.mood-bean').forEach(bean => bean.classList.remove('selected'));
     document.getElementById('memoInput').value = '';
     document.getElementById('imagePreview').innerHTML = '';
     selectedMood = null;
-    upedImage = null;
+    uploadedImage = null;
     
     if (diaryEntry) {
         const mood = diaryEntry.mood;
@@ -693,7 +693,7 @@ function DiaryData(selectedDate) {
         document.getElementById('memoInput').value = diaryEntry.memo || '';
         if (diaryEntry.image) {
             document.getElementById('imagePreview').innerHTML = `<img src="${diaryEntry.image}" alt="Diary Image">`;
-            upedImage = diaryEntry.image;
+            uploadedImage = diaryEntry.image;
         }
     }
 }
@@ -987,54 +987,6 @@ async function createGroup() {
         error.textContent = `Error: ${err.message}`;
         error.classList.remove('hidden');
         console.error('Group creation error:', err);
-    }
-}
-
-async function joinGroup() {
-    if (!window.currentUser) {
-        alert('You must be logged in to join a group.');
-        return;
-    }
-
-    const groupCodeInput = document.getElementById('groupCodeInput');
-    const groupCode = groupCodeInput.value.trim().toUpperCase();
-    const error = document.getElementById('groupJoinError');
-
-    if (groupCode.length !== 6) {
-        error.textContent = 'Please enter a valid 6-digit code.';
-        error.classList.remove('hidden');
-        return;
-    }
-
-    const groupRef = window.firestoreDoc(window.firestoreDb, "groups", groupCode);
-    try {
-        const groupDoc = await window.firestoreGetDoc(groupRef);
-        if (!groupDoc.exists()) {
-            error.textContent = 'Group not found.';
-            error.classList.remove('hidden');
-            return;
-        }
-
-        const groupData = groupDoc.data();
-        await window.firestoreSetDoc(groupRef, {
-            members: {
-                ...groupData.members,
-                [window.currentUser.uid]: {
-                    nickname: window.nickname,
-                    studyTime: (window.studyData && window.studyData[currentDate]) || 0
-                }
-            }
-        }, { merge: true });
-
-        window.currentGroupCode = groupCode;
-        groupCodeInput.value = '';
-        error.classList.add('hidden');
-        await window.saveUserData();
-        renderGroupDashboard();
-    } catch (err) {
-        error.textContent = `Error: ${err.message}`;
-        error.classList.remove('hidden');
-        console.error('Group join error:', err);
     }
 }
 

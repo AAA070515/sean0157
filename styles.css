@@ -1340,7 +1340,7 @@ body {
     padding: 12px;
     border-radius: 8px;
     border: 1px solid #ddd;
-    margin-bottom: 20px; /* 이름 입력 → 날짜 선택: 20px */
+    margin-bottom: 10px;
     font-size: 16px;
 }
 
@@ -1349,7 +1349,7 @@ body {
     padding: 12px;
     border-radius: 8px;
     border: 1px solid #ddd;
-    margin-bottom: 20px; /* 날짜 선택 → Add 버튼: 20px */
+    margin-bottom: 10px;
     font-size: 16px;
 }
 
@@ -1359,7 +1359,7 @@ body {
     color: white;
     font-size: 16px;
     padding: 12px;
-    margin-top: 20px; /* 추가 보장: 날짜 선택과 Add 버튼 사이 20px */
+    margin-top: 10px;
 }
 
 .dday-add-btn:hover {

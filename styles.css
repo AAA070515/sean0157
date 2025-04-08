@@ -1326,9 +1326,13 @@ body {
     transition: opacity 0.3s ease;
 }
 
-.dday-input-section,
 .dday-list-section {
     margin-bottom: 10px;
+}
+
+.dday-input-section {
+    margin-bottom: 10px;
+    padding: 0;
 }
 
 #ddayNameInput {
@@ -1336,7 +1340,7 @@ body {
     padding: 12px;
     border-radius: 8px;
     border: 1px solid #ddd;
-    margin-bottom: 10px;
+    margin-bottom: 20px; /* 이름 입력 → 날짜 선택: 20px */
     font-size: 16px;
 }
 
@@ -1345,7 +1349,7 @@ body {
     padding: 12px;
     border-radius: 8px;
     border: 1px solid #ddd;
-    margin-bottom: 10px;
+    margin-bottom: 20px; /* 날짜 선택 → Add 버튼: 20px */
     font-size: 16px;
 }
 
@@ -1355,7 +1359,7 @@ body {
     color: white;
     font-size: 16px;
     padding: 12px;
-    margin-bottom: 10px;
+    margin-top: 20px; /* 추가 보장: 날짜 선택과 Add 버튼 사이 20px */
 }
 
 .dday-add-btn:hover {

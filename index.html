@@ -81,12 +81,6 @@
                         <h3>Goal Progress</h3>
                         <div id="dashboardGoalProgress" class="goal-preview"></div>
                     </div>
-                    <div class="widget" onclick="showScreen('todo', 'dday')">
-                        <h3>Upcoming D-Day</h3>
-                        <div id="dashboardDDayPreview" class="dday-preview">
-                            <p>No D-Days set</p>
-                        </div>
-                    </div>
                 </div>
             </section>
             <section id="studyScreen" class="hidden">
@@ -141,10 +135,6 @@
             </section>
             <section id="todoScreen" class="hidden">
                 <div class="todo-section">
-                    <div class="todo-tabs">
-                        <button class="tab-btn active" onclick="showTodoTab('todo')">To-Do</button>
-                        <button class="tab-btn" onclick="showTodoTab('dday')">D-Day</button>
-                    </div>
                     <div id="todoTabContent" class="todo-content">
                         <div style="display: flex;">
                             <label for="todoInput" class="hidden-label">Add new task</label>
@@ -160,19 +150,6 @@
                         <div class="todo-stats">
                             <span id="todoCount">0 tasks remaining</span>
                             <button class="clear-btn" onclick="clearCompleted()">Clear completed</button>
-                        </div>
-                    </div>
-                    <div id="ddayTabContent" class="dday-content hidden">
-                        <div class="dday-input-section">
-                            <h3>Add D-Day</h3>
-                            <input type="text" id="ddayNameInput" placeholder="Enter D-Day name" maxlength="50">
-                            <input type="date" id="ddayDateInput" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd; margin-top: 15px; font-size: 16px;">
-                            <button class="btn dday-add-btn" onclick="addDDay()">Add D-Day</button>
-                            <p id="ddayError" class="error hidden"></p>
-                        </div>
-                        <div class="dday-list-section">
-                            <h3>Your D-Days</h3>
-                            <ul id="ddayList" class="dday-list"></ul>
                         </div>
                     </div>
                 </div>

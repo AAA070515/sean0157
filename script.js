@@ -86,8 +86,6 @@ window.saveUserData = async function() {
     }
 
     const userId = window.currentUser.uid;
-    console.log("Current user ID:", userId);
-
     const dataToSave = {
         subjects: window.subjects || [],
         studyData: window.studyData || {},
@@ -101,19 +99,14 @@ window.saveUserData = async function() {
         groupCode: window.currentGroupCode || null
     };
 
-    console.log("Data to save:", JSON.stringify(dataToSave, null, 2));
+    console.log("Saving to Firestore - ddays:", dataToSave.ddays);
 
     try {
         const userDocRef = window.firestoreDoc(window.firestoreDb, "users", userId);
-        console.log("Firestore document reference created:", userDocRef.path);
         await window.firestoreSetDoc(userDocRef, dataToSave, { merge: true });
-        console.log("Data successfully saved to Firestore! D-Days:", window.ddays);
+        console.log("Save completed - ddays:", dataToSave.ddays);
     } catch (error) {
-        console.error("Failed to save data to Firestore:", {
-            code: error.code,
-            message: error.message,
-            stack: error.stack
-        });
+        console.error("Failed to save data to Firestore:", error);
         throw error;
     }
 };
@@ -1391,16 +1384,16 @@ async function addDDay() {
 
     if (!window.ddays) window.ddays = [];
     window.ddays.push(newDDay);
-    console.log("Added D-Day locally:", newDDay);
+    console.log("Before save - window.ddays:", window.ddays);
 
     try {
         await window.saveUserData();
+        console.log("After save - window.ddays:", window.ddays);
         nameInput.value = '';
         dateInput.value = '';
         error.classList.add('hidden');
         renderDDays();
         renderHome();
-        console.log("D-Day 추가 완료:", newDDay);
     } catch (err) {
         console.error("D-Day 저장 실패:", err);
         error.textContent = 'Failed to save D-Day to Firestore: ' + err.message;

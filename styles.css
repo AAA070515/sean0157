@@ -1326,7 +1326,6 @@ body {
     transition: opacity 0.3s ease;
 }
 
-.dday-input-section,
 .dday-list-section {
     margin-bottom: 10px;
 }
@@ -1336,7 +1335,7 @@ body {
     padding: 12px;
     border-radius: 8px;
     border: 1px solid #ddd;
-    margin-bottom: 10px; /* 이름 입력과 날짜 선택 간격: 10px */
+    margin-bottom: 10px;
     font-size: 16px;
 }
 

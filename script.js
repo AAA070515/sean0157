@@ -24,7 +24,7 @@ async function loadUserData(userId) {
             window.subjectStudyTime = data.subjectStudyTime || {};
             window.diaryData = data.diaryData || {};
             window.todos = data.todos || [];
-            window.ddays = data.ddays || []; // Firestore에서 D-Day 로드
+            window.ddays = data.ddays || [];
             window.goals = data.goals || { daily: null, weekly: null };
             window.studySessions = data.studySessions || {};
             window.nickname = data.nickname || 'User';
@@ -32,7 +32,6 @@ async function loadUserData(userId) {
 
             console.log("Loaded data from Firestore with ddays:", window.ddays);
 
-            // UI 업데이트
             updateSubjectSelect();
             updateSubjectTimes();
             updateStudyTimeDisplay();
@@ -47,7 +46,6 @@ async function loadUserData(userId) {
                 isInitialLoad = false;
             }
         } else {
-            // 문서가 없으면 기본값 설정 및 저장
             window.subjects = [];
             window.studyData = {};
             window.subjectStudyTime = {};
@@ -62,7 +60,6 @@ async function loadUserData(userId) {
             console.log("No user data found, initialized with defaults");
             window.saveUserData();
 
-            // UI 업데이트
             updateSubjectSelect();
             updateSubjectTimes();
             updateStudyTimeDisplay();
@@ -84,31 +81,40 @@ async function loadUserData(userId) {
 
 window.saveUserData = async function() {
     if (!window.currentUser) {
-        console.error("No current user found.");
+        console.error("No current user found. Cannot save data.");
         return;
     }
+
     const userId = window.currentUser.uid;
+    console.log("Current user ID:", userId);
+
     const dataToSave = {
         subjects: window.subjects || [],
         studyData: window.studyData || {},
         subjectStudyTime: window.subjectStudyTime || {},
         diaryData: window.diaryData || {},
         todos: window.todos || [],
-        ddays: window.ddays || [], // 항상 배열로 보장
+        ddays: window.ddays || [],
         goals: window.goals || { daily: null, weekly: null },
         studySessions: window.studySessions || {},
         nickname: window.nickname || 'User',
         groupCode: window.currentGroupCode || null
     };
 
-    console.log("Saving data to Firestore:", dataToSave); // 저장 전 데이터 확인
+    console.log("Data to save:", JSON.stringify(dataToSave, null, 2));
 
     try {
-        await window.firestoreSetDoc(window.firestoreDoc(db, "users", userId), dataToSave, { merge: true });
-        console.log("Data saved successfully! D-Days:", window.ddays);
+        const userDocRef = window.firestoreDoc(window.firestoreDb, "users", userId);
+        console.log("Firestore document reference created:", userDocRef.path);
+        await window.firestoreSetDoc(userDocRef, dataToSave, { merge: true });
+        console.log("Data successfully saved to Firestore! D-Days:", window.ddays);
     } catch (error) {
-        console.error("Save failed:", error.code, error.message);
-        throw error; // 상위 함수에서 에러를 처리하도록 전달
+        console.error("Failed to save data to Firestore:", {
+            code: error.code,
+            message: error.message,
+            stack: error.stack
+        });
+        throw error;
     }
 };
 
@@ -1383,14 +1389,12 @@ async function addDDay() {
         createdAt: new Date().toISOString()
     };
 
-    // 로컬 배열에 추가
     if (!window.ddays) window.ddays = [];
     window.ddays.push(newDDay);
+    console.log("Added D-Day locally:", newDDay);
 
     try {
-        // Firestore에 저장
         await window.saveUserData();
-        // 저장 성공 후 UI 업데이트
         nameInput.value = '';
         dateInput.value = '';
         error.classList.add('hidden');
@@ -1399,9 +1403,8 @@ async function addDDay() {
         console.log("D-Day 추가 완료:", newDDay);
     } catch (err) {
         console.error("D-Day 저장 실패:", err);
-        error.textContent = 'Failed to save D-Day. Please try again.';
+        error.textContent = 'Failed to save D-Day to Firestore: ' + err.message;
         error.classList.remove('hidden');
-        // 저장 실패 시 롤백
         window.ddays = window.ddays.filter(d => d.id !== newDDay.id);
         renderDDays();
     }
@@ -1501,6 +1504,33 @@ function renderGroupContent() {
     console.log('After update - contentBox hidden:', contentBox.classList.contains('hidden'));
 }
 document.head.appendChild(style);
+
+window.auth.onAuthStateChanged(user => {
+    if (user) {
+        window.currentUser = user;
+        console.log("User logged in:", user.uid);
+        loadUserData(user.uid);
+    } else {
+        window.currentUser = null;
+        console.log("No user logged in. Please log in to save data.");
+        document.getElementById('loginScreen')?.classList.remove('hidden');
+    }
+});
+
+function login() {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    window.auth.signInWithPopup(provider)
+        .then((result) => {
+            window.currentUser = result.user;
+            console.log("Login successful:", window.currentUser.uid);
+            loadUserData(window.currentUser.uid);
+            document.getElementById('loginScreen')?.classList.add('hidden');
+        })
+        .catch((error) => {
+            console.error("Login failed:", error);
+            alert("Login failed: " + error.message);
+        });
+}
 
 updateSubjectSelect();
 updateSubjectTimes();

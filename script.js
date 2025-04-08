@@ -23,11 +23,18 @@ async function loadUserData(userId) {
             window.subjectStudyTime = data.subjectStudyTime || {};
             window.diaryData = data.diaryData || {};
             window.todos = data.todos || [];
-            window.ddays = data.ddays || []; // D-Day 추가
+            window.ddays = data.ddays || [];
             window.goals = data.goals || { daily: null, weekly: null };
             window.studySessions = data.studySessions || {};
             window.nickname = data.nickname || 'User';
             window.currentGroupCode = data.groupCode || null;
+            window.widgetVisibility = data.widgetVisibility || {
+                studyTime: true,
+                todo: true,
+                diary: true,
+                goalProgress: true,
+                dday: true
+            };
             updateSubjectSelect();
             updateSubjectTimes();
             updateStudyTimeDisplay();
@@ -37,26 +44,14 @@ async function loadUserData(userId) {
             renderTodos();
             renderGroupDashboard();
         } else {
-            window.subjects = [];
-            window.studyData = {};
-            window.subjectStudyTime = {};
-            window.diaryData = {};
-            window.todos = [];
-            window.ddays = []; // D-Day 초기화
-            window.goals = { daily: null, weekly: null };
-            window.studySessions = {};
-            window.currentGroupCode = null;
-            updateSubjectSelect();
-            updateSubjectTimes();
-            updateStudyTimeDisplay();
-            updateGoalsInputs();
-            updateGoalsProgress();
-            renderHome();
-            renderTodos();
-            renderGroupDashboard();
+            window.widgetVisibility = {
+                studyTime: true,
+                todo: true,
+                diary: true,
+                goalProgress: true,
+                dday: true
+            };
         }
-    }, (error) => {
-        console.error("Load failed:", error.code, error.message);
     });
 }
 
@@ -69,19 +64,14 @@ window.saveUserData = async function() {
         subjectStudyTime: window.subjectStudyTime || {},
         diaryData: window.diaryData || {},
         todos: window.todos || [],
-        ddays: window.ddays || [], // D-Day 추가
+        ddays: window.ddays || [],
         goals: window.goals || { daily: null, weekly: null },
         studySessions: window.studySessions || {},
         nickname: window.nickname || 'User',
-        groupCode: window.currentGroupCode || null
+        groupCode: window.currentGroupCode || null,
+        widgetVisibility: window.widgetVisibility
     };
-    try {
-        await window.firestoreSetDoc(window.firestoreDoc(db, "users", userId), dataToSave, { merge: true });
-        console.log("Data saved successfully!");
-    } catch (error) {
-        console.error("Save failed:", error.code, error.message);
-        alert("Failed to save data: " + error.message);
-    }
+    await window.firestoreSetDoc(window.firestoreDoc(db, "users", userId), dataToSave, { merge: true });
 };
 
 function checkAndResetDailyData() {
@@ -221,116 +211,156 @@ function renderHome() {
     document.getElementById('calendarTitle').textContent = `${year} ${getMonthName(month)} Records`;
     const calendar = document.getElementById('calendar');
     calendar.innerHTML = '';
-
     for (let i = 0; i < firstDay; i++) {
         calendar.innerHTML += `<div class="day-cell"></div>`;
     }
-
     for (let i = 1; i <= daysInMonth; i++) {
         const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
         const hasDiary = window.diaryData[dateStr]?.mood ? true : false;
         let dayContent = i;
-        
         if (hasDiary) {
             const mood = window.diaryData[dateStr].mood;
             dayContent = `<img src="${getMoodImage(mood)}" alt="${mood}" style="width: 100%; height: 100%; object-fit: contain;">`;
         }
-        
         calendar.innerHTML += `
             <div class="day-cell ${hasDiary ? 'sticker' : ''}" onclick="toggleDayDetails('${dateStr}')">
                 ${dayContent}
             </div>`;
     }
 
-    const studyTime = (window.studyData && window.studyData[currentDate]) || 0;
-    const hours = Math.floor(studyTime / 3600);
-    const minutes = Math.floor((studyTime % 3600) / 60);
-    const seconds = studyTime % 60;
-    document.getElementById('dashboardStudyTime').textContent = `${hours}h ${minutes}m ${seconds}s`;
-
-    const todoPreview = document.getElementById('dashboardTodoPreview');
-    todoPreview.innerHTML = '';
-    const activeTodos = window.todos.filter(todo => !todo.completed);
-    const completedTodos = window.todos.filter(todo => todo.completed);
-    const sortedTodos = [...activeTodos, ...completedTodos];
-    sortedTodos.slice(0, 5).forEach(todo => {
-        const li = document.createElement('li');
-        li.textContent = todo.text;
-        if (todo.completed) li.classList.add('completed');
-        todoPreview.appendChild(li);
-    });
-    if (sortedTodos.length === 0) {
-        todoPreview.innerHTML = '<li>No tasks yet</li>';
-    }
-
-    const diaryPreview = document.getElementById('dashboardDiary');
-    diaryPreview.innerHTML = '';
-    const recentDates = Object.keys(window.diaryData).sort().reverse().slice(0, 1);
-    if (recentDates.length > 0) {
-        const date = recentDates[0];
-        const entry = window.diaryData[date];
-        diaryPreview.innerHTML = `
-            <p><strong>${date}</strong></p>
-            <p>Mood: ${entry.mood}</p>
-            <p>${entry.memo.substring(0, 50)}${entry.memo.length > 50 ? '...' : ''}</p>
-        `;
-    } else {
-        diaryPreview.innerHTML = '<p>No recent entries</p>';
-    }
-
-    const goalProgress = document.getElementById('dashboardGoalProgress');
-    goalProgress.innerHTML = '';
-    
-    const todayTodos = window.todos.filter(todo => 
-        new Date(todo.createdAt).toISOString().split('T')[0] === currentDate);
-    const completedTodayTodos = todayTodos.filter(todo => todo.completed).length;
-    const totalTodayTodos = todayTodos.length;
-    goalProgress.innerHTML += `
-        <p>Today's Tasks: ${completedTodayTodos}/${totalTodayTodos} completed</p>
+    const dashboard = document.querySelector('.dashboard');
+    dashboard.innerHTML = `
+        <div class="widget full-width">
+            <h3>Calendar</h3>
+            <div class="stats-calendar">
+                <h4 id="calendarTitle">${year} ${getMonthName(month)} Records</h4>
+                <div id="calendar" class="calendar-grid">${calendar.innerHTML}</div>
+            </div>
+            <div id="dayDetails" class="day-details hidden">
+                <h3 id="selectedDate"></h3>
+                <p>Study Time: <span id="studyTimeDetail">0h 0m 0s</span></p>
+                <p id="memoDetail" class="memo-detail hidden"></p>
+                <div id="dayImagePreview" style="margin-top: 15px;"></div>
+            </div>
+        </div>
     `;
 
-    if (window.goals.daily !== null) {
-        const dailyTime = (window.studyData && window.studyData[currentDate]) || 0;
-        const dailyPercentage = Math.min(Math.round((dailyTime / window.goals.daily) * 100), 100);
-        const hours = Math.floor(dailyTime / 3600);
-        const minutes = Math.floor((dailyTime % 3600) / 60);
-        goalProgress.innerHTML += `
-            <p>Daily Study: ${hours}h ${minutes}m / ${Math.floor(window.goals.daily / 3600)}h (${dailyPercentage}%)</p>
-            <div class="progress-bar">
-                <div class="progress-fill" style="width: ${dailyPercentage}%"></div>
+    if (window.widgetVisibility.studyTime) {
+        dashboard.innerHTML += `
+            <div class="widget" onclick="showScreen('study')">
+                <h3>Today's Study Time</h3>
+                <div id="dashboardStudyTime" class="big-text">0h 0m 0s</div>
             </div>
         `;
-    }
-    if (window.goals.weekly !== null) {
-        const weeklyTime = calculateWeeklyStudyTime();
-        const weeklyPercentage = Math.min(Math.round((weeklyTime / window.goals.weekly) * 100), 100);
-        const hours = Math.floor(weeklyTime / 3600);
-        const minutes = Math.floor((weeklyTime % 3600) / 60);
-        goalProgress.innerHTML += `
-            <p>Weekly Study: ${hours}h ${minutes}m / ${Math.floor(window.goals.weekly / 3600)}h (${weeklyPercentage}%)</p>
-            <div class="progress-bar">
-                <div class="progress-fill" style="width: ${weeklyPercentage}%"></div>
-            </div>
-        `;
-    }
-    if (window.goals.daily === null && window.goals.weekly === null && totalTodayTodos === 0) {
-        goalProgress.innerHTML = '<p>No goals or tasks set</p>';
+        const studyTime = (window.studyData && window.studyData[currentDate]) || 0;
+        const hours = Math.floor(studyTime / 3600);
+        const minutes = Math.floor((studyTime % 3600) / 60);
+        const seconds = studyTime % 60;
+        document.getElementById('dashboardStudyTime').textContent = `${hours}h ${minutes}m ${seconds}s`;
     }
 
-    const ddayPreview = document.getElementById('dashboardDDayPreview');
-    ddayPreview.innerHTML = '';
-    const sortedDDays = window.ddays
-        .filter(dday => new Date(dday.date) >= new Date(currentDate))
-        .sort((a, b) => new Date(a.date) - new Date(b.date));
-    if (sortedDDays.length > 0) {
-        const nearestDDay = sortedDDays[0];
-        const daysLeft = Math.ceil((new Date(nearestDDay.date) - new Date(currentDate)) / (1000 * 60 * 60 * 24));
-        ddayPreview.innerHTML = `
-            <p><strong>${nearestDDay.name}</strong></p>
-            <p>${nearestDDay.date} (${daysLeft} days left)</p>
+    if (window.widgetVisibility.todo) {
+        dashboard.innerHTML += `
+            <div class="widget" onclick="showScreen('todo')">
+                <h3>To-Do List</h3>
+                <ul id="dashboardTodoPreview" class="todo-preview"></ul>
+            </div>
         `;
-    } else {
-        ddayPreview.innerHTML = '<p>No D-Days set</p>';
+        const todoPreview = document.getElementById('dashboardTodoPreview');
+        const activeTodos = window.todos.filter(todo => !todo.completed);
+        const completedTodos = window.todos.filter(todo => todo.completed);
+        const sortedTodos = [...activeTodos, ...completedTodos].slice(0, 5);
+        sortedTodos.forEach(todo => {
+            const li = document.createElement('li');
+            li.textContent = todo.text;
+            if (todo.completed) li.classList.add('completed');
+            todoPreview.appendChild(li);
+        });
+        if (sortedTodos.length === 0) todoPreview.innerHTML = '<li>No tasks yet</li>';
+    }
+
+    if (window.widgetVisibility.diary) {
+        dashboard.innerHTML += `
+            <div class="widget" onclick="showScreen('diary')">
+                <h3>Recent Journal</h3>
+                <div id="dashboardDiary" class="diary-preview">
+                    <p>No recent entries</p>
+                </div>
+            </div>
+        `;
+        const diaryPreview = document.getElementById('dashboardDiary');
+        const recentDates = Object.keys(window.diaryData).sort().reverse().slice(0, 1);
+        if (recentDates.length > 0) {
+            const date = recentDates[0];
+            const entry = window.diaryData[date];
+            diaryPreview.innerHTML = `
+                <p><strong>${date}</strong></p>
+                <p>Mood: ${entry.mood}</p>
+                <p>${entry.memo.substring(0, 50)}${entry.memo.length > 50 ? '...' : ''}</p>
+            `;
+        }
+    }
+
+    if (window.widgetVisibility.goalProgress) {
+        dashboard.innerHTML += `
+            <div class="widget" onclick="showScreen('stats')">
+                <h3>Goal Progress</h3>
+                <div id="dashboardGoalProgress" class="goal-preview"></div>
+            </div>
+        `;
+        const goalProgress = document.getElementById('dashboardGoalProgress');
+        const todayTodos = window.todos.filter(todo => 
+            new Date(todo.createdAt).toISOString().split('T')[0] === currentDate);
+        const completedTodayTodos = todayTodos.filter(todo => todo.completed).length;
+        const totalTodayTodos = todayTodos.length;
+        goalProgress.innerHTML = `<p>Today's Tasks: ${completedTodayTodos}/${totalTodayTodos} completed</p>`;
+        if (window.goals.daily !== null) {
+            const dailyTime = (window.studyData && window.studyData[currentDate]) || 0;
+            const dailyPercentage = Math.min(Math.round((dailyTime / window.goals.daily) * 100), 100);
+            const hours = Math.floor(dailyTime / 3600);
+            const minutes = Math.floor((dailyTime % 3600) / 60);
+            goalProgress.innerHTML += `
+                <p>Daily Study: ${hours}h ${minutes}m / ${Math.floor(window.goals.daily / 3600)}h (${dailyPercentage}%)</p>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: ${dailyPercentage}%"></div>
+                </div>
+            `;
+        }
+        if (window.goals.weekly !== null) {
+            const weeklyTime = calculateWeeklyStudyTime();
+            const weeklyPercentage = Math.min(Math.round((weeklyTime / window.goals.weekly) * 100), 100);
+            const hours = Math.floor(weeklyTime / 3600);
+            const minutes = Math.floor((weeklyTime % 3600) / 60);
+            goalProgress.innerHTML += `
+                <p>Weekly Study: ${hours}h ${minutes}m / ${Math.floor(window.goals.weekly / 3600)}h (${weeklyPercentage}%)</p>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: ${weeklyPercentage}%"></div>
+                </div>
+            `;
+        }
+    }
+
+    if (window.widgetVisibility.dday) {
+        dashboard.innerHTML += `
+            <div class="widget" onclick="showScreen('todo', 'dday')">
+                <h3>Upcoming D-Day</h3>
+                <div id="dashboardDDayPreview" class="dday-preview">
+                    <p>No D-Days set</p>
+                </div>
+            </div>
+        `;
+        const ddayPreview = document.getElementById('dashboardDDayPreview');
+        const sortedDDays = window.ddays
+            .filter(dday => new Date(dday.date) >= new Date(currentDate))
+            .sort((a, b) => new Date(a.date) - new Date(b.date));
+        if (sortedDDays.length > 0) {
+            const nearestDDay = sortedDDays[0];
+            const daysLeft = Math.ceil((new Date(nearestDDay.date) - new Date(currentDate)) / (1000 * 60 * 60 * 24));
+            ddayPreview.innerHTML = `
+                <p><strong>${nearestDDay.name}</strong></p>
+                <p>${nearestDDay.date} (${daysLeft} days left)</p>
+            `;
+        }
     }
 }
 
@@ -852,6 +882,13 @@ function calculateWeeklyStudyTime() {
 
 async function resetAllSettings() {
     if (confirm('Are you sure you want to reset all settings? This will clear all your data.')) {
+        window.widgetVisibility = {
+            studyTime: true,
+            todo: true,
+            diary: true,
+            goalProgress: true,
+            dday: true
+        };
         if (window.currentUser) {
             const userRef = window.firestoreDoc(window.firestoreDb, "users", window.currentUser.uid);
             try {
@@ -921,8 +958,18 @@ function loadSettings() {
     nicknameInput.value = window.nickname || 'User';
     error.classList.add('hidden');
     document.getElementById('logout-btn').style.display = window.currentUser ? 'block' : 'none';
-}
 
+    document.getElementById('studyTimeToggle').checked = window.widgetVisibility.studyTime;
+    document.getElementById('todoToggle').checked = window.widgetVisibility.todo;
+    document.getElementById('diaryToggle').checked = window.widgetVisibility.diary;
+    document.getElementById('goalProgressToggle').checked = window.widgetVisibility.goalProgress;
+    document.getElementById('ddayToggle').checked = window.widgetVisibility.dday;
+}
+async function toggleWidget(widget) {
+    window.widgetVisibility[widget] = !window.widgetVisibility[widget];
+    await window.saveUserData();
+    renderHome();
+}
 async function changeNickname() {
     const nicknameInput = document.getElementById('settingsNicknameInput');
     const error = document.getElementById('settingsNicknameError');

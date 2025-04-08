@@ -1395,42 +1395,32 @@ async function deleteDDay(id) {
 
 function renderStats() {
     const weekStart = getWeekStartDate(currentWeekOffset);
-    const weekRange = document.getElementById('weekRange');
-    const weekCalendar = document.getElementById('weekCalendar');
-    const statsDetails = document.getElementById('statsDetails');
-
-    // 주간 범위 표시
     const weekEnd = new Date(weekStart);
     weekEnd.setDate(weekStart.getDate() + 6);
-    weekRange.textContent = `${weekStart.toLocaleDateString()} - ${weekEnd.toLocaleDateString()}`;
 
-    // 주간 캘린더 렌더링
+    document.getElementById('weekRange').textContent = 
+        `${weekStart.toLocaleDateString()} - ${weekEnd.toLocaleDateString()}`;
+
+    const weekCalendar = document.getElementById('weekCalendar');
     weekCalendar.innerHTML = '';
+
     for (let i = 0; i < 7; i++) {
-        const day = new Date(weekStart);
-        day.setDate(weekStart.getDate() + i);
-        const dateStr = day.toISOString().split('T')[0];
-        const studyTime = (window.studyData && window.studyData[dateStr]) || 0;
-        const hours = Math.floor(studyTime / 3600);
-        const minutes = Math.floor((studyTime % 3600) / 60);
-
-        const dayDiv = document.createElement('div');
-        dayDiv.className = 'week-day';
-        dayDiv.innerHTML = `
-            <p>${day.toLocaleDateString('en-US', { weekday: 'short' })}</p>
-            <p>${dateStr}</p>
-            <p>${hours}h ${minutes}m</p>
-        `;
-        dayDiv.onclick = () => showStatsDetails(dateStr);
-        weekCalendar.appendChild(dayDiv);
+        const date = new Date(weekStart);
+        date.setDate(weekStart.getDate() + i);
+        const dateStr = date.toISOString().split('T')[0];
+        const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+        const dayNum = date.getDate();
+        const hasData = (window.studyData && window.studyData[dateStr]) || window.diaryData[dateStr];
+        
+        weekCalendar.innerHTML += `
+            <div class="week-day ${hasData ? 'sticker' : ''}" 
+                 onclick="showStatsDetails('${dateStr}')">
+                <div>${dayName}</div>
+                <div>${dayNum}</div>
+            </div>`;
     }
 
-    // 이전에 선택된 날짜가 있으면 세부 정보 표시
-    if (currentSelectedDate) {
-        showStatsDetails(currentSelectedDate);
-    } else {
-        statsDetails.classList.add('hidden');
-    }
+    document.getElementById('statsDetails').classList.add('hidden');
 }
 
 function renderGroupContent() {

@@ -30,7 +30,7 @@ async function loadUserData(userId) {
             window.nickname = data.nickname || 'User';
             window.currentGroupCode = data.groupCode || null;
 
-            console.log("Loaded data from Firestore with ddays:", window.ddays);
+            console.log("Loaded from Firestore - ddays:", window.ddays);
 
             updateSubjectSelect();
             updateSubjectTimes();
@@ -46,6 +46,7 @@ async function loadUserData(userId) {
                 isInitialLoad = false;
             }
         } else {
+            console.log("No user data found, initializing defaults");
             window.subjects = [];
             window.studyData = {};
             window.subjectStudyTime = {};
@@ -57,7 +58,6 @@ async function loadUserData(userId) {
             window.nickname = 'User';
             window.currentGroupCode = null;
 
-            console.log("No user data found, initialized with defaults");
             window.saveUserData();
 
             updateSubjectSelect();
@@ -99,14 +99,14 @@ window.saveUserData = async function() {
         groupCode: window.currentGroupCode || null
     };
 
-    console.log("Saving to Firestore - ddays:", dataToSave.ddays);
+    console.log("Saving to Firestore - dataToSave:", dataToSave);
 
     try {
         const userDocRef = window.firestoreDoc(window.firestoreDb, "users", userId);
         await window.firestoreSetDoc(userDocRef, dataToSave, { merge: true });
-        console.log("Save completed - ddays:", dataToSave.ddays);
+        console.log("Data saved successfully:", dataToSave);
     } catch (error) {
-        console.error("Failed to save data to Firestore:", error);
+        console.error("Save failed:", error.code, error.message);
         throw error;
     }
 };
@@ -1396,9 +1396,9 @@ async function addDDay() {
         renderHome();
     } catch (err) {
         console.error("D-Day 저장 실패:", err);
-        error.textContent = 'Failed to save D-Day to Firestore: ' + err.message;
-        error.classList.remove('hidden');
         window.ddays = window.ddays.filter(d => d.id !== newDDay.id);
+        error.textContent = 'Failed to save D-Day: ' + err.message;
+        error.classList.remove('hidden');
         renderDDays();
     }
 }

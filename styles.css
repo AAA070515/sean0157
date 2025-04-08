@@ -1328,7 +1328,7 @@ body {
 
 .dday-input-section,
 .dday-list-section {
-    margin-bottom: 20px;
+    margin-bottom: 10px;
 }
 
 #ddayNameInput {
@@ -1345,7 +1345,6 @@ body {
     padding: 12px;
     border-radius: 8px;
     border: 1px solid #ddd;
-    margin-top: 10px;
     margin-bottom: 10px;
     font-size: 16px;
 }

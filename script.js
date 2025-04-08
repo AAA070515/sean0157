@@ -14,12 +14,11 @@ let currentDate = today.toISOString().split('T')[0];
 
 async function loadUserData(userId) {
     const userRef = window.firestoreDoc(window.firestoreDb, "users", userId);
-    let isInitialLoad = true; // 초기 로드 여부 추적
+    let isInitialLoad = true;
 
     window.firestoreOnSnapshot(userRef, (doc) => {
         if (doc.exists()) {
             const data = doc.data();
-            // Firestore에서 가져온 데이터로 전역 변수 업데이트
             window.subjects = data.subjects || [];
             window.studyData = data.studyData || {};
             window.subjectStudyTime = data.subjectStudyTime || {};
@@ -31,37 +30,7 @@ async function loadUserData(userId) {
             window.nickname = data.nickname || 'User';
             window.currentGroupCode = data.groupCode || null;
 
-            console.log("Loaded data with ddays:", window.ddays);
-
-            // UI 업데이트
-            updateSubjectSelect();
-            updateSubjectTimes();
-            updateStudyTimeDisplay();
-            updateGoalsInputs();
-            updateGoalsProgress();
-            renderHome();
-            renderTodos();
-            renderDDays(); // D-Day 렌더링
-            renderGroupDashboard();
-
-            if (isInitialLoad) {
-                console.log("Initial data load completed");
-                isInitialLoad = false;
-            }
-        } else {
-            // 문서가 없으면 기본값 설정
-            window.subjects = [];
-            window.studyData = {};
-            window.subjectStudyTime = {};
-            window.diaryData = {};
-            window.todos = [];
-            window.ddays = []; // D-Day 초기화
-            window.goals = { daily: null, weekly: null };
-            window.studySessions = {};
-            window.nickname = 'User';
-            window.currentGroupCode = null;
-
-            console.log("No user data found, initialized with defaults");
+            console.log("Loaded data from Firestore with ddays:", window.ddays);
 
             // UI 업데이트
             updateSubjectSelect();
@@ -72,10 +41,38 @@ async function loadUserData(userId) {
             renderHome();
             renderTodos();
             renderDDays();
-            renderGroupDashboard();
 
             if (isInitialLoad) {
-                window.saveUserData(); // 초기 데이터 저장
+                console.log("Initial data load completed");
+                isInitialLoad = false;
+            }
+        } else {
+            // 문서가 없으면 기본값 설정 및 저장
+            window.subjects = [];
+            window.studyData = {};
+            window.subjectStudyTime = {};
+            window.diaryData = {};
+            window.todos = [];
+            window.ddays = [];
+            window.goals = { daily: null, weekly: null };
+            window.studySessions = {};
+            window.nickname = 'User';
+            window.currentGroupCode = null;
+
+            console.log("No user data found, initialized with defaults");
+            window.saveUserData();
+
+            // UI 업데이트
+            updateSubjectSelect();
+            updateSubjectTimes();
+            updateStudyTimeDisplay();
+            updateGoalsInputs();
+            updateGoalsProgress();
+            renderHome();
+            renderTodos();
+            renderDDays();
+
+            if (isInitialLoad) {
                 isInitialLoad = false;
             }
         }
@@ -86,7 +83,10 @@ async function loadUserData(userId) {
 }
 
 window.saveUserData = async function() {
-    if (!window.currentUser) return;
+    if (!window.currentUser) {
+        console.error("No current user found.");
+        return;
+    }
     const userId = window.currentUser.uid;
     const dataToSave = {
         subjects: window.subjects || [],
@@ -94,18 +94,21 @@ window.saveUserData = async function() {
         subjectStudyTime: window.subjectStudyTime || {},
         diaryData: window.diaryData || {},
         todos: window.todos || [],
-        ddays: window.ddays || [], // D-Day 포함 확인
+        ddays: window.ddays || [], // 항상 배열로 보장
         goals: window.goals || { daily: null, weekly: null },
         studySessions: window.studySessions || {},
         nickname: window.nickname || 'User',
         groupCode: window.currentGroupCode || null
     };
+
+    console.log("Saving data to Firestore:", dataToSave); // 저장 전 데이터 확인
+
     try {
         await window.firestoreSetDoc(window.firestoreDoc(db, "users", userId), dataToSave, { merge: true });
         console.log("Data saved successfully! D-Days:", window.ddays);
     } catch (error) {
         console.error("Save failed:", error.code, error.message);
-        alert("Failed to save data: " + error.message);
+        throw error; // 상위 함수에서 에러를 처리하도록 전달
     }
 };
 
@@ -1383,13 +1386,15 @@ async function addDDay() {
     // 로컬 배열에 추가
     if (!window.ddays) window.ddays = [];
     window.ddays.push(newDDay);
-    renderDDays(); // 즉시 UI 업데이트
 
     try {
-        await window.saveUserData(); // Firestore에 저장
+        // Firestore에 저장
+        await window.saveUserData();
+        // 저장 성공 후 UI 업데이트
         nameInput.value = '';
         dateInput.value = '';
         error.classList.add('hidden');
+        renderDDays();
         renderHome();
         console.log("D-Day 추가 완료:", newDDay);
     } catch (err) {
@@ -1401,14 +1406,15 @@ async function addDDay() {
         renderDDays();
     }
 }
+
 function renderDDays() {
     const ddayList = document.getElementById('ddayList');
-    if (!ddayList) return; // 요소가 없으면 종료
+    if (!ddayList) return;
 
     ddayList.innerHTML = '';
     console.log("Rendering D-Days:", window.ddays);
 
-    const sortedDDays = (window.ddays || []).sort((a, b) => new showScreenDate(a.date) - new Date(b.date));
+    const sortedDDays = (window.ddays || []).sort((a, b) => new Date(a.date) - new Date(b.date));
     sortedDDays.forEach(dday => {
         const daysLeft = Math.ceil((new Date(dday.date) - new Date(currentDate)) / (1000 * 60 * 60 * 24));
         const ddayItem = document.createElement('li');
@@ -1425,6 +1431,7 @@ function renderDDays() {
         ddayList.innerHTML = '<li>No D-Days set</li>';
     }
 }
+
 async function deleteDDay(id) {
     window.ddays = window.ddays.filter(dday => dday.id !== id);
     await window.saveUserData();

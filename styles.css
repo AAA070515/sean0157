@@ -1336,7 +1336,7 @@ body {
     padding: 12px;
     border-radius: 8px;
     border: 1px solid #ddd;
-    margin-bottom: 10px;
+    margin-bottom: 10px; /* 이름 입력과 날짜 선택 간격: 10px */
     font-size: 16px;
 }
 
@@ -1356,6 +1356,7 @@ body {
     font-size: 16px;
     padding: 12px;
 }
+
 .dday-add-btn:hover {
     background-color: #3367D6;
 }

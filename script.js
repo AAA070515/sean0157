@@ -7,7 +7,6 @@ let currentSelectedDate = null;
 let currentWeekOffset = 0;
 let currentSelectedSubject = null;
 let lastCheckedDate = new Date().toISOString().split('T')[0];
-let dDays = dDays || [];
 
 const today = new Date();
 let currentDate = today.toISOString().split('T')[0];
@@ -1329,43 +1328,44 @@ function showTodoTab(tab) {
     }
 }
 
-async function addDDay() {
-    const nameInput = document.getElementById('ddayNameInput');
-    const dateInput = document.getElementById('ddayDateInput');
-    const error = document.getElementById('ddayError');
-    const name = nameInput.value.trim();
-    const date = dateInput.value;
+async function addDDay(title, date) {
+    try {
+        // Firestore 컬렉션 참조 (예: 'dDays' 컬렉션)
+        const db = firebase.firestore();
+        const dDaysRef = db.collection("dDays");
 
-    if (!name || !date) {
-        error.textContent = 'Please enter a name and date for the D-Day.';
-        error.classList.remove('hidden');
-        return;
+        // 새로운 D-Day 객체 생성
+        const newDDay = {
+            title: title || "새로운 D-Day",
+            date: date || new Date().toISOString().split("T")[0],
+            id: Date.now(),
+            createdAt: firebase.firestore.FieldValue.serverTimestamp() // 서버 시간 추가
+        };
+
+        // Firestore에 추가
+        await dDaysRef.add(newDDay);
+
+        // 추가 후 렌더링 호출 (필요 시)
+        await renderDDays(); // renderDDays가 비동기라면 await 필요
+
+        // 디버깅용 로그
+        console.log("D-Day가 Firestore에 추가됨:", newDDay);
+    } catch (error) {
+        console.error("D-Day 추가 중 오류 발생:", error);
+        throw error; // 오류를 상위로 전달
     }
-
-    const selectedDate = new Date(date);
-    const today = new Date(currentDate);
-    if (selectedDate < today) {
-        error.textContent = 'D-Day date must be today or in the future.';
-        error.classList.remove('hidden');
-        return;
-    }
-
-    const newDDay = {
-        id: Date.now(),
-        name: name,
-        date: date,
-        createdAt: new Date().toISOString()
-    };
-
-    window.ddays.push(newDDay);
-    console.log("Added D-Day:", newDDay);
-    await window.saveUserData();
-    nameInput.value = '';
-    dateInput.value = '';
-    error.classList.add('hidden');
-    renderDDays();
-    renderHome();
 }
+
+// 사용 예시: 버튼 클릭 시 호출
+document.querySelector("#addDDayButton").addEventListener("click", async () => {
+    const title = document.querySelector("#dDayTitle").value;
+    const date = document.querySelector("#dDayDate").value;
+    try {
+        await addDDay(title, date);
+    } catch (error) {
+        alert("D-Day 추가에 실패했습니다.");
+    }
+});
 
 function renderDDays() {
     const ddayList = document.getElementById('ddayList');

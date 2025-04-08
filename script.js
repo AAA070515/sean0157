@@ -28,8 +28,6 @@ async function loadUserData(userId) {
             window.nickname = data.nickname || 'User';
             window.currentGroupCode = data.groupCode || null;
 
-            console.log("Loaded from Firestore - nickname:", window.nickname);
-
             updateSubjectSelect();
             updateSubjectTimes();
             updateStudyTimeDisplay();
@@ -129,6 +127,7 @@ function checkAndResetDailyData() {
 }
 
 checkAndResetDailyData();
+
 setInterval(checkAndResetDailyData, 60000);
 
 function getMoodImage(mood) {
@@ -158,7 +157,8 @@ function closeDrawer() {
     overlay.classList.remove('visible');
 }
 
-function showScreen(screen) {
+
+function showScreen(screen, subTab = null) {
     const screens = ['home', 'study', 'diary', 'todo', 'goals', 'stats', 'settings', 'groups'];
     screens.forEach(s => {
         const el = document.getElementById(`${s}Screen`);
@@ -210,6 +210,7 @@ function showScreen(screen) {
         loadDiaryData(currentDate);
     } else if (screen === 'todo') {
         renderTodos();
+        showTodoTab(subTab || 'todo');
     } else if (screen === 'goals') {
         updateGoalsInputs();
         updateGoalsProgress();
@@ -472,7 +473,7 @@ function startTimer() {
 
             if (timerSeconds % 1 === 0 && window.currentGroupCode) {
                 const groupRef = window.firestoreDoc(window.firestoreDb, "groups", window.currentGroupCode);
-                window.firestore strollGetDoc(groupRef).then(groupDoc => {
+                window.firestoreGetDoc(groupRef).then(groupDoc => {
                     if (groupDoc.exists()) {
                         const groupData = groupDoc.data();
                         const tempStudyTime = (window.studyData[currentDate] || 0) + timerSeconds;
@@ -725,24 +726,24 @@ function uploadImage() {
     const file = fileInput.files[0];
     if (file) {
         const reader = new FileReader();
-        reader.onload = function(e) {
-            uploadedImage = e.target.result;
+        reader.on = function(e) {
+            upedImage = e.target.result;
             const preview = document.getElementById('imagePreview');
-            preview.innerHTML = `<img src="${uploadedImage}" alt="Uploaded Image">`;
+            preview.innerHTML = `<img src="${upedImage}" alt="Uped Image">`;
         };
         reader.readAsDataURL(file);
         fileInput.value = '';
     }
 }
 
-function loadDiaryData(selectedDate) {
+function DiaryData(selectedDate) {
     const diaryEntry = window.diaryData[selectedDate];
     
     document.querySelectorAll('.mood-bean').forEach(bean => bean.classList.remove('selected'));
     document.getElementById('memoInput').value = '';
     document.getElementById('imagePreview').innerHTML = '';
     selectedMood = null;
-    uploadedImage = null;
+    upedImage = null;
     
     if (diaryEntry) {
         const mood = diaryEntry.mood;
@@ -754,7 +755,7 @@ function loadDiaryData(selectedDate) {
         document.getElementById('memoInput').value = diaryEntry.memo || '';
         if (diaryEntry.image) {
             document.getElementById('imagePreview').innerHTML = `<img src="${diaryEntry.image}" alt="Diary Image">`;
-            uploadedImage = diaryEntry.image;
+            upedImage = diaryEntry.image;
         }
     }
 }
@@ -1234,14 +1235,12 @@ function renderGroupDashboard() {
         console.error('Group dashboard render error:', error);
     });
 }
-
 document.getElementById('chatInput').addEventListener('keypress', function(event) {
     if (event.key === 'Enter') {
         event.preventDefault();
         sendMessage();
     }
 });
-
 document.getElementById('groupNameInput').addEventListener('keypress', function(event) {
     if (event.key === 'Enter') {
         event.preventDefault();
@@ -1299,6 +1298,16 @@ function showGroupTab(tab) {
         dashboardBtn.classList.remove('active');
         chatBtn.classList.add('active');
     }
+}
+
+function showTodoTab(tab) {
+    const todoContent = document.getElementById('todoTabContent');
+    const todoBtn = document.querySelector('.todo-tabs .tab-btn[onclick="showTodoTab(\'todo\')"]');
+
+    if (tab === 'todo') {
+        todoContent.classList.remove('hidden');
+        todoBtn.classList.add('active');
+        renderTodos();
 }
 
 function renderStats() {
@@ -1362,7 +1371,6 @@ function renderGroupContent() {
     console.log('After update - joinCreateBox hidden:', joinCreateBox.classList.contains('hidden'));
     console.log('After update - contentBox hidden:', contentBox.classList.contains('hidden'));
 }
-
 document.head.appendChild(style);
 
 window.auth.onAuthStateChanged(user => {

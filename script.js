@@ -7,6 +7,7 @@ let currentSelectedDate = null;
 let currentWeekOffset = 0;
 let currentSelectedSubject = null;
 let lastCheckedDate = new Date().toISOString().split('T')[0];
+let dDays = dDays || [];
 
 const today = new Date();
 let currentDate = today.toISOString().split('T')[0];

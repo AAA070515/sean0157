@@ -1336,6 +1336,16 @@ body {
     padding: 12px;
     border-radius: 8px;
     border: 1px solid #ddd;
+    margin-bottom: 10px;
+    font-size: 16px;
+}
+
+#ddayDateInput {
+    width: 100%;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    margin-top: 15px;
     margin-bottom: 15px;
     font-size: 16px;
 }
@@ -1347,7 +1357,6 @@ body {
     font-size: 16px;
     padding: 12px;
 }
-
 .dday-add-btn:hover {
     background-color: #3367D6;
 }

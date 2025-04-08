@@ -7,28 +7,33 @@ let currentSelectedDate = null;
 let currentWeekOffset = 0;
 let currentSelectedSubject = null;
 let lastCheckedDate = new Date().toISOString().split('T')[0];
+window.ddays = window.ddays || [];
 
 const today = new Date();
 let currentDate = today.toISOString().split('T')[0];
 
 async function loadUserData(userId) {
     const userRef = window.firestoreDoc(window.firestoreDb, "users", userId);
+    let isInitialLoad = true; // 초기 로드 여부 추적
+
     window.firestoreOnSnapshot(userRef, (doc) => {
         if (doc.exists()) {
             const data = doc.data();
-            // 기존 데이터 유지하면서 업데이트
+            // Firestore에서 가져온 데이터로 전역 변수 업데이트
             window.subjects = data.subjects || [];
             window.studyData = data.studyData || {};
             window.subjectStudyTime = data.subjectStudyTime || {};
             window.diaryData = data.diaryData || {};
             window.todos = data.todos || [];
-            window.ddays = data.ddays || []; // D-Day 초기화 보장
+            window.ddays = data.ddays || []; // Firestore에서 D-Day 로드
             window.goals = data.goals || { daily: null, weekly: null };
             window.studySessions = data.studySessions || {};
             window.nickname = data.nickname || 'User';
             window.currentGroupCode = data.groupCode || null;
 
             console.log("Loaded data with ddays:", window.ddays);
+
+            // UI 업데이트
             updateSubjectSelect();
             updateSubjectTimes();
             updateStudyTimeDisplay();
@@ -36,8 +41,13 @@ async function loadUserData(userId) {
             updateGoalsProgress();
             renderHome();
             renderTodos();
-            renderDDays(); // D-Day 렌더링 추가
+            renderDDays(); // D-Day 렌더링
             renderGroupDashboard();
+
+            if (isInitialLoad) {
+                console.log("Initial data load completed");
+                isInitialLoad = false;
+            }
         } else {
             // 문서가 없으면 기본값 설정
             window.subjects = [];
@@ -48,9 +58,12 @@ async function loadUserData(userId) {
             window.ddays = []; // D-Day 초기화
             window.goals = { daily: null, weekly: null };
             window.studySessions = {};
-            window.currentGroupCode = null;
             window.nickname = 'User';
+            window.currentGroupCode = null;
 
+            console.log("No user data found, initialized with defaults");
+
+            // UI 업데이트
             updateSubjectSelect();
             updateSubjectTimes();
             updateStudyTimeDisplay();
@@ -60,9 +73,15 @@ async function loadUserData(userId) {
             renderTodos();
             renderDDays();
             renderGroupDashboard();
+
+            if (isInitialLoad) {
+                window.saveUserData(); // 초기 데이터 저장
+                isInitialLoad = false;
+            }
         }
     }, (error) => {
         console.error("Load failed:", error.code, error.message);
+        alert("Failed to load user data: " + error.message);
     });
 }
 
@@ -1361,35 +1380,35 @@ async function addDDay() {
         createdAt: new Date().toISOString()
     };
 
-    // 로컬 배열에 즉시 추가
-    if (!window.ddays) window.ddays = []; // 초기화 확인
+    // 로컬 배열에 추가
+    if (!window.ddays) window.ddays = [];
     window.ddays.push(newDDay);
+    renderDDays(); // 즉시 UI 업데이트
 
     try {
-        // Firestore에 저장
-        await window.saveUserData();
+        await window.saveUserData(); // Firestore에 저장
         nameInput.value = '';
         dateInput.value = '';
         error.classList.add('hidden');
-        renderDDays(); // 저장 후 즉시 렌더링
         renderHome();
         console.log("D-Day 추가 완료:", newDDay);
     } catch (err) {
         console.error("D-Day 저장 실패:", err);
         error.textContent = 'Failed to save D-Day. Please try again.';
         error.classList.remove('hidden');
-        // 에러 발생 시 로컬 데이터 롤백
+        // 저장 실패 시 롤백
         window.ddays = window.ddays.filter(d => d.id !== newDDay.id);
         renderDDays();
     }
 }
-
 function renderDDays() {
     const ddayList = document.getElementById('ddayList');
-    ddayList.innerHTML = '';
+    if (!ddayList) return; // 요소가 없으면 종료
 
-    console.log("Rendering D-Days:", window.ddays); // 디버깅 로그
-    const sortedDDays = (window.ddays || []).sort((a, b) => new Date(a.date) - new Date(b.date));
+    ddayList.innerHTML = '';
+    console.log("Rendering D-Days:", window.ddays);
+
+    const sortedDDays = (window.ddays || []).sort((a, b) => new showScreenDate(a.date) - new Date(b.date));
     sortedDDays.forEach(dday => {
         const daysLeft = Math.ceil((new Date(dday.date) - new Date(currentDate)) / (1000 * 60 * 60 * 24));
         const ddayItem = document.createElement('li');
@@ -1406,7 +1425,6 @@ function renderDDays() {
         ddayList.innerHTML = '<li>No D-Days set</li>';
     }
 }
-
 async function deleteDDay(id) {
     window.ddays = window.ddays.filter(dday => dday.id !== id);
     await window.saveUserData();

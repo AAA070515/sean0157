@@ -12,20 +12,22 @@ const today = new Date();
 let currentDate = today.toISOString().split('T')[0];
 
 async function loadUserData(userId) {
-    const userRef = doc(db, "users", userId);
+    const userRef = window.firestoreDoc(window.firestoreDb, "users", userId);
     window.firestoreOnSnapshot(userRef, (doc) => {
         if (doc.exists()) {
             const data = doc.data();
+            // 기존 데이터 유지하면서 업데이트
             window.subjects = data.subjects || [];
             window.studyData = data.studyData || {};
             window.subjectStudyTime = data.subjectStudyTime || {};
             window.diaryData = data.diaryData || {};
             window.todos = data.todos || [];
-            window.ddays = data.ddays || []; 
+            window.ddays = data.ddays || []; // D-Day 초기화 보장
             window.goals = data.goals || { daily: null, weekly: null };
             window.studySessions = data.studySessions || {};
             window.nickname = data.nickname || 'User';
             window.currentGroupCode = data.groupCode || null;
+
             console.log("Loaded data with ddays:", window.ddays);
             updateSubjectSelect();
             updateSubjectTimes();
@@ -34,18 +36,21 @@ async function loadUserData(userId) {
             updateGoalsProgress();
             renderHome();
             renderTodos();
-            renderDDays();
+            renderDDays(); // D-Day 렌더링 추가
             renderGroupDashboard();
         } else {
+            // 문서가 없으면 기본값 설정
             window.subjects = [];
             window.studyData = {};
             window.subjectStudyTime = {};
             window.diaryData = {};
             window.todos = [];
-            window.ddays = [];
+            window.ddays = []; // D-Day 초기화
             window.goals = { daily: null, weekly: null };
             window.studySessions = {};
             window.currentGroupCode = null;
+            window.nickname = 'User';
+
             updateSubjectSelect();
             updateSubjectTimes();
             updateStudyTimeDisplay();
@@ -70,7 +75,7 @@ window.saveUserData = async function() {
         subjectStudyTime: window.subjectStudyTime || {},
         diaryData: window.diaryData || {},
         todos: window.todos || [],
-        ddays: window.ddays || [],
+        ddays: window.ddays || [], // D-Day 포함 확인
         goals: window.goals || { daily: null, weekly: null },
         studySessions: window.studySessions || {},
         nickname: window.nickname || 'User',
@@ -78,7 +83,7 @@ window.saveUserData = async function() {
     };
     try {
         await window.firestoreSetDoc(window.firestoreDoc(db, "users", userId), dataToSave, { merge: true });
-        console.log("Data saved successfully! D-Days:", window.ddays); // 디버깅 로그
+        console.log("Data saved successfully! D-Days:", window.ddays);
     } catch (error) {
         console.error("Save failed:", error.code, error.message);
         alert("Failed to save data: " + error.message);
@@ -1356,22 +1361,26 @@ async function addDDay() {
         createdAt: new Date().toISOString()
     };
 
+    // 로컬 배열에 즉시 추가
+    if (!window.ddays) window.ddays = []; // 초기화 확인
     window.ddays.push(newDDay);
-    console.log("추가된 D-Day:", newDDay);
-    console.log("현재 D-Days 배열:", window.ddays);
 
     try {
-        await window.saveUserData(); // Firestore에 저장
-        console.log("Firestore에 D-Day 저장 완료:", window.ddays);
+        // Firestore에 저장
+        await window.saveUserData();
         nameInput.value = '';
         dateInput.value = '';
         error.classList.add('hidden');
-        renderDDays();
+        renderDDays(); // 저장 후 즉시 렌더링
         renderHome();
+        console.log("D-Day 추가 완료:", newDDay);
     } catch (err) {
         console.error("D-Day 저장 실패:", err);
         error.textContent = 'Failed to save D-Day. Please try again.';
         error.classList.remove('hidden');
+        // 에러 발생 시 로컬 데이터 롤백
+        window.ddays = window.ddays.filter(d => d.id !== newDDay.id);
+        renderDDays();
     }
 }
 
@@ -1379,7 +1388,8 @@ function renderDDays() {
     const ddayList = document.getElementById('ddayList');
     ddayList.innerHTML = '';
 
-    const sortedDDays = window.ddays.sort((a, b) => new Date(a.date) - new Date(b.date));
+    console.log("Rendering D-Days:", window.ddays); // 디버깅 로그
+    const sortedDDays = (window.ddays || []).sort((a, b) => new Date(a.date) - new Date(b.date));
     sortedDDays.forEach(dday => {
         const daysLeft = Math.ceil((new Date(dday.date) - new Date(currentDate)) / (1000 * 60 * 60 * 24));
         const ddayItem = document.createElement('li');

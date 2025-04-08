@@ -23,7 +23,7 @@ async function loadUserData(userId) {
             window.subjectStudyTime = data.subjectStudyTime || {};
             window.diaryData = data.diaryData || {};
             window.todos = data.todos || [];
-            window.ddays = data.ddays || []; // D-Day 추가
+            window.ddays = data.ddays || []; // 이미 포함되어 있음
             window.goals = data.goals || { daily: null, weekly: null };
             window.studySessions = data.studySessions || {};
             window.nickname = data.nickname || 'User';
@@ -35,14 +35,16 @@ async function loadUserData(userId) {
             updateGoalsProgress();
             renderHome();
             renderTodos();
+            renderDDays(); // D-Day 렌더링 추가
             renderGroupDashboard();
         } else {
+            // 기본값 설정
             window.subjects = [];
             window.studyData = {};
             window.subjectStudyTime = {};
             window.diaryData = {};
             window.todos = [];
-            window.ddays = []; // D-Day 초기화
+            window.ddays = []; // 기본값 유지
             window.goals = { daily: null, weekly: null };
             window.studySessions = {};
             window.currentGroupCode = null;
@@ -53,6 +55,7 @@ async function loadUserData(userId) {
             updateGoalsProgress();
             renderHome();
             renderTodos();
+            renderDDays(); // D-Day 렌더링 추가
             renderGroupDashboard();
         }
     }, (error) => {
@@ -69,7 +72,7 @@ window.saveUserData = async function() {
         subjectStudyTime: window.subjectStudyTime || {},
         diaryData: window.diaryData || {},
         todos: window.todos || [],
-        ddays: window.ddays || [], // D-Day 추가
+        ddays: window.ddays || [], // 이미 포함되어 있음
         goals: window.goals || { daily: null, weekly: null },
         studySessions: window.studySessions || {},
         nickname: window.nickname || 'User',
@@ -1356,7 +1359,7 @@ async function addDDay() {
     };
 
     window.ddays.push(newDDay);
-    await window.saveUserData();
+    await window.saveUserData(); // Firestore에 저장
     nameInput.value = '';
     dateInput.value = '';
     error.classList.add('hidden');
@@ -1388,7 +1391,7 @@ function renderDDays() {
 
 async function deleteDDay(id) {
     window.ddays = window.ddays.filter(dday => dday.id !== id);
-    await window.saveUserData();
+    await window.saveUserData(); // Firestore에 저장
     renderDDays();
     renderHome();
 }

@@ -226,7 +226,45 @@
                         </div>
                         <p id="settingsNicknameError" class="error hidden"></p>
                     </div>
-                    <button id="logout-btn" class="save-button btn" onclick="signOut(window.firebaseAuth).then(() => console.log('Logout successful')).catch((error) => alert('로그아웃에 실패했습니다: ' + error.message))">Logout</button>
+                    <div class="widget-visibility-section">
+                        <h4>Home Screen Widgets</h4>
+                        <div class="widget-toggle" style="display: flex; justify-content: space-between; align-items: center; margin: 10px 0;">
+                            <span>Today's Study Time Widget</span>
+                            <label class="switch">
+                                <input type="checkbox" id="studyTimeToggle" onchange="toggleWidget('studyTime')">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <div class="widget-toggle" style="display: flex; justify-content: space-between; align-items: center; margin: 10px 0;">
+                            <span>To-Do List Widget</span>
+                            <label class="switch">
+                                <input type="checkbox" id="todoToggle" onchange="toggleWidget('todo')">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <div class="widget-toggle" style="display: flex; justify-content: space-between; align-items: center; margin: 10px 0;">
+                            <span>Recent Journal Widget</span>
+                            <label class="switch">
+                                <input type="checkbox" id="diaryToggle" onchange="toggleWidget('diary')">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <div class="widget-toggle" style="display: flex; justify-content: space-between; align-items: center; margin: 10px 0;">
+                            <span>Goal Progress Widget</span>
+                            <label class="switch">
+                                <input type="checkbox" id="goalProgressToggle" onchange="toggleWidget('goalProgress')">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <div class="widget-toggle" style="display: flex; justify-content: space-between; align-items: center; margin: 10px 0;">
+                            <span>Upcoming D-Day Widget</span>
+                            <label class="switch">
+                                <input type="checkbox" id="ddayToggle" onchange="toggleWidget('dday')">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                    <button id="logout-btn" class="save-button btn" onclick="signOut(window.firebaseAuth)...">Logout</button>
                     <button id="reset-all-btn" class="save-button btn" onclick="resetAllSettings()">Reset All Settings</button>
                 </div>
             </section>
@@ -426,11 +464,18 @@
                     window.subjectStudyTime = data.subjectStudyTime || {};
                     window.diaryData = data.diaryData || {};
                     window.todos = data.todos || [];
-                    window.ddays = data.ddays || []; // D-Day 추가
+                    window.ddays = data.ddays || [];
                     window.goals = data.goals || { daily: null, weekly: null };
                     window.studySessions = data.studySessions || {};
                     window.nickname = data.nickname || 'User';
                     window.currentGroupCode = data.groupCode || null;
+                    window.widgetVisibility = data.widgetVisibility || {
+                        studyTime: true,
+                        todo: true,
+                        diary: true,
+                        goalProgress: true,
+                        dday: true
+                    };
                     updateSubjectSelect();
                     updateSubjectTimes();
                     updateStudyTimeDisplay();
@@ -440,26 +485,14 @@
                     renderTodos();
                     renderGroupDashboard();
                 } else {
-                    window.subjects = [];
-                    window.studyData = {};
-                    window.subjectStudyTime = {};
-                    window.diaryData = {};
-                    window.todos = [];
-                    window.ddays = []; // D-Day 초기화
-                    window.goals = { daily: null, weekly: null };
-                    window.studySessions = {};
-                    window.currentGroupCode = null;
-                    updateSubjectSelect();
-                    updateSubjectTimes();
-                    updateStudyTimeDisplay();
-                    updateGoalsInputs();
-                    updateGoalsProgress();
-                    renderHome();
-                    renderTodos();
-                    renderGroupDashboard();
+                    window.widgetVisibility = {
+                        studyTime: true,
+                        todo: true,
+                        diary: true,
+                        goalProgress: true,
+                        dday: true
+                    };
                 }
-            }, (error) => {
-                console.error("Load failed:", error.code, error.message);
             });
         }
         
@@ -472,19 +505,14 @@
                 subjectStudyTime: window.subjectStudyTime || {},
                 diaryData: window.diaryData || {},
                 todos: window.todos || [],
-                ddays: window.ddays || [], // D-Day 추가
+                ddays: window.ddays || [],
                 goals: window.goals || { daily: null, weekly: null },
                 studySessions: window.studySessions || {},
                 nickname: window.nickname || 'User',
-                groupCode: window.currentGroupCode || null
+                groupCode: window.currentGroupCode || null,
+                widgetVisibility: window.widgetVisibility
             };
-            try {
-                await window.firestoreSetDoc(window.firestoreDoc(db, "users", userId), dataToSave, { merge: true });
-                console.log("Data saved successfully!");
-            } catch (error) {
-                console.error("Save failed:", error.code, error.message);
-                alert("Failed to save data: " + error.message);
-            }
+            await window.firestoreSetDoc(window.firestoreDoc(db, "users", userId), dataToSave, { merge: true });
         };
     </script>
     <script src="script.js"></script>

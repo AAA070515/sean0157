@@ -60,6 +60,7 @@ async function loadUserData(userId) {
         console.error("Load failed:", error.code, error.message);
     });
 }
+
 window.saveUserData = async function() {
     if (!window.currentUser) return;
     const userId = window.currentUser.uid;
@@ -69,7 +70,7 @@ window.saveUserData = async function() {
         subjectStudyTime: window.subjectStudyTime || {},
         diaryData: window.diaryData || {},
         todos: window.todos || [],
-        ddays: window.ddays || [], // D-Day 추가
+        ddays: window.ddays || [],
         goals: window.goals || { daily: null, weekly: null },
         studySessions: window.studySessions || {},
         nickname: window.nickname || 'User',
@@ -77,7 +78,7 @@ window.saveUserData = async function() {
     };
     try {
         await window.firestoreSetDoc(window.firestoreDoc(db, "users", userId), dataToSave, { merge: true });
-        console.log("Data saved successfully!");
+        console.log("Data saved successfully! D-Days:", window.ddays); // 디버깅 로그
     } catch (error) {
         console.error("Save failed:", error.code, error.message);
         alert("Failed to save data: " + error.message);
@@ -1356,6 +1357,7 @@ async function addDDay() {
     };
 
     window.ddays.push(newDDay);
+    console.log("Added D-Day:", newDDay);
     await window.saveUserData();
     nameInput.value = '';
     dateInput.value = '';

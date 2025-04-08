@@ -7,7 +7,6 @@ let currentSelectedDate = null;
 let currentWeekOffset = 0;
 let currentSelectedSubject = null;
 let lastCheckedDate = new Date().toISOString().split('T')[0];
-window.ddays = window.ddays || [];
 
 const today = new Date();
 let currentDate = today.toISOString().split('T')[0];
@@ -24,13 +23,12 @@ async function loadUserData(userId) {
             window.subjectStudyTime = data.subjectStudyTime || {};
             window.diaryData = data.diaryData || {};
             window.todos = data.todos || [];
-            window.ddays = data.ddays || [];
             window.goals = data.goals || { daily: null, weekly: null };
             window.studySessions = data.studySessions || {};
             window.nickname = data.nickname || 'User';
             window.currentGroupCode = data.groupCode || null;
 
-            console.log("Loaded from Firestore - ddays:", window.ddays);
+            console.log("Loaded from Firestore - nickname:", window.nickname);
 
             updateSubjectSelect();
             updateSubjectTimes();
@@ -39,7 +37,6 @@ async function loadUserData(userId) {
             updateGoalsProgress();
             renderHome();
             renderTodos();
-            renderDDays();
 
             if (isInitialLoad) {
                 console.log("Initial data load completed");
@@ -52,7 +49,6 @@ async function loadUserData(userId) {
             window.subjectStudyTime = {};
             window.diaryData = {};
             window.todos = [];
-            window.ddays = [];
             window.goals = { daily: null, weekly: null };
             window.studySessions = {};
             window.nickname = 'User';
@@ -67,7 +63,6 @@ async function loadUserData(userId) {
             updateGoalsProgress();
             renderHome();
             renderTodos();
-            renderDDays();
 
             if (isInitialLoad) {
                 isInitialLoad = false;
@@ -92,7 +87,6 @@ window.saveUserData = async function() {
         subjectStudyTime: window.subjectStudyTime || {},
         diaryData: window.diaryData || {},
         todos: window.todos || [],
-        ddays: window.ddays || [],
         goals: window.goals || { daily: null, weekly: null },
         studySessions: window.studySessions || {},
         nickname: window.nickname || 'User',
@@ -135,7 +129,6 @@ function checkAndResetDailyData() {
 }
 
 checkAndResetDailyData();
-
 setInterval(checkAndResetDailyData, 60000);
 
 function getMoodImage(mood) {
@@ -165,8 +158,7 @@ function closeDrawer() {
     overlay.classList.remove('visible');
 }
 
-
-function showScreen(screen, subTab = null) {
+function showScreen(screen) {
     const screens = ['home', 'study', 'diary', 'todo', 'goals', 'stats', 'settings', 'groups'];
     screens.forEach(s => {
         const el = document.getElementById(`${s}Screen`);
@@ -218,7 +210,6 @@ function showScreen(screen, subTab = null) {
         loadDiaryData(currentDate);
     } else if (screen === 'todo') {
         renderTodos();
-        showTodoTab(subTab || 'todo');
     } else if (screen === 'goals') {
         updateGoalsInputs();
         updateGoalsProgress();
@@ -342,22 +333,6 @@ function renderHome() {
     }
     if (window.goals.daily === null && window.goals.weekly === null && totalTodayTodos === 0) {
         goalProgress.innerHTML = '<p>No goals or tasks set</p>';
-    }
-
-    const ddayPreview = document.getElementById('dashboardDDayPreview');
-    ddayPreview.innerHTML = '';
-    const sortedDDays = window.ddays
-        .filter(dday => new Date(dday.date) >= new Date(currentDate))
-        .sort((a, b) => new Date(a.date) - new Date(b.date));
-    if (sortedDDays.length > 0) {
-        const nearestDDay = sortedDDays[0];
-        const daysLeft = Math.ceil((new Date(nearestDDay.date) - new Date(currentDate)) / (1000 * 60 * 60 * 24));
-        ddayPreview.innerHTML = `
-            <p><strong>${nearestDDay.name}</strong></p>
-            <p>${nearestDDay.date} (${daysLeft} days left)</p>
-        `;
-    } else {
-        ddayPreview.innerHTML = '<p>No D-Days set</p>';
     }
 }
 
@@ -497,7 +472,7 @@ function startTimer() {
 
             if (timerSeconds % 1 === 0 && window.currentGroupCode) {
                 const groupRef = window.firestoreDoc(window.firestoreDb, "groups", window.currentGroupCode);
-                window.firestoreGetDoc(groupRef).then(groupDoc => {
+                window.firestore strollGetDoc(groupRef).then(groupDoc => {
                     if (groupDoc.exists()) {
                         const groupData = groupDoc.data();
                         const tempStudyTime = (window.studyData[currentDate] || 0) + timerSeconds;
@@ -750,24 +725,24 @@ function uploadImage() {
     const file = fileInput.files[0];
     if (file) {
         const reader = new FileReader();
-        reader.on = function(e) {
-            upedImage = e.target.result;
+        reader.onload = function(e) {
+            uploadedImage = e.target.result;
             const preview = document.getElementById('imagePreview');
-            preview.innerHTML = `<img src="${upedImage}" alt="Uped Image">`;
+            preview.innerHTML = `<img src="${uploadedImage}" alt="Uploaded Image">`;
         };
         reader.readAsDataURL(file);
         fileInput.value = '';
     }
 }
 
-function DiaryData(selectedDate) {
+function loadDiaryData(selectedDate) {
     const diaryEntry = window.diaryData[selectedDate];
     
     document.querySelectorAll('.mood-bean').forEach(bean => bean.classList.remove('selected'));
     document.getElementById('memoInput').value = '';
     document.getElementById('imagePreview').innerHTML = '';
     selectedMood = null;
-    upedImage = null;
+    uploadedImage = null;
     
     if (diaryEntry) {
         const mood = diaryEntry.mood;
@@ -779,7 +754,7 @@ function DiaryData(selectedDate) {
         document.getElementById('memoInput').value = diaryEntry.memo || '';
         if (diaryEntry.image) {
             document.getElementById('imagePreview').innerHTML = `<img src="${diaryEntry.image}" alt="Diary Image">`;
-            upedImage = diaryEntry.image;
+            uploadedImage = diaryEntry.image;
         }
     }
 }
@@ -888,7 +863,6 @@ async function resetAllSettings() {
                     subjectStudyTime: {},
                     diaryData: {},
                     todos: [],
-                    ddays: [], // D-Day 초기화
                     goals: { daily: null, weekly: null },
                     studySessions: {},
                     nickname: window.nickname,
@@ -899,7 +873,6 @@ async function resetAllSettings() {
                 window.subjectStudyTime = {};
                 window.diaryData = {};
                 window.todos = [];
-                window.ddays = [];
                 window.goals = { daily: null, weekly: null };
                 window.studySessions = {};
                 window.currentGroupCode = null;
@@ -934,13 +907,6 @@ async function resetAllSettings() {
         }
     }
 }
-
-document.getElementById('ddayNameInput').addEventListener('keypress', function(event) {
-    if (event.key === 'Enter') {
-        event.preventDefault();
-        addDDay();
-    }
-});
 
 function loadSettings() {
     const nicknameInput = document.getElementById('settingsNicknameInput');
@@ -1268,12 +1234,14 @@ function renderGroupDashboard() {
         console.error('Group dashboard render error:', error);
     });
 }
+
 document.getElementById('chatInput').addEventListener('keypress', function(event) {
     if (event.key === 'Enter') {
         event.preventDefault();
         sendMessage();
     }
 });
+
 document.getElementById('groupNameInput').addEventListener('keypress', function(event) {
     if (event.key === 'Enter') {
         event.preventDefault();
@@ -1331,108 +1299,6 @@ function showGroupTab(tab) {
         dashboardBtn.classList.remove('active');
         chatBtn.classList.add('active');
     }
-}
-
-function showTodoTab(tab) {
-    const todoContent = document.getElementById('todoTabContent');
-    const ddayContent = document.getElementById('ddayTabContent');
-    const todoBtn = document.querySelector('.todo-tabs .tab-btn[onclick="showTodoTab(\'todo\')"]');
-    const ddayBtn = document.querySelector('.todo-tabs .tab-btn[onclick="showTodoTab(\'dday\')"]');
-
-    if (tab === 'todo') {
-        todoContent.classList.remove('hidden');
-        ddayContent.classList.add('hidden');
-        todoBtn.classList.add('active');
-        ddayBtn.classList.remove('active');
-        renderTodos();
-    } else if (tab === 'dday') {
-        todoContent.classList.add('hidden');
-        ddayContent.classList.remove('hidden');
-        todoBtn.classList.remove('active');
-        ddayBtn.classList.add('active');
-        renderDDays();
-    }
-}
-
-async function addDDay() {
-    const nameInput = document.getElementById('ddayNameInput');
-    const dateInput = document.getElementById('ddayDateInput');
-    const error = document.getElementById('ddayError');
-    const name = nameInput.value.trim();
-    const date = dateInput.value;
-
-    if (!name || !date) {
-        error.textContent = 'Please enter a name and date for the D-Day.';
-        error.classList.remove('hidden');
-        return;
-    }
-
-    const selectedDate = new Date(date);
-    const today = new Date(currentDate);
-    if (selectedDate < today) {
-        error.textContent = 'D-Day date must be today or in the future.';
-        error.classList.remove('hidden');
-        return;
-    }
-
-    const newDDay = {
-        id: Date.now(),
-        name: name,
-        date: date,
-        createdAt: new Date().toISOString()
-    };
-
-    if (!window.ddays) window.ddays = [];
-    window.ddays.push(newDDay);
-    console.log("Before save - window.ddays:", window.ddays);
-
-    try {
-        await window.saveUserData();
-        console.log("After save - window.ddays:", window.ddays);
-        nameInput.value = '';
-        dateInput.value = '';
-        error.classList.add('hidden');
-        renderDDays();
-        renderHome();
-    } catch (err) {
-        console.error("D-Day 저장 실패:", err);
-        window.ddays = window.ddays.filter(d => d.id !== newDDay.id);
-        error.textContent = 'Failed to save D-Day: ' + err.message;
-        error.classList.remove('hidden');
-        renderDDays();
-    }
-}
-
-function renderDDays() {
-    const ddayList = document.getElementById('ddayList');
-    if (!ddayList) return;
-
-    ddayList.innerHTML = '';
-    console.log("Rendering D-Days:", window.ddays);
-
-    const sortedDDays = (window.ddays || []).sort((a, b) => new Date(a.date) - new Date(b.date));
-    sortedDDays.forEach(dday => {
-        const daysLeft = Math.ceil((new Date(dday.date) - new Date(currentDate)) / (1000 * 60 * 60 * 24));
-        const ddayItem = document.createElement('li');
-        ddayItem.className = 'dday-item';
-        ddayItem.innerHTML = `
-            <span class="dday-text">${dday.name} (${dday.date})</span>
-            <span class="dday-days">${daysLeft} days</span>
-            <button class="delete-dday" onclick="deleteDDay(${dday.id})">×</button>
-        `;
-        ddayList.appendChild(ddayItem);
-    });
-
-    if (sortedDDays.length === 0) {
-        ddayList.innerHTML = '<li>No D-Days set</li>';
-    }
-}
-
-async function deleteDDay(id) {
-    window.ddays = window.ddays.filter(dday => dday.id !== id);
-    await window.saveUserData();
-    renderDDays();
-    renderHome();
 }
 
 function renderStats() {
@@ -1496,6 +1362,7 @@ function renderGroupContent() {
     console.log('After update - joinCreateBox hidden:', joinCreateBox.classList.contains('hidden'));
     console.log('After update - contentBox hidden:', contentBox.classList.contains('hidden'));
 }
+
 document.head.appendChild(style);
 
 window.auth.onAuthStateChanged(user => {

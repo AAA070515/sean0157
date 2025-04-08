@@ -1326,6 +1326,7 @@ body {
     transition: opacity 0.3s ease;
 }
 
+.dday-input-section,
 .dday-list-section {
     margin-bottom: 10px;
 }
@@ -1354,6 +1355,7 @@ body {
     color: white;
     font-size: 16px;
     padding: 12px;
+    margin-bottom: 10px;
 }
 
 .dday-add-btn:hover {

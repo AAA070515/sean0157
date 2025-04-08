@@ -1,1401 +1,1430 @@
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-    font-family: 'Arial', sans-serif;
-}
-
-body {
-    background-color: #f5f5f5;
-    color: #333;
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-    overflow-x: hidden;
-    padding-top: 60px;
-}
-
-.header {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 60px;
-    background-color: #fff;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0 20px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    z-index: 1000;
-}
-
-.logo {
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-}
-
-.logo img {
-    height: 40px;
-    transition: transform 0.2s ease;
-}
-
-.logo:hover img {
-    transform: scale(1.05);
-}
-
-.btn {
-    padding: clamp(8px, 2vw, 12px);
-    border-radius: 8px;
-    border: none;
-    cursor: pointer;
-    transition: transform 0.2s ease, background-color 0.3s ease;
-}
-
-.btn:hover {
-    transform: scale(1.05);
-}
-
-.hidden-label {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    border: 0;
-}
-
-.login-screen {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100vh;
-    background-color: #f5f5f5;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 2000;
-}
-
-.login-container {
-    background-color: white;
-    padding: 40px;
-    border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    text-align: center;
-}
-
-.login-container h1 {
-    font-size: 24px;
-    color: #4285F4;
-    margin-bottom: 20px;
-}
-
-.login-container p {
-    font-size: 16px;
-    color: #666;
-    margin-bottom: 30px;
-}
-
-.login-btn {
-    background-color: #4285F4;
-    color: white;
-    font-size: 16px;
-    padding: 12px 24px;
-}
-
-.login-btn:hover {
-    background-color: #3367D6;
-}
-
-.modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100vh;
-    background-color: rgba(0, 0, 0, 0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 3000;
-}
-
-.modal-content {
-    background-color: white;
-    padding: 20px;
-    border-radius: 12px;
-    width: 90%;
-    max-width: 400px;
-    text-align: center;
-}
-
-.modal-content h2 {
-    font-size: 20px;
-    color: #4285F4;
-    margin-bottom: 15px;
-}
-
-.modal-content p {
-    font-size: 14px;
-    color: #666;
-    margin-bottom: 20px;
-}
-
-#nicknameInput {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    font-size: 16px;
-    margin-bottom: 20px;
-}
-
-#saveNicknameBtn {
-    background-color: #4285F4;
-    color: white;
-    padding: 10px 20px;
-}
-
-#saveNicknameBtn:hover {
-    background-color: #3367D6;
-}
-
-.error {
-    color: #EA4335;
-    font-size: 14px;
-    margin-top: 10px;
-}
-
-.nav-drawer {
-    position: fixed;
-    top: 60px;
-    right: -250px;
-    width: 250px;
-    height: calc(100% - 60px);
-    background-color: #fff;
-    box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
-    transition: right 0.3s ease-in-out;
-    z-index: 1000;
-}
-
-.nav-drawer .drawer-content {
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    height: 100%;
-}
-
-.nav-drawer:not(.hidden) {
-    right: 0;
-}
-
-.overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.2);
-    z-index: 999;
-    opacity: 0;
-    transition: opacity 0.3s ease-in-out;
-    pointer-events: none;
-}
-
-.overlay.visible {
-    opacity: 1;
-    pointer-events: auto;
-}
-
-.hamburger-icon {
-    font-size: 30px;
-    cursor: pointer;
-    color: #4285F4;
-    padding: 5px;
-    transition: transform 0.3s ease;
-}
-
-.drawer-content.visible {
-    right: 0;
-}
-
-.nav-item {
-    padding: 15px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    border-left: 4px solid transparent;
-    font-size: 16px;
-}
-
-.nav-item.active {
-    border-left-color: #4285F4;
-    background-color: rgba(66, 133, 244, 0.1);
-    color: #4285F4;
-    font-weight: bold;
-}
-
-.nav-item:hover {
-    background-color: rgba(66, 133, 244, 0.05);
-    transform: translateX(5px);
-}
-
-.reset-btn {
-    width: 100%;
-    padding: 10px;
-    border-radius: 8px;
-    border: none;
-    background-color: #4285F4;
-    color: white;
-    font-size: 16px;
-    cursor: pointer;
-    margin-top: 20px;
-    transition: all 0.3s;
-}
-
-.reset-btn:hover {
-    background-color: #3367D6;
-}
-
-#login-btn, #logout-btn {
-    width: 100%;
-    padding: 10px;
-    border-radius: 8px;
-    border: none;
-    background-color: #4285F4;
-    color: white;
-    font-size: 16px;
-    cursor: pointer;
-    margin-top: 20px;
-    transition: all 0.3s;
-    text-align: center;
-}
-
-#settings-btn, #reset-all-btn {
-    width: 100%;
-    padding: 10px;
-    border-radius: 8px;
-    border: none;
-    background-color: #4285F4;
-    color: white;
-    font-size: 16px;
-    cursor: pointer;
-    margin-top: 20px;
-    transition: all 0.3s;
-    text-align: center;
-}
-
-.main-content {
-    flex: 1;
-    width: 100%;
-}
-
-.container {
-    max-width: min(90%, 1200px);
-    margin: 0 auto;
-    padding: 20px;
-}
-
-.dashboard {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 20px;
-    padding: 20px 0;
-}
-
-.widget {
-    background-color: #fff;
-    border-radius: 12px;
-    padding: 20px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    cursor: pointer;
-}
-
-.widget.full-width {
-    grid-column: 1 / -1;
-    cursor: default;
-}
-
-.widget:hover {
-    transform: translateY(-5px) scale(1.02);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
-}
-
-.widget h3 {
-    font-size: 18px;
-    margin-bottom: 15px;
-    color: #4285F4;
-}
-
-.big-text {
-    font-size: 32px;
-    font-weight: bold;
-    color: #333;
-}
-
-.todo-preview {
-    list-style: none;
-    margin-top: 10px;
-    max-height: 150px;
-    overflow-y: auto;
-}
-
-.todo-preview::-webkit-scrollbar {
-    width: 8px;
-}
-
-.todo-preview::-webkit-scrollbar-thumb {
-    background: #4285F4;
-    border-radius: 4px;
-}
-
-.todo-preview li {
-    font-size: 14px;
-    padding: 5px 0;
-    color: #666;
-    display: flex;
-    align-items: center;
-}
-
-.todo-preview li.completed {
-    text-decoration: line-through;
-    color: #999;
-}
-
-.diary-preview {
-    font-size: 14px;
-    color: #666;
-}
-
-.diary-preview p {
-    margin: 5px 0;
-}
-
-.goal-preview {
-    margin-top: 10px;
-}
-
-.calendar-grid {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: min(1vw, 5px);
-    margin-top: 15px;
-}
-
-.day-cell {
-    aspect-ratio: 1;
-    border-radius: 5px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: clamp(10px, 2vw, 12px);
-    background-color: #fff;
-    border: 1px solid #eee;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-}
-
-.day-cell:hover {
-    background-color: #f0f0f0;
-}
-
-.day-cell.sticker {
-    background-color: rgba(66, 133, 244, 0.2);
-    font-size: clamp(16px, 3vw, 20px);
-}
-
-.day-cell.sticker:hover {
-    background-color: rgba(66, 133, 244, 0.3);
-}
-
-.day-details {
-    background-color: white;
-    border-radius: 12px;
-    padding: 4%;
-    margin-top: 20px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-    text-align: center;
-    font-size: clamp(14px, 2.5vw, 16px);
-}
-
-.day-details h3 {
-    font-size: clamp(16px, 3vw, 18px);
-    margin-bottom: 10px;
-}
-
-.memo-detail {
-    margin: 10px 0;
-}
-
-#dayImagePreview img {
-    max-width: 100%;
-    max-height: 200px;
-    border-radius: 8px;
-    margin-top: 10px;
-    object-fit: contain;
-}
-
-.stats-section {
-    background-color: white;
-    border-radius: 12px;
-    padding: 4%;
-    margin-bottom: 20px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-}
-
-.week-controls {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-}
-
-.week-controls button {
-    background-color: #4285F4;
-    color: white;
-}
-
-.week-controls button:hover {
-    background-color: #3367D6;
-}
-
-.week-controls span {
-    font-size: 16px;
-    font-weight: bold;
-}
-
-.week-calendar {
-    display: flex;
-    justify-content: space-between;
-    gap: 10px;
-    margin-bottom: 20px;
-}
-
-.week-day {
-    flex: 1;
-    padding: 15px;
-    background-color: #fff;
-    border: 1px solid #eee;
-    border-radius: 8px;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.3s;
-}
-
-.week-day:hover {
-    background-color: #f0f0f0;
-}
-
-.week-day.selected {
-    background-color: rgba(66, 133, 244, 0.2);
-    border-color: #4285F4;
-}
-
-.stats-details {
-    background-color: white;
-    border-radius: 12px;
-    padding: 20px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-    text-align: center;
-}
-
-.stats-details h3 {
-    font-size: 18px;
-    margin-bottom: 15px;
-}
-
-#statsStudyTime {
-    font-size: 16px;
-    margin-bottom: 15px;
-}
-
-#statsSubjects {
-    margin-bottom: 15px;
-}
-
-.subject-stat {
-    display: flex;
-    justify-content: space-between;
-    padding: 5px 0;
-    font-size: 14px;
-}
-
-#statsDiary {
-    font-size: 14px;
-    color: #666;
-}
-
-#statsDiary p {
-    margin: 5px 0;
-}
-
-#statsDiary img {
-    max-width: 100%;
-    max-height: 200px;
-    border-radius: 8px;
-    margin-top: 10px;
-    object-fit: contain;
-}
-
-.timer-section {
-    background-color: white;
-    border-radius: 12px;
-    padding: 4%;
-    margin-bottom: 20px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-    text-align: center;
-}
-
-.timer-display {
-    font-size: clamp(32px, 6vw, 48px);
-    font-weight: bold;
-    margin: 20px 0;
-    color: #4285F4;
-}
-
-.subject-input {
-    width: 70%;
-    padding: clamp(8px, 2vw, 12px);
-    border-radius: 8px;
-    border: 1px solid #ddd;
-    margin-bottom: 15px;
-    font-size: clamp(14px, 2.5vw, 16px);
-}
-
-.subject-add-btn {
-    width: 25%;
-    background-color: #4285F4;
-    color: white;
-    font-size: clamp(14px, 2.5vw, 16px);
-    margin-left: 5%;
-    margin-bottom: 15px;
-}
-
-.subject-select {
-    width: 100%;
-    padding: clamp(8px, 2vw, 12px);
-    border-radius: 8px;
-    border: 1px solid #ddd;
-    margin-bottom: 15px;
-    font-size: clamp(14px, 2.5vw, 16px);
-}
-
-.timer-controls {
-    display: flex;
-    justify-content: center;
-    gap: clamp(10px, 2vw, 15px);
-    flex-wrap: wrap;
-}
-
-.timer-btn {
-    padding: clamp(8px, 2vw, 12px) clamp(15px, 3vw, 25px);
-    border-radius: 25px;
-    font-size: clamp(14px, 2.5vw, 16px);
-    font-weight: bold;
-    margin: 5px;
-}
-
-.start-btn { background-color: #4285F4; color: white; }
-.start-btn:hover { background-color: #3367D6; }
-.pause-btn { background-color: #FBBC05; color: #333; }
-.pause-btn:hover { background-color: #F9A825; }
-.stop-btn { background-color: #EA4335; color: white; }
-.stop-btn:hover { background-color: #D32F2F; }
-
-.study-stats {
-    background-color: white;
-    border-radius: 12px;
-    padding: 4%;
-    margin-bottom: 20px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-    text-align: center;
-}
-
-.study-stats h3 {
-    font-size: clamp(16px, 3vw, 18px);
-    margin-bottom: 10px;
-}
-
-#dailyStudyTime {
-    font-size: clamp(16px, 3vw, 18px);
-    margin: 10px 0;
-}
-
-.subject-time {
-    margin-top: 10px;
-    font-size: clamp(12px, 2.2vw, 14px);
-}
-
-.diary-section {
-    background-color: white;
-    border-radius: 12px;
-    padding: 4%;
-    margin-bottom: 20px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-    text-align: center;
-}
-
-.diary-section h3 {
-    font-size: clamp(16px, 3vw, 18px);
-    margin-bottom: 10px;
-}
-
-.mood-beans {
-    display: flex;
-    justify-content: space-between;
-    margin: 20px 0;
-    flex-wrap: wrap;
-}
-
-.mood-bean {
-    width: clamp(40px, 10vw, 60px);
-    height: clamp(40px, 10vw, 60px);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: transform 0.3s ease, border-color 0.3s ease;
-    border: 3px solid transparent;
-    margin: 5px auto;
-}
-
-.mood-bean img {
-    width: 185%;
-    height: 185%;
-    object-fit: contain;
-}
-
-.mood-bean:hover {
-    transform: scale(1.1);
-}
-
-.mood-bean.selected {
-    transform: scale(1.2);
-}
-
-.memo-input {
-    width: 100%;
-    padding: clamp(10px, 2.5vw, 15px);
-    border-radius: 8px;
-    border: 1px solid #ddd;
-    margin-top: 15px;
-    font-size: clamp(14px, 2.5vw, 16px);
-    resize: none;
-}
-
-.image-upload-btn {
-    width: 100%;
-    background-color: #4285F4;
-    color: white;
-    font-size: clamp(14px, 2.5vw, 16px);
-}
-
-.image-upload-btn:hover {
-    background-color: #3367D6;
-}
-
-#imagePreview img {
-    max-width: 100%;
-    max-height: 200px;
-    border-radius: 8px;
-    margin-top: 10px;
-    object-fit: contain;
-}
-
-.save-button {
-    width: 100%;
-    padding: clamp(10px, 2.5vw, 15px);
-    border-radius: 25px;
-    background-color: #4285F4;
-    color: white;
-    font-size: clamp(14px, 2.5vw, 16px);
-    font-weight: bold;
-    margin-top: 20px;
-}
-
-.save-button:hover {
-    background-color: #3367D6;
-}
-
-.todo-section {
-    background-color: white;
-    border-radius: 12px;
-    padding: 4%;
-    margin-bottom: 20px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-}
-
-.todo-input {
-    width: 70%;
-    padding: clamp(8px, 2vw, 12px);
-    border-radius: 8px;
-    border: 1px solid #ddd;
-    margin-bottom: 15px;
-    font-size: clamp(14px, 2.5vw, 16px);
-}
-
-.todo-add-btn {
-    width: 25%;
-    background-color: #4285F4;
-    color: white;
-    font-size: clamp(14px, 2.5vw, 16px);
-    margin-left: 5%;
-    margin-bottom: 15px;
-}
-
-.task-filters {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-    margin-bottom: 15px;
-    flex-wrap: wrap;
-}
-
-.filter-btn {
-    padding: clamp(6px, 1.5vw, 8px) clamp(10px, 2.5vw, 15px);
-    border-radius: 20px;
-    border: 1px solid #E0E0E0;
-    background-color: white;
-    font-size: clamp(12px, 2.2vw, 14px);
-    cursor: pointer;
-    transition: all 0.3s;
-    margin: 5px;
-}
-
-.filter-btn.active {
-    background-color: #4285F4;
-    color: white;
-    border-color: #4285F4;
-}
-
-.todo-list {
-    list-style: none;
-    margin-top: 15px;
-}
-
-.todo-item {
-    display: flex;
-    align-items: center;
-    padding: 12px 0;
-    border-bottom: 1px solid #eee;
-}
-
-.todo-checkbox {
-    margin-right: 10px;
-    min-width: 20px;
-    height: 20px;
-    cursor: pointer;
-}
-
-.todo-text {
-    flex: 1;
-    font-size: clamp(14px, 2.5vw, 16px);
-    word-break: break-word;
-}
-
-.todo-text.completed {
-    text-decoration: line-through;
-    color: #999;
-}
-
-.delete-todo {
-    color: #EA4335;
-    background: none;
-    border: none;
-    font-size: clamp(16px, 3vw, 18px);
-    cursor: pointer;
-    padding: 0 10px;
-    transition: transform 0.2s ease;
-}
-
-.delete-todo:hover {
-    transform: scale(1.2);
-}
-
-.todo-stats {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 15px;
-    font-size: clamp(12px, 2.2vw, 14px);
-    color: #777;
-    flex-wrap: wrap;
-    gap: 10px;
-}
-
-.clear-btn {
-    background: none;
-    border: none;
-    color: #4285F4;
-    cursor: pointer;
-    font-size: clamp(12px, 2.2vw, 14px);
-    transition: transform 0.2s ease;
-}
-
-.clear-btn:hover {
-    transform: scale(1.05);
-}
-
-.hidden {
-    display: none !important;
-}
-
-.goals-section {
-    background-color: white;
-    border-radius: 12px;
-    padding: 4%;
-    margin-bottom: 20px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-}
-
-.goals-section h3 {
-    font-size: clamp(16px, 3vw, 18px);
-    margin-bottom: 10px;
-}
-
-.goal-inputs {
-    margin: 20px 0;
-}
-
-.goal-period {
-    display: flex;
-    align-items: center;
-    margin: 15px 0;
-    gap: 10px;
-    flex-wrap: wrap;
-}
-
-.goal-period h4 {
-    width: 100px;
-    font-size: clamp(14px, 2.5vw, 16px);
-}
-
-.goal-period input {
-    width: clamp(80px, 20vw, 100px);
-    padding: 8px;
-    border-radius: 8px;
-    border: 1px solid #ddd;
-    font-size: clamp(14px, 2.5vw, 16px);
-}
-
-.goal-period button {
-    background-color: #4285F4;
-    color: white;
-    font-size: clamp(12px, 2.2vw, 14px);
-}
-
-.goal-period button:hover {
-    background-color: #3367D6;
-}
-
-.goal-progress {
-    margin-top: 20px;
-}
-
-.progress-bar {
-    width: 100%;
-    height: clamp(15px, 3vw, 20px);
-    background-color: #eee;
-    border-radius: 10px;
-    overflow: hidden;
-    margin: 10px 0;
-}
-
-.progress-fill {
-    height: 100%;
-    background-color: #4285F4;
-    transition: width 0.5s ease-in-out;
-}
-
+let timerSeconds = 0;
+let timerInterval = null;
+let currentFilter = 'all';
+let selectedMood = null;
+let uploadedImage = null;
+let currentSelectedDate = null;
+let currentWeekOffset = 0;
+let currentSelectedSubject = null;
+let lastCheckedDate = new Date().toISOString().split('T')[0];
+
+window.ddays = [];
+
+const today = new Date();
+let currentDate = today.toISOString().split('T')[0];
+
+async function loadUserData(userId) {
+    const userRef = doc(db, "users", userId);
+    window.firestoreOnSnapshot(userRef, (doc) => {
+        if (doc.exists()) {
+            const data = doc.data();
+            window.subjects = data.subjects || [];
+            window.studyData = data.studyData || {};
+            window.subjectStudyTime = data.subjectStudyTime || {};
+            window.diaryData = data.diaryData || {};
+            window.todos = data.todos || [];
+            window.ddays = data.ddays || []; // D-Day 추가
+            window.goals = data.goals || { daily: null, weekly: null };
+            window.studySessions = data.studySessions || {};
+            window.nickname = data.nickname || 'User';
+            window.currentGroupCode = data.groupCode || null;
+            updateSubjectSelect();
+            updateSubjectTimes();
+            updateStudyTimeDisplay();
+            updateGoalsInputs();
+            updateGoalsProgress();
+            renderHome();
+            renderTodos();
+            renderGroupDashboard();
+        } else {
+            window.subjects = [];
+            window.studyData = {};
+            window.subjectStudyTime = {};
+            window.diaryData = {};
+            window.todos = [];
+            window.ddays = []; // D-Day 초기화
+            window.goals = { daily: null, weekly: null };
+            window.studySessions = {};
+            window.currentGroupCode = null;
+            updateSubjectSelect();
+            updateSubjectTimes();
+            updateStudyTimeDisplay();
+            updateGoalsInputs();
+            updateGoalsProgress();
+            renderHome();
+            renderTodos();
+            renderGroupDashboard();
+        }
+    }, (error) => {
+        console.error("Load failed:", error.code, error.message);
+    });
+}
+
+window.saveUserData = async function() {
+    if (!window.currentUser) return;
+    const userId = window.currentUser.uid;
+    const dataToSave = {
+        subjects: window.subjects || [],
+        studyData: window.studyData || {},
+        subjectStudyTime: window.subjectStudyTime || {},
+        diaryData: window.diaryData || {},
+        todos: window.todos || [],
+        ddays: window.ddays || [], // D-Day 추가
+        goals: window.goals || { daily: null, weekly: null },
+        studySessions: window.studySessions || {},
+        nickname: window.nickname || 'User',
+        groupCode: window.currentGroupCode || null
+    };
+    try {
+        await window.firestoreSetDoc(window.firestoreDoc(db, "users", userId), dataToSave, { merge: true });
+        console.log("Data saved successfully!");
+    } catch (error) {
+        console.error("Save failed:", error.code, error.message);
+        alert("Failed to save data: " + error.message);
+    }
+};
+
+function checkAndResetDailyData() {
+    const today = new Date().toISOString().split('T')[0];
+    if (today !== lastCheckedDate) {
+        currentDate = today;
+        window.studyData[currentDate] = 0;
+        window.subjects.forEach(subject => {
+            if (!window.subjectStudyTime[subject]) {
+                window.subjectStudyTime[subject] = {};
+            }
+            window.subjectStudyTime[subject][currentDate] = 0;
+        });
+        timerSeconds = 0;
+        if (timerInterval) clearInterval(timerInterval);
+        timerInterval = null;
+        lastCheckedDate = today;
+        updateStudyTimeDisplay();
+        updateSubjectTimes();
+        updateTimerDisplay();
+        renderHome();
+        window.saveUserData();
+    }
+}
+
+checkAndResetDailyData();
+
+setInterval(checkAndResetDailyData, 60000);
+
+function getMoodImage(mood) {
+    const moodImages = {
+        'happy': 'very_happy.png',
+        'calm': 'happy.png',
+        'neutral': 'calm.png',
+        'sad': 'sad.png',
+        'angry': 'angry.png'
+    };
+    return moodImages[mood] || 'very_happy.png';
+}
+
+function toggleDrawer() {
+    const navDrawer = document.querySelector('.nav-drawer');
+    const overlay = document.querySelector('.overlay');
+    navDrawer.classList.toggle('hidden');
+    overlay.classList.toggle('hidden');
+    overlay.classList.toggle('visible');
+}
+
+function closeDrawer() {
+    const navDrawer = document.querySelector('.nav-drawer');
+    const overlay = document.querySelector('.overlay');
+    navDrawer.classList.add('hidden');
+    overlay.classList.add('hidden');
+    overlay.classList.remove('visible');
+}
+
+
+function showScreen(screen, subTab = null) {
+    const screens = ['home', 'study', 'diary', 'todo', 'goals', 'stats', 'settings', 'groups'];
+    screens.forEach(s => {
+        const el = document.getElementById(`${s}Screen`);
+        el.classList.add('hidden');
+    });
+
+    const targetScreen = document.getElementById(`${screen}Screen`);
+    setTimeout(() => {
+        targetScreen.classList.remove('hidden');
+    }, 50);
+
+    const navMapping = {
+        'home': 'Home',
+        'study': 'Study',
+        'todo': 'To-Do',
+        'diary': 'Journal',
+        'goals': 'Goals',
+        'stats': 'Statistics',
+        'settings': 'Settings',
+        'groups': 'Groups'
+    };
+
+    document.querySelectorAll('.nav-item').forEach(btn => {
+        btn.classList.remove('active');
+        if (navMapping[screen] && btn.textContent.trim() === navMapping[screen]) {
+            btn.classList.add('active');
+        }
+    });
+
+    closeDrawer();
+
+    if (screen === 'home') {
+        renderHome();
+    } else if (screen === 'study') {
+        updateStudyTimeDisplay();
+        updateSubjectSelect();
+        updateSubjectTimes();
+        updateTimerDisplay();
+        if (currentSelectedSubject) {
+            document.getElementById('subjectSelect').value = currentSelectedSubject;
+        }
+    } else if (screen === 'diary') {
+        document.getElementById('diaryDate').value = currentDate;
+        document.getElementById('memoInput').value = '';
+        document.querySelectorAll('.mood-bean').forEach(bean => bean.classList.remove('selected'));
+        selectedMood = null;
+        uploadedImage = null;
+        document.getElementById('imagePreview').innerHTML = '';
+        loadDiaryData(currentDate);
+    } else if (screen === 'todo') {
+        renderTodos();
+        showTodoTab(subTab || 'todo');
+    } else if (screen === 'goals') {
+        updateGoalsInputs();
+        updateGoalsProgress();
+    } else if (screen === 'stats') {
+        renderStats();
+    } else if (screen === 'settings') {
+        loadSettings();
+        document.getElementById('logout-btn').style.display = window.currentUser ? 'block' : 'none';
+    } else if (screen === 'groups') {
+        document.getElementById('groupNameInput').value = '';
+        document.getElementById('groupCodeInput').value = '';
+        document.getElementById('groupPasswordInput').value = '';
+        document.getElementById('groupPasswordInputJoin').value = '';
+        document.getElementById('groupCreateError').classList.add('hidden');
+        document.getElementById('groupJoinError').classList.add('hidden');
+        document.getElementById('groupCodeDisplay').classList.add('hidden');
+        renderGroupContent();
+    }
+}
+
+function renderHome() {
+    const year = today.getFullYear();
+    const month = today.getMonth();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const firstDay = new Date(year, month, 1).getDay();
+
+    document.getElementById('calendarTitle').textContent = `${year} ${getMonthName(month)} Records`;
+    const calendar = document.getElementById('calendar');
+    calendar.innerHTML = '';
+
+    for (let i = 0; i < firstDay; i++) {
+        calendar.innerHTML += `<div class="day-cell"></div>`;
+    }
+
+    for (let i = 1; i <= daysInMonth; i++) {
+        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+        const hasDiary = window.diaryData[dateStr]?.mood ? true : false;
+        let dayContent = i;
+        
+        if (hasDiary) {
+            const mood = window.diaryData[dateStr].mood;
+            dayContent = `<img src="${getMoodImage(mood)}" alt="${mood}" style="width: 100%; height: 100%; object-fit: contain;">`;
+        }
+        
+        calendar.innerHTML += `
+            <div class="day-cell ${hasDiary ? 'sticker' : ''}" onclick="toggleDayDetails('${dateStr}')">
+                ${dayContent}
+            </div>`;
+    }
+
+    const studyTime = (window.studyData && window.studyData[currentDate]) || 0;
+    const hours = Math.floor(studyTime / 3600);
+    const minutes = Math.floor((studyTime % 3600) / 60);
+    const seconds = studyTime % 60;
+    document.getElementById('dashboardStudyTime').textContent = `${hours}h ${minutes}m ${seconds}s`;
+
+    const todoPreview = document.getElementById('dashboardTodoPreview');
+    todoPreview.innerHTML = '';
+    const activeTodos = window.todos.filter(todo => !todo.completed);
+    const completedTodos = window.todos.filter(todo => todo.completed);
+    const sortedTodos = [...activeTodos, ...completedTodos];
+    sortedTodos.slice(0, 5).forEach(todo => {
+        const li = document.createElement('li');
+        li.textContent = todo.text;
+        if (todo.completed) li.classList.add('completed');
+        todoPreview.appendChild(li);
+    });
+    if (sortedTodos.length === 0) {
+        todoPreview.innerHTML = '<li>No tasks yet</li>';
+    }
+
+    const diaryPreview = document.getElementById('dashboardDiary');
+    diaryPreview.innerHTML = '';
+    const recentDates = Object.keys(window.diaryData).sort().reverse().slice(0, 1);
+    if (recentDates.length > 0) {
+        const date = recentDates[0];
+        const entry = window.diaryData[date];
+        diaryPreview.innerHTML = `
+            <p><strong>${date}</strong></p>
+            <p>Mood: ${entry.mood}</p>
+            <p>${entry.memo.substring(0, 50)}${entry.memo.length > 50 ? '...' : ''}</p>
+        `;
+    } else {
+        diaryPreview.innerHTML = '<p>No recent entries</p>';
+    }
+
+    const goalProgress = document.getElementById('dashboardGoalProgress');
+    goalProgress.innerHTML = '';
+    
+    const todayTodos = window.todos.filter(todo => 
+        new Date(todo.createdAt).toISOString().split('T')[0] === currentDate);
+    const completedTodayTodos = todayTodos.filter(todo => todo.completed).length;
+    const totalTodayTodos = todayTodos.length;
+    goalProgress.innerHTML += `
+        <p>Today's Tasks: ${completedTodayTodos}/${totalTodayTodos} completed</p>
+    `;
+
+    if (window.goals.daily !== null) {
+        const dailyTime = (window.studyData && window.studyData[currentDate]) || 0;
+        const dailyPercentage = Math.min(Math.round((dailyTime / window.goals.daily) * 100), 100);
+        const hours = Math.floor(dailyTime / 3600);
+        const minutes = Math.floor((dailyTime % 3600) / 60);
+        goalProgress.innerHTML += `
+            <p>Daily Study: ${hours}h ${minutes}m / ${Math.floor(window.goals.daily / 3600)}h (${dailyPercentage}%)</p>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: ${dailyPercentage}%"></div>
+            </div>
+        `;
+    }
+    if (window.goals.weekly !== null) {
+        const weeklyTime = calculateWeeklyStudyTime();
+        const weeklyPercentage = Math.min(Math.round((weeklyTime / window.goals.weekly) * 100), 100);
+        const hours = Math.floor(weeklyTime / 3600);
+        const minutes = Math.floor((weeklyTime % 3600) / 60);
+        goalProgress.innerHTML += `
+            <p>Weekly Study: ${hours}h ${minutes}m / ${Math.floor(window.goals.weekly / 3600)}h (${weeklyPercentage}%)</p>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: ${weeklyPercentage}%"></div>
+            </div>
+        `;
+    }
+    if (window.goals.daily === null && window.goals.weekly === null && totalTodayTodos === 0) {
+        goalProgress.innerHTML = '<p>No goals or tasks set</p>';
+    }
+
+    const ddayPreview = document.getElementById('dashboardDDayPreview');
+    ddayPreview.innerHTML = '';
+    const sortedDDays = window.ddays
+        .filter(dday => new Date(dday.date) >= new Date(currentDate))
+        .sort((a, b) => new Date(a.date) - new Date(b.date));
+    if (sortedDDays.length > 0) {
+        const nearestDDay = sortedDDays[0];
+        const daysLeft = Math.ceil((new Date(nearestDDay.date) - new Date(currentDate)) / (1000 * 60 * 60 * 24));
+        ddayPreview.innerHTML = `
+            <p><strong>${nearestDDay.name}</strong></p>
+            <p>${nearestDDay.date} (${daysLeft} days left)</p>
+        `;
+    } else {
+        ddayPreview.innerHTML = '<p>No D-Days set</p>';
+    }
+}
+
+function getWeekStartDate(offset) {
+    const today = new Date();
+    const dayOfWeek = today.getDay();
+    const diff = today.getDate() - dayOfWeek + (offset * 7);
+    const weekStart = new Date(today.getFullYear(), today.getMonth(), diff);
+    weekStart.setHours(0, 0, 0, 0);
+    return weekStart;
+}
+
+function changeWeek(offset) {
+    currentWeekOffset += offset;
+    renderStats();
+}
+
+function showStatsDetails(dateStr) {
+    const selectedDate = new Date(dateStr);
+    selectedDate.setDate(selectedDate.getDate() + 1);
+    const nextDayStr = selectedDate.toISOString().split('T')[0];
+    
+    currentSelectedDate = nextDayStr;
+    const statsDetails = document.getElementById('statsDetails');
+    document.getElementById('statsSelectedDate').textContent = nextDayStr;
+
+    const studyTime = (window.studyData && window.studyData[nextDayStr]) || 0;
+    const hours = Math.floor(studyTime / 3600);
+    const minutes = Math.floor((studyTime % 3600) / 60);
+    const seconds = studyTime % 60;
+    document.getElementById('statsStudyTime').textContent = 
+        `Total Study Time: ${hours}h ${minutes}m ${seconds}s`;
+
+    const statsSubjects = document.getElementById('statsSubjects');
+    statsSubjects.innerHTML = '';
+
+    statsSubjects.innerHTML += '<h4>To-Do Statistics</h4>';
+    const dayTodos = window.todos.filter(todo => 
+        new Date(todo.createdAt).toISOString().split('T')[0] === nextDayStr);
+    const completedTodos = dayTodos.filter(todo => todo.completed).length;
+    const totalTodos = dayTodos.length;
+    statsSubjects.innerHTML += `
+        <div class="subject-stat">
+            <span>Completed Tasks</span>
+            <span>${completedTodos}/${totalTodos}</span>
+        </div>
+    `;
+
+    const statsDiary = document.getElementById('statsDiary');
+    statsDiary.innerHTML = '<h4>Journal Entry</h4>';
+    const diaryEntry = window.diaryData[nextDayStr];
+    if (diaryEntry) {
+        statsDiary.innerHTML += `
+            <p>Mood: ${diaryEntry.mood}</p>
+            <p>${diaryEntry.memo}</p>
+            ${diaryEntry.image ? `<img src="${diaryEntry.image}" alt="Diary Image">` : ''}
+        `;
+    } else {
+        statsDiary.innerHTML += '<p>No journal entry for this day.</p>';
+    }
+
+    statsDetails.classList.remove('hidden');
+    document.querySelectorAll('.week-day').forEach(day => {
+        day.classList.remove('selected');
+        if (day.onclick.toString().includes(`'${dateStr}'`)) day.classList.add('selected');
+    });
+}
+
+function getMonthName(month) {
+    const months = ['January', 'February', 'March', 'April', 'May', 'June', 
+                   'July', 'August', 'September', 'October', 'November', 'December'];
+    return months[month];
+}
+
+function toggleDayDetails(date) {
+    const dayDetails = document.getElementById('dayDetails');
+    
+    if (currentSelectedDate === date && !dayDetails.classList.contains('hidden')) {
+        dayDetails.classList.add('hidden');
+        currentSelectedDate = null;
+        return;
+    }
+
+    currentSelectedDate = date;
+    const studyTime = (window.studyData && window.studyData[date]) || 0;
+    const hours = Math.floor(studyTime / 3600);
+    const minutes = Math.floor((studyTime % 3600) / 60);
+    const seconds = studyTime % 60;
+    const memo = window.diaryData[date]?.memo || '';
+    const image = window.diaryData[date]?.image || null;
+
+    document.getElementById('selectedDate').textContent = date;
+    document.getElementById('studyTimeDetail').textContent = `${hours}h ${minutes}m ${seconds}s`;
+    
+    const memoDetail = document.getElementById('memoDetail');
+    if (memo) {
+        memoDetail.textContent = `Memo: ${memo}`;
+        memoDetail.classList.remove('hidden');
+    } else {
+        memoDetail.classList.add('hidden');
+    }
+
+    const imagePreview = document.getElementById('dayImagePreview');
+    imagePreview.innerHTML = '';
+    if (image) {
+        imagePreview.innerHTML = `<img src="${image}" alt="Diary Image">`;
+    }
+    
+    dayDetails.classList.remove('hidden');
+}
+
+function updateStudyTimeDisplay() {
+    const studyTime = window.studyData[currentDate] || 0;
+    const hours = Math.floor(studyTime / 3600);
+    const minutes = Math.floor((studyTime % 3600) / 60);
+    const seconds = studyTime % 60;
+    document.getElementById('dailyStudyTime').textContent = `${hours}h ${minutes}m ${seconds}s`;
+    if (document.getElementById('dashboardStudyTime')) {
+        document.getElementById('dashboardStudyTime').textContent = `${hours}h ${minutes}m ${seconds}s`;
+    }
+}
+
+function startTimer() {
+    const selectedSubject = document.getElementById('subjectSelect').value;
+
+    if (!timerInterval && !selectedSubject) {
+        alert('Please select a subject!');
+        return;
+    }
+
+    if (!timerInterval && selectedSubject) {
+        currentSelectedSubject = selectedSubject;
+        const startTime = new Date();
+        timerInterval = setInterval(() => {
+            timerSeconds++;
+            updateTimerDisplay();
+
+            if (timerSeconds % 1 === 0 && window.currentGroupCode) {
+                const groupRef = window.firestoreDoc(window.firestoreDb, "groups", window.currentGroupCode);
+                window.firestoreGetDoc(groupRef).then(groupDoc => {
+                    if (groupDoc.exists()) {
+                        const groupData = groupDoc.data();
+                        const tempStudyTime = (window.studyData[currentDate] || 0) + timerSeconds;
+                        window.firestoreSetDoc(groupRef, {
+                            members: {
+                                ...groupData.members,
+                                [window.currentUser.uid]: {
+                                    nickname: window.nickname,
+                                    studyTime: tempStudyTime
+                                }
+                            }
+                        }, { merge: true });
+                    }
+                });
+            }
+        }, 1000);
+
+        if (!window.studySessions[currentDate]) {
+            window.studySessions[currentDate] = [];
+        }
+        window.studySessions[currentDate].push({
+            subject: selectedSubject,
+            startTime: startTime.toISOString(),
+            endTime: null,
+            duration: 0
+        });
+    }
+}
+
+async function stopTimer() {
+    const selectedSubject = document.getElementById('subjectSelect').value;
+    if (!selectedSubject || !timerInterval) return;
+
+    clearInterval(timerInterval);
+    timerInterval = null;
+
+    if (!window.subjectStudyTime[selectedSubject]) {
+        window.subjectStudyTime[selectedSubject] = {};
+    }
+    window.subjectStudyTime[selectedSubject][currentDate] = 
+        (window.subjectStudyTime[selectedSubject][currentDate] || 0) + timerSeconds;
+
+    window.studyData[currentDate] = window.subjects.reduce((total, subject) => {
+        return total + (window.subjectStudyTime[subject]?.[currentDate] || 0);
+    }, 0);
+
+    const lastSession = window.studySessions[currentDate]?.slice(-1)[0];
+    if (lastSession && lastSession.subject === selectedSubject && !lastSession.endTime) {
+        lastSession.endTime = new Date().toISOString();
+        lastSession.duration = timerSeconds;
+    }
+
+    if (window.currentGroupCode) {
+        const groupRef = window.firestoreDoc(window.firestoreDb, "groups", window.currentGroupCode);
+        const groupDoc = await window.firestoreGetDoc(groupRef);
+        if (groupDoc.exists()) {
+            const groupData = groupDoc.data();
+            const updatedMembers = {
+                ...groupData.members,
+                [window.currentUser.uid]: {
+                    nickname: window.nickname,
+                    studyTime: window.studyData[currentDate] || 0
+                }
+            };
+            await window.firestoreSetDoc(groupRef, { members: updatedMembers }, { merge: true });
+        }
+    }
+
+    timerSeconds = 0;
+    await window.saveUserData();
+    updateTimerDisplay();
+    updateStudyTimeDisplay();
+    updateSubjectTimes();
+    updateGoalsProgress();
+    renderHome();
+
+    document.getElementById('subjectSelect').value = currentSelectedSubject;
+}
+
+async function saveDiary() {
+    const date = document.getElementById('diaryDate').value;
+    const memo = document.getElementById('memoInput').value.trim();
+    if (!date || !selectedMood || !memo) {
+        if (!selectedMood) alert('Please select your mood for today!');
+        if (!memo) alert('Please write a memo for your journal entry!');
+        return;
+    }
+
+    window.diaryData[date] = { 
+        mood: selectedMood,
+        memo: memo, 
+        image: uploadedImage || window.diaryData[date]?.image || null 
+    };
+    await window.saveUserData();
+    renderHome();
+    document.getElementById('memoInput').value = '';
+    document.getElementById('diaryImage').value = '';
+    document.querySelectorAll('.mood-bean').forEach(bean => bean.classList.remove('selected'));
+    selectedMood = null;
+    uploadedImage = null;
+    document.getElementById('imagePreview').innerHTML = '';
+    alert('Journal entry saved!');
+}
+
+function renderTodos() {
+    const todoList = document.getElementById('todoList');
+    const todoCount = document.getElementById('todoCount');
+    
+    let filteredTodos = [];
+    if (currentFilter === 'all') filteredTodos = window.todos;
+    else if (currentFilter === 'active') filteredTodos = window.todos.filter(todo => !todo.completed);
+    else if (currentFilter === 'completed') filteredTodos = window.todos.filter(todo => todo.completed);
+
+    todoList.innerHTML = '';
+    
+    filteredTodos.forEach(todo => {
+        const todoItem = document.createElement('li');
+        todoItem.className = 'todo-item';
+        todoItem.innerHTML = `
+            <input type="checkbox" class="todo-checkbox" 
+                   ${todo.completed ? 'checked' : ''} 
+                   onclick="toggleTodo(${todo.id})">
+            <span class="todo-text ${todo.completed ? 'completed' : ''}">${todo.text}</span>
+            <button class="delete-todo" onclick="deleteTodo(${todo.id})">×</button>
+        `;
+        todoList.appendChild(todoItem);
+    });
+    
+    const activeTodos = window.todos.filter(todo => !todo.completed);
+    todoCount.textContent = `${activeTodos.length} task${activeTodos.length !== 1 ? 's' : ''} remaining`;
+    renderHome();
+}
+
+async function toggleTodo(id) {
+    window.todos = window.todos.map(todo => {
+        if (todo.id === id) return { ...todo, completed: !todo.completed };
+        return todo;
+    });
+    await window.saveUserData();
+    renderTodos();
+}
+
+async function deleteTodo(id) {
+    window.todos = window.todos.filter(todo => todo.id !== id);
+    await window.saveUserData();
+    renderTodos();
+}
+
+async function saveGoal(type) {
+    const input = document.getElementById(`${type}Goal`);
+    const value = parseInt(input.value);
+    
+    if (!isNaN(value) && value >= 0) {
+        window.goals[type] = value * 3600;
+        await window.saveUserData();
+        updateGoalsProgress();
+        renderHome();
+        alert(`${type.charAt(0).toUpperCase() + type.slice(1)} goal saved!`);
+    } else {
+        alert('Please enter a valid number of hours.');
+    }
+}
+
+async function addSubject() {
+    const subjectInput = document.getElementById('subjectInput');
+    const subjectName = subjectInput.value.trim();
+    if (subjectName && !window.subjects.includes(subjectName)) {
+        window.subjects.push(subjectName);
+        if (!window.subjectStudyTime[subjectName]) {
+            window.subjectStudyTime[subjectName] = {};
+        }
+        window.subjectStudyTime[subjectName][currentDate] = 0;
+        await window.saveUserData();
+        updateSubjectSelect();
+        updateSubjectTimes();
+        subjectInput.value = '';
+    } else if (window.subjects.includes(subjectName)) {
+        alert('Subject already exists!');
+    } else {
+        alert('Please enter a valid subject name!');
+    }
+}
+
+async function deleteSubject(subjectName) {
+    if (window.subjects.includes(subjectName)) {
+        window.subjects = window.subjects.filter(subject => subject !== subjectName);
+        if (window.subjectStudyTime[subjectName]) delete window.subjectStudyTime[subjectName];
+        await window.saveUserData();
+        updateSubjectSelect();
+        updateSubjectTimes();
+    }
+}
+
+function updateSubjectSelect() {
+    const subjectSelect = document.getElementById('subjectSelect');
+    subjectSelect.innerHTML = '<option value="">Select a subject</option>';
+    window.subjects.forEach(subject => {
+        subjectSelect.innerHTML += `<option value="${subject}">${subject}</option>`;
+    });
+}
+
+function updateSubjectTimes() {
+    const subjectTimesDiv = document.getElementById('subjectTimes');
+    subjectTimesDiv.innerHTML = '';
+    window.subjects.forEach(subject => {
+        const time = window.subjectStudyTime[subject]?.[currentDate] || 0;
+        const hours = Math.floor(time / 3600);
+        const minutes = Math.floor((time % 3600) / 60);
+        const seconds = time % 60;
+        subjectTimesDiv.innerHTML += `
+            <div class="subject-time">
+                ${subject}: ${hours}h ${minutes}m ${seconds}s
+                <button class="delete-subject-btn" onclick="deleteSubject('${subject}')" title="Delete Subject">×</button>
+            </div>
+        `;
+    });
+}
+
+function pauseTimer() {
+    clearInterval(timerInterval);
+    timerInterval = null;
+}
+
+function updateTimerDisplay() {
+    const hours = Math.floor(timerSeconds / 3600);
+    const minutes = Math.floor((timerSeconds % 3600) / 60);
+    const seconds = timerSeconds % 60;
+    const timerDisplay = document.getElementById('timerDisplay');
+    timerDisplay.textContent = 
+        `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+}
+
+function selectMood(mood) {
+    document.querySelectorAll('.mood-bean').forEach(bean => bean.classList.remove('selected'));
+    document.querySelector(`.mood-bean.${mood}`).classList.add('selected');
+    selectedMood = mood;
+}
+
+function triggerFileInput() {
+    const fileInput = document.getElementById('diaryImage');
+    fileInput.click();
+}
+
+document.getElementById('diaryImage').addEventListener('change', function() {
+    uploadImage();
+});
+
+function uploadImage() {
+    const fileInput = document.getElementById('diaryImage');
+    const file = fileInput.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.on = function(e) {
+            upedImage = e.target.result;
+            const preview = document.getElementById('imagePreview');
+            preview.innerHTML = `<img src="${upedImage}" alt="Uped Image">`;
+        };
+        reader.readAsDataURL(file);
+        fileInput.value = '';
+    }
+}
+
+function DiaryData(selectedDate) {
+    const diaryEntry = window.diaryData[selectedDate];
+    
+    document.querySelectorAll('.mood-bean').forEach(bean => bean.classList.remove('selected'));
+    document.getElementById('memoInput').value = '';
+    document.getElementById('imagePreview').innerHTML = '';
+    selectedMood = null;
+    upedImage = null;
+    
+    if (diaryEntry) {
+        const mood = diaryEntry.mood;
+        if (mood) {
+            document.querySelector(`.mood-bean.${mood}`).classList.add('selected');
+            selectedMood = mood;
+        }
+        
+        document.getElementById('memoInput').value = diaryEntry.memo || '';
+        if (diaryEntry.image) {
+            document.getElementById('imagePreview').innerHTML = `<img src="${diaryEntry.image}" alt="Diary Image">`;
+            upedImage = diaryEntry.image;
+        }
+    }
+}
+
+async function addTodo() {
+    const todoInput = document.getElementById('todoInput');
+    const todoText = todoInput.value.trim();
+    
+    if (todoText) {
+        const newTodo = {
+            id: Date.now(),
+            text: todoText,
+            completed: false,
+            createdAt: new Date().toISOString()
+        };
+        window.todos.push(newTodo);
+        await window.saveUserData();
+        todoInput.value = '';
+        renderTodos();
+    }
+}
+
+function filterTasks(filter) {
+    currentFilter = filter;
+    
+    document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelector(`.filter-btn[onclick="filterTasks('${filter}')"]`).classList.add('active');
+    renderTodos();
+}
+
+async function clearCompleted() {
+    window.todos = window.todos.filter(todo => !todo.completed);
+    await window.saveUserData();
+    renderTodos();
+}
+
+function updateGoalsInputs() {
+    if (window.goals.daily !== null) document.getElementById('dailyGoal').value = Math.floor(window.goals.daily / 3600);
+    if (window.goals.weekly !== null) document.getElementById('weeklyGoal').value = Math.floor(window.goals.weekly / 3600);
+}
+
+function updateGoalsProgress() {
+    const progressDiv = document.getElementById('goalProgress');
+    progressDiv.innerHTML = '';
+    
+    if (window.goals.daily !== null) {
+        const dailyTime = (window.studyData && window.studyData[currentDate]) || 0;
+        const dailyPercentage = Math.min(Math.round((dailyTime / window.goals.daily) * 100), 100);
+        const hours = Math.floor(dailyTime / 3600);
+        const minutes = Math.floor((dailyTime % 3600) / 60);
+        
+        progressDiv.innerHTML += `
+            <h4>Daily Goal Progress (${hours}h ${minutes}m of ${Math.floor(window.goals.daily / 3600)}h)</h4>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: ${dailyPercentage}%"></div>
+            </div>
+            <p>${dailyPercentage}% Complete</p>
+        `;
+    }
+    
+    if (window.goals.weekly !== null) {
+        const weeklyTime = calculateWeeklyStudyTime();
+        const weeklyPercentage = Math.min(Math.round((weeklyTime / window.goals.weekly) * 100), 100);
+        const hours = Math.floor(weeklyTime / 3600);
+        const minutes = Math.floor((weeklyTime % 3600) / 60);
+        
+        progressDiv.innerHTML += `
+            <h4 style="margin-top: 20px;">Weekly Goal Progress (${hours}h ${minutes}m of ${Math.floor(window.goals.weekly / 3600)}h)</h4>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: ${weeklyPercentage}%"></div>
+            </div>
+            <p>${weeklyPercentage}% Complete</p>
+        `;
+    }
+    
+    if (window.goals.daily === null && window.goals.weekly === null) {
+        progressDiv.innerHTML = '<p>No goals set yet. Set your daily and weekly goals above.</p>';
+    }
+}
+
+function calculateWeeklyStudyTime() {
+    const currentDay = new Date(currentDate);
+    let totalTime = 0;
+    const dayOfWeek = currentDay.getDay();
+    const startDate = new Date(currentDay);
+    startDate.setDate(currentDay.getDate() - dayOfWeek);
+    
+    for (let i = 0; i <= 6; i++) {
+        const date = new Date(startDate);
+        date.setDate(startDate.getDate() + i);
+        const dateString = date.toISOString().split('T')[0];
+        totalTime += (window.studyData && window.studyData[dateString]) || 0;
+    }
+    
+    return totalTime;
+}
+
+async function resetAllSettings() {
+    if (confirm('Are you sure you want to reset all settings? This will clear all your data.')) {
+        if (window.currentUser) {
+            const userRef = window.firestoreDoc(window.firestoreDb, "users", window.currentUser.uid);
+            try {
+                await window.firestoreSetDoc(userRef, {
+                    subjects: [],
+                    studyData: {},
+                    subjectStudyTime: {},
+                    diaryData: {},
+                    todos: [],
+                    ddays: [], // D-Day 초기화
+                    goals: { daily: null, weekly: null },
+                    studySessions: {},
+                    nickname: window.nickname,
+                    groupCode: null
+                });
+                window.subjects = [];
+                window.studyData = {};
+                window.subjectStudyTime = {};
+                window.diaryData = {};
+                window.todos = [];
+                window.ddays = [];
+                window.goals = { daily: null, weekly: null };
+                window.studySessions = {};
+                window.currentGroupCode = null;
+                timerSeconds = 0;
+                if (timerInterval) clearInterval(timerInterval);
+                timerInterval = null;
+                currentFilter = 'all';
+                selectedMood = null;
+                uploadedImage = null;
+                currentWeekOffset = 0;
+                updateSubjectSelect();
+                updateSubjectTimes();
+                updateStudyTimeDisplay();
+                updateTimerDisplay();
+                updateGoalsInputs();
+                updateGoalsProgress();
+                renderHome();
+                renderTodos();
+                document.getElementById('dayDetails').classList.add('hidden');
+                document.getElementById('subjectInput').value = '';
+                document.getElementById('todoInput').value = '';
+                document.getElementById('diaryDate').value = currentDate;
+                document.getElementById('memoInput').value = '';
+                document.getElementById('diaryImage').value = '';
+                document.getElementById('imagePreview').innerHTML = '';
+                document.querySelectorAll('.mood-bean').forEach(bean => bean.classList.remove('selected'));
+                showScreen('home');
+                alert('All settings have been reset.');
+            } catch (error) {
+                console.error('데이터 초기화 실패:', error.code, error.message);
+            }
+        }
+    }
+}
+
+document.getElementById('ddayNameInput').addEventListener('keypress', function(event) {
+    if (event.key === 'Enter') {
+        event.preventDefault();
+        addDDay();
+    }
+});
+
+function loadSettings() {
+    const nicknameInput = document.getElementById('settingsNicknameInput');
+    const error = document.getElementById('settingsNicknameError');
+    nicknameInput.value = window.nickname || 'User';
+    error.classList.add('hidden');
+    document.getElementById('logout-btn').style.display = window.currentUser ? 'block' : 'none';
+}
+
+async function changeNickname() {
+    const nicknameInput = document.getElementById('settingsNicknameInput');
+    const error = document.getElementById('settingsNicknameError');
+    const newNickname = nicknameInput.value.trim();
+
+    if (newNickname.length < 2 || newNickname.length > 20) {
+        error.textContent = 'Nickname must be between 2 and 20 characters.';
+        error.classList.remove('hidden');
+        return;
+    }
+
+    if (!window.currentUser) {
+        error.textContent = 'You must be logged in to change your nickname.';
+        error.classList.remove('hidden');
+        return;
+    }
+
+    try {
+        const userRef = window.firestoreDoc(window.firestoreDb, "users", window.currentUser.uid);
+        await window.firestoreSetDoc(userRef, { nickname: newNickname }, { merge: true });
+        window.nickname = newNickname;
+        error.classList.add('hidden');
+        alert(`Nickname changed to "${newNickname}"!`);
+    } catch (err) {
+        error.textContent = `Error: ${err.message}`;
+        error.classList.remove('hidden');
+        console.error('Nickname change error:', err);
+    }
+}
+
+document.getElementById('diaryDate').addEventListener('change', function() {
+    const selectedDate = this.value;
+    loadDiaryData(selectedDate);
+});
+
+document.getElementById('subjectInput').addEventListener('keypress', function(event) {
+    if (event.key === 'Enter') {
+        event.preventDefault();
+        addSubject();
+    }
+});
+
+document.getElementById('todoInput').addEventListener('keypress', function(event) {
+    if (event.key === 'Enter') {
+        event.preventDefault();
+        addTodo();
+    }
+});
+
+document.getElementById('settingsNicknameInput').addEventListener('keypress', function(event) {
+    if (event.key === 'Enter') {
+        event.preventDefault();
+        changeNickname();
+    }
+});
+
+const style = document.createElement('style');
+style.textContent = `
 .delete-subject-btn {
     background: none;
     border: none;
     color: #EA4335;
     cursor: pointer;
-    font-size: clamp(14px, 2.5vw, 16px);
+    font-size: 16px;
     margin-left: 8px;
     padding: 2px 6px;
     border-radius: 50%;
-    transition: transform 0.2s ease;
 }
-
 .delete-subject-btn:hover {
     background-color: rgba(234, 67, 53, 0.1);
-    transform: scale(1.2);
 }
-
 .subject-time {
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 5px 0;
 }
+`;
 
-.main-content .container > section {
-    opacity: 0;
-    transform: translateY(20px);
-    transition: opacity 0.3s ease, transform 0.3s ease;
+function generateGroupCode() {
+    return Math.random().toString(36).substr(2, 6).toUpperCase();
 }
 
-.main-content .container > section:not(.hidden) {
-    opacity: 1;
-    transform: translateY(0);
-}
-
-.settings-section {
-    background-color: white;
-    border-radius: 12px;
-    padding: 4%;
-    margin-bottom: 20px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-    text-align: center;
-}
-
-.settings-section h3 {
-    font-size: clamp(16px, 3vw, 18px);
-    margin-bottom: 20px;
-    color: #4285F4;
-}
-
-.nickname-section {
-    margin: 20px 0;
-}
-
-.nickname-section h4 {
-    font-size: clamp(14px, 2.5vw, 16px);
-    margin-bottom: 15px;
-}
-
-.nickname-section div {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-}
-
-#settingsNicknameInput {
-    flex: 1;
-    padding: clamp(8px, 2vw, 12px);
-    border-radius: 8px;
-    border: 1px solid #ddd;
-    font-size: clamp(14px, 2.5vw, 16px);
-    height: clamp(36px, 4vw, 44px);
-    box-sizing: border-box;
-}
-
-.nickname-save-btn {
-    width: 25%;
-    background-color: #4285F4;
-    color: white;
-    font-size: clamp(14px, 2.5vw, 16px);
-    padding: clamp(8px, 2vw, 12px);
-    border-radius: 8px;
-    border: none;
-    cursor: pointer;
-    transition: transform 0.2s ease, background-color 0.3s ease;
-    height: clamp(36px, 4vw, 44px);
-    box-sizing: border-box;
-}
-
-.nickname-save-btn:hover {
-    background-color: #3367D6;
-    transform: scale(1.05);
-}
-
-.save-button {
-    width: 100%;
-    padding: clamp(10px, 2.5vw, 15px);
-    border-radius: 25px;
-    background-color: #4285F4;
-    color: white;
-    font-size: clamp(14px, 2.5vw, 16px);
-    font-weight: bold;
-    margin-top: 20px;
-    border: none;
-    cursor: pointer;
-    transition: transform 0.2s ease, background-color 0.3s ease;
-}
-
-.save-button:hover {
-    background-color: #3367D6;
-    transform: scale(1.05);
-}
-
-@media (max-width: 576px) {
-    .header {
-        height: 50px;
-        padding: 0 15px;
+async function createGroup() {
+    if (!window.currentUser) {
+        alert('You must be logged in to create a group.');
+        return;
     }
-    .logo img {
-        height: 30px;
+
+    const groupNameInput = document.getElementById('groupNameInput');
+    const groupPasswordInput = document.getElementById('groupPasswordInput');
+    const groupName = groupNameInput.value.trim();
+    const groupPassword = groupPasswordInput.value.trim();
+    const error = document.getElementById('groupCreateError');
+
+    if (!groupName) {
+        error.textContent = 'Please enter a group name.';
+        error.classList.remove('hidden');
+        return;
     }
-    .hamburger-icon {
-        font-size: 25px;
-    }
-    .nav-drawer {
-        top: 50px;
-        width: 200px;
-        height: calc(100% - 50px);
-    }
-    .nav-drawer:not(.hidden) {
-        right: 0;
+
+    const groupCode = generateGroupCode();
+    const groupRef = window.firestoreDoc(window.firestoreDb, "groups", groupCode);
+
+    try {
+        const groupDoc = await window.firestoreGetDoc(groupRef);
+        if (groupDoc.exists()) {
+            error.textContent = 'Group code already exists. Try again.';
+            error.classList.remove('hidden');
+            return;
+        }
+
+        await window.firestoreSetDoc(groupRef, {
+            name: groupName,
+            password: groupPassword || null,
+            members: {
+                [window.currentUser.uid]: {
+                    nickname: window.nickname,
+                    studyTime: (window.studyData && window.studyData[currentDate]) || 0
+                }
+            },
+            messages: [],
+            createdAt: new Date().toISOString()
+        });
+
+        window.currentGroupCode = groupCode;
+        groupNameInput.value = '';
+        groupPasswordInput.value = '';
+        document.getElementById('groupCodeDisplay').textContent = `Group Code: ${groupCode}`;
+        document.getElementById('groupCodeDisplay').classList.remove('hidden');
+        error.classList.add('hidden');
+        await window.saveUserData();
+        renderGroupContent();
+    } catch (err) {
+        error.textContent = `Error: ${err.message}`;
+        error.classList.remove('hidden');
+        console.error('Group creation error:', err);
     }
 }
 
-.drawer-content {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+async function joinGroup() {
+    if (!window.currentUser) {
+        alert('You must be logged in to join a group.');
+        return;
+    }
+
+    const groupCodeInput = document.getElementById('groupCodeInput');
+    const groupPasswordInputJoin = document.getElementById('groupPasswordInputJoin');
+    const groupCode = groupCodeInput.value.trim().toUpperCase();
+    const groupPassword = groupPasswordInputJoin.value.trim();
+    const error = document.getElementById('groupJoinError');
+
+    if (groupCode.length !== 6) {
+        error.textContent = 'Please enter a valid 6-digit code.';
+        error.classList.remove('hidden');
+        return;
+    }
+
+    const groupRef = window.firestoreDoc(window.firestoreDb, "groups", groupCode);
+    try {
+        const groupDoc = await window.firestoreGetDoc(groupRef);
+        if (!groupDoc.exists()) {
+            error.textContent = 'Group not found.';
+            error.classList.remove('hidden');
+            return;
+        }
+
+        const groupData = groupDoc.data();
+
+        if (groupData.password !== null && groupData.password !== groupPassword) {
+            error.textContent = 'Incorrect password.';
+            error.classList.remove('hidden');
+            return;
+        }
+
+        await window.firestoreSetDoc(groupRef, {
+            members: {
+                ...groupData.members,
+                [window.currentUser.uid]: {
+                    nickname: window.nickname,
+                    studyTime: (window.studyData && window.studyData[currentDate]) || 0
+                }
+            }
+        }, { merge: true });
+
+        window.currentGroupCode = groupCode;
+        groupCodeInput.value = '';
+        groupPasswordInputJoin.value = '';
+        error.classList.add('hidden');
+        await window.saveUserData();
+        renderGroupContent();
+    } catch (err) {
+        error.textContent = `Error: ${err.message}`;
+        error.classList.remove('hidden');
+        console.error('Group join error:', err);
+    }
 }
 
-.groups {
-    background-color: white;
-    border-radius: 12px;
-    padding: 4%;
-    margin-bottom: 20px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-    text-align: center;
+async function leaveGroup() {
+    if (!window.currentUser || !window.currentGroupCode) return;
+
+    const groupRef = window.firestoreDoc(window.firestoreDb, "groups", window.currentGroupCode);
+    const groupDoc = await window.firestoreGetDoc(groupRef);
+    if (!groupDoc.exists()) return;
+
+    const groupData = groupDoc.data();
+    delete groupData.members[window.currentUser.uid];
+
+    if (Object.keys(groupData.members).length === 0) {
+        await window.firestoreDeleteDoc(groupRef);
+        console.log(`Group ${window.currentGroupCode} deleted as no members remain.`);
+    } else {
+        await window.firestoreSetDoc(groupRef, { members: groupData.members }, { merge: true });
+    }
+
+    window.currentGroupCode = null;
+    await window.saveUserData();
+    renderGroupContent();
 }
 
-.groups h3 {
-    font-size: clamp(16px, 3vw, 18px);
-    margin-bottom: 20px;
-    color: #4285F4;
+async function sendMessage() {
+    if (!window.currentUser || !window.currentGroupCode) return;
+
+    const chatInput = document.getElementById('chatInput');
+    const messageText = chatInput.value.trim();
+    if (!messageText) return;
+
+    const groupRef = window.firestoreDoc(window.firestoreDb, "groups", window.currentGroupCode);
+    try {
+        const groupDoc = await window.firestoreGetDoc(groupRef);
+        if (groupDoc.exists()) {
+            const groupData = groupDoc.data();
+            const newMessage = {
+                senderId: window.currentUser.uid,
+                senderNickname: window.nickname,
+                text: messageText,
+                timestamp: new Date().toISOString()
+            };
+            const updatedMessages = [...(groupData.messages || []), newMessage];
+            await window.firestoreSetDoc(groupRef, { messages: updatedMessages }, { merge: true });
+            chatInput.value = '';
+        }
+    } catch (err) {
+        console.error('Message send error:', err);
+        alert('Failed to send message: ' + err.message);
+    }
 }
 
-.group-actions {
-    display: flex;
-    justify-content: space-around;
-    flex-wrap: wrap;
-    gap: 20px;
-    margin-bottom: 20px;
+function renderGroupDashboard() {
+    const dashboard = document.querySelector('.group-dashboard');
+    const membersDiv = document.getElementById('groupMembers');
+    const groupNameDiv = document.getElementById('currentGroupName');
+
+    if (!window.currentGroupCode) {
+        dashboard.classList.add('hidden');
+        return;
+    }
+
+    const groupRef = window.firestoreDoc(window.firestoreDb, "groups", window.currentGroupCode);
+    window.firestoreOnSnapshot(groupRef, (doc) => {
+        if (doc.exists()) {
+            const groupData = doc.data();
+            groupNameDiv.textContent = `${groupData.name} (Code: ${window.currentGroupCode})`;
+
+            const membersArray = Object.entries(groupData.members).map(([uid, data]) => ({
+                uid,
+                nickname: data.nickname,
+                studyTime: data.studyTime || 0
+            }));
+
+            membersArray.sort((a, b) => b.studyTime - a.studyTime);
+            let currentRank = 1;
+            for (let i = 0; i < membersArray.length; i++) {
+                if (i > 0 && membersArray[i].studyTime < membersArray[i - 1].studyTime) {
+                    currentRank = i + 1;
+                }
+                membersArray[i].rank = currentRank;
+            }
+
+            const rankedMembers = [];
+            const rankGroups = {};
+            membersArray.forEach(member => {
+                if (!rankGroups[member.rank]) rankGroups[member.rank] = [];
+                rankGroups[member.rank].push(member);
+            });
+            for (const rank in rankGroups) {
+                const group = rankGroups[rank];
+                const currentUserIndex = group.findIndex(m => m.uid === window.currentUser.uid);
+                let currentUserMember = null;
+                if (currentUserIndex !== -1) {
+                    currentUserMember = group.splice(currentUserIndex, 1)[0];
+                }
+                group.sort((a, b) => a.uid.localeCompare(b.uid));
+                if (currentUserMember) group.unshift(currentUserMember);
+                rankedMembers.push(...group);
+            }
+
+            membersDiv.innerHTML = '';
+            rankedMembers.forEach(member => {
+                const hours = Math.floor(member.studyTime / 3600);
+                const minutes = Math.floor((member.studyTime % 3600) / 60);
+                const seconds = member.studyTime % 60;
+                membersDiv.innerHTML += `
+                    <div class="member-card">
+                        <div class="rank">#${member.rank}</div>
+                        <div class="nickname">${member.nickname}</div>
+                        <div class="study-time">${hours}h ${minutes}m ${seconds}s</div>
+                    </div>
+                `;
+            });
+        } else {
+            window.currentGroupCode = null;
+            renderGroupContent();
+        }
+    }, (error) => {
+        console.error('Group dashboard render error:', error);
+    });
+}
+document.getElementById('chatInput').addEventListener('keypress', function(event) {
+    if (event.key === 'Enter') {
+        event.preventDefault();
+        sendMessage();
+    }
+});
+document.getElementById('groupNameInput').addEventListener('keypress', function(event) {
+    if (event.key === 'Enter') {
+        event.preventDefault();
+        createGroup();
+    }
+});
+
+document.getElementById('groupCodeInput').addEventListener('keypress', function(event) {
+    if (event.key === 'Enter') {
+        event.preventDefault();
+        joinGroup();
+    }
+});
+
+function renderGroupChat() {
+    const chatMessagesDiv = document.getElementById('chatMessages');
+    if (!window.currentGroupCode) return;
+
+    const groupRef = window.firestoreDoc(window.firestoreDb, "groups", window.currentGroupCode);
+    window.firestoreOnSnapshot(groupRef, (doc) => {
+        if (doc.exists()) {
+            const groupData = doc.data();
+            chatMessagesDiv.innerHTML = '';
+            const messages = groupData.messages || [];
+            messages.forEach(msg => {
+                const date = new Date(msg.timestamp);
+                const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                chatMessagesDiv.innerHTML += `
+                    <div class="chat-message">
+                        <span class="sender">${msg.senderNickname}</span> (${timeStr}): ${msg.text}
+                    </div>
+                `;
+            });
+            chatMessagesDiv.scrollTop = chatMessagesDiv.scrollHeight;
+        }
+    }, (error) => {
+        console.error('Group chat render error:', error);
+    });
 }
 
-.group-create, .group-join {
-    flex: 1;
-    min-width: 200px;
+function showGroupTab(tab) {
+    const dashboard = document.querySelector('.group-dashboard');
+    const chat = document.querySelector('.group-chat');
+    const dashboardBtn = document.querySelector('.tab-btn[onclick="showGroupTab(\'dashboard\')"]');
+    const chatBtn = document.querySelector('.tab-btn[onclick="showGroupTab(\'chat\')"]');
+
+    if (tab === 'dashboard') {
+        dashboard.classList.remove('hidden');
+        chat.classList.add('hidden');
+        dashboardBtn.classList.add('active');
+        chatBtn.classList.remove('active');
+    } else if (tab === 'chat') {
+        dashboard.classList.add('hidden');
+        chat.classList.remove('hidden');
+        dashboardBtn.classList.remove('active');
+        chatBtn.classList.add('active');
+    }
 }
 
-#groupNameInput, #groupCodeInput {
-    width: 100%;
-    padding: clamp(8px, 2vw, 12px);
-    border-radius: 8px;
-    border: 1px solid #ddd;
-    font-size: clamp(14px, 2.5vw, 16px);
-    margin-bottom: 15px;
+function showTodoTab(tab) {
+    const todoContent = document.getElementById('todoTabContent');
+    const ddayContent = document.getElementById('ddayTabContent');
+    const todoBtn = document.querySelector('.todo-tabs .tab-btn[onclick="showTodoTab(\'todo\')"]');
+    const ddayBtn = document.querySelector('.todo-tabs .tab-btn[onclick="showTodoTab(\'dday\')"]');
+
+    if (tab === 'todo') {
+        todoContent.classList.remove('hidden');
+        ddayContent.classList.add('hidden');
+        todoBtn.classList.add('active');
+        ddayBtn.classList.remove('active');
+        renderTodos();
+    } else if (tab === 'dday') {
+        todoContent.classList.add('hidden');
+        ddayContent.classList.remove('hidden');
+        todoBtn.classList.remove('active');
+        ddayBtn.classList.add('active');
+        renderDDays();
+    }
 }
 
-.group-action-btn {
-    width: 100%;
-    background-color: #4285F4;
-    color: white;
-    font-size: clamp(14px, 2.5vw, 16px);
-    padding: clamp(8px, 2vw, 12px);
-    border-radius: 8px;
-    border: none;
-    cursor: pointer;
-    transition: transform 0.2s ease, background-color 0.3s ease;
+async function addDDay() {
+    const nameInput = document.getElementById('ddayNameInput');
+    const dateInput = document.getElementById('ddayDateInput');
+    const error = document.getElementById('ddayError');
+    const name = nameInput.value.trim();
+    const date = dateInput.value;
+
+    if (!name || !date) {
+        error.textContent = 'Please enter a name and date for the D-Day.';
+        error.classList.remove('hidden');
+        return;
+    }
+
+    const selectedDate = new Date(date);
+    const today = new Date(currentDate);
+    if (selectedDate < today) {
+        error.textContent = 'D-Day date must be today or in the future.';
+        error.classList.remove('hidden');
+        return;
+    }
+
+    const newDDay = {
+        id: Date.now(),
+        name: name,
+        date: date,
+        createdAt: new Date().toISOString()
+    };
+
+    window.ddays.push(newDDay);
+    await window.saveUserData();
+    nameInput.value = '';
+    dateInput.value = '';
+    error.classList.add('hidden');
+    renderDDays();
+    renderHome();
 }
 
-.group-action-btn:hover {
-    background-color: #3367D6;
-    transform: scale(1.05);
+function renderDDays() {
+    const ddayList = document.getElementById('ddayList');
+    ddayList.innerHTML = '';
+
+    const sortedDDays = window.ddays.sort((a, b) => new Date(a.date) - new Date(b.date));
+    sortedDDays.forEach(dday => {
+        const daysLeft = Math.ceil((new Date(dday.date) - new Date(currentDate)) / (1000 * 60 * 60 * 24));
+        const ddayItem = document.createElement('li');
+        ddayItem.className = 'dday-item';
+        ddayItem.innerHTML = `
+            <span class="dday-text">${dday.name} (${dday.date})</span>
+            <span class="dday-days">${daysLeft} days</span>
+            <button class="delete-dday" onclick="deleteDDay(${dday.id})">×</button>
+        `;
+        ddayList.appendChild(ddayItem);
+    });
+
+    if (sortedDDays.length === 0) {
+        ddayList.innerHTML = '<li>No D-Days set</li>';
+    }
 }
 
-#groupCodeDisplay {
-    font-size: clamp(14px, 2.5vw, 16px);
-    color: #4285F4;
-    margin-top: 10px;
+async function deleteDDay(id) {
+    window.ddays = window.ddays.filter(dday => dday.id !== id);
+    await window.saveUserData();
+    renderDDays();
+    renderHome();
 }
 
-.group-dashboard {
-    text-align: center;
-}
+function renderGroupContent() {
+    const joinCreateBox = document.querySelector('.group-join-create-box');
+    const contentBox = document.querySelector('.group-content-box');
 
-#currentGroupName {
-    font-size: clamp(16px, 3vw, 18px);
-    margin-bottom: 15px;
-    color: #4285F4;
-}
+    if (!joinCreateBox || !contentBox) {
+        console.error('Error: .group-join-create-box or .group-content-box not found');
+        return;
+    }
 
-.group-members {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 15px;
-    margin-bottom: 20px;
-}
+    console.log('currentGroupCode:', window.currentGroupCode);
+    console.log('joinCreateBox hidden:', joinCreateBox.classList.contains('hidden'));
+    console.log('contentBox hidden:', contentBox.classList.contains('hidden'));
 
-.member-card {
-    background-color: #f9f9f9;
-    border-radius: 8px;
-    padding: 15px;
-    text-align: center;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-}
+    if (!window.currentGroupCode) {
+        joinCreateBox.classList.remove('hidden');
+        joinCreateBox.style.display = 'flex';
+        contentBox.classList.add('hidden');
+        contentBox.style.display = 'none';
+    } else {
+        joinCreateBox.classList.add('hidden');
+        joinCreateBox.style.display = 'none';
+        contentBox.classList.remove('hidden');
+        contentBox.style.display = 'block';
+        renderGroupDashboard();
+        renderGroupChat();
+        showGroupTab('dashboard');
+    }
 
-.member-card .nickname {
-    font-size: clamp(14px, 2.5vw, 16px);
-    font-weight: bold;
-    color: #333;
-    margin-bottom: 5px;
+    console.log('After update - joinCreateBox hidden:', joinCreateBox.classList.contains('hidden'));
+    console.log('After update - contentBox hidden:', contentBox.classList.contains('hidden'));
 }
+document.head.appendChild(style);
 
-.member-card .study-time {
-    font-size: clamp(12px, 2.2vw, 14px);
-    color: #666;
-}
-
-.leave-btn {
-    width: 100%;
-    background-color: #EA4335;
-    color: white;
-    font-size: clamp(14px, 2.5vw, 16px);
-    padding: clamp(8px, 2vw, 12px);
-    border-radius: 8px;
-    border: none;
-    cursor: pointer;
-    transition: transform 0.2s ease, background-color 0.3s ease;
-}
-
-.leave-btn:hover {
-    background-color: #D32F2F;
-    transform: scale(1.05);
-}
-
-.member-card .rank {
-    font-size: clamp(16px, 3vw, 20px);
-    font-weight: bold;
-    color: #4285F4;
-    margin-bottom: 5px;
-}
-
-.ads-footer {
-    width: 100%;
-    text-align: center;
-    padding: 20px 0;
-    background-color: #f5f5f5;
-    margin-top: 20px;
-}
-
-#groupPasswordInput, #groupPasswordInputJoin {
-    width: 100%;
-    padding: clamp(8px, 2vw, 12px);
-    border-radius: 8px;
-    border: 1px solid #ddd;
-    font-size: clamp(14px, 2.5vw, 16px);
-    margin-bottom: 15px;
-}
-
-.group-chat-section {
-    margin-top: 20px;
-    background-color: #f9f9f9;
-    border-radius: 8px;
-    padding: 15px;
-}
-
-.chat-messages {
-    max-height: 300px;
-    overflow-y: auto;
-    margin-bottom: 15px;
-    padding: 10px;
-    background-color: #fff;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-}
-
-.chat-messages::-webkit-scrollbar {
-    width: 8px;
-}
-
-.chat-messages::-webkit-scrollbar-thumb {
-    background: #4285F4;
-    border-radius: 4px;
-}
-
-.chat-message {
-    padding: 8px;
-    margin: 5px 0;
-    border-radius: 5px;
-    background-color: #e9ecef;
-    font-size: clamp(12px, 2.2vw, 14px);
-}
-
-.chat-message .sender {
-    font-weight: bold;
-    color: #4285F4;
-}
-
-.chat-input {
-    display: flex;
-    gap: 10px;
-}
-
-#chatInput {
-    flex: 1;
-    padding: clamp(8px, 2vw, 12px);
-    border-radius: 8px;
-    border: 1px solid #ddd;
-    font-size: clamp(14px, 2.5vw, 16px);
-}
-
-.chat-send-btn {
-    background-color: #4285F4;
-    color: white;
-    padding: clamp(8px, 2vw, 12px);
-    border-radius: 8px;
-}
-.chat-send-btn:hover {
-    background-color: #3367D6;
-}
-
-.group-tabs {
-    display: flex;
-    justify-content: center;
-    gap: 15px;
-    margin-bottom: 20px;
-}
-
-.tab-btn {
-    padding: 10px 20px;
-    border-radius: 8px;
-    border: 1px solid #4285F4;
-    background-color: white;
-    color: #4285F4;
-    font-size: 16px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.tab-btn.active {
-    background-color: #4285F4;
-    color: white;
-}
-
-.tab-btn:hover {
-    background-color: #3367D6;
-    color: white;
-}
-
-.group-dashboard, .group-chat {
-    background-color: #f9f9f9;
-    border-radius: 8px;
-    padding: 15px;
-}
-
-.group-members {
-    margin-bottom: 20px;
-}
-
-.chat-messages {
-    max-height: 300px;
-    overflow-y: auto;
-    margin-bottom: 15px;
-    padding: 10px;
-    background-color: #fff;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-}
-
-.group-join-create-box {
-    display: flex;
-    justify-content: space-around;
-    flex-wrap: wrap;
-    gap: 20px;
-    margin-bottom: 20px;
-}
-
-.group-content-box {
-    text-align: center;
-}
-
-.todo-tabs {
-    display: flex;
-    justify-content: center;
-    gap: 15px;
-    margin-bottom: 20px;
-}
-
-.todo-content,
-.dday-content {
-    transition: opacity 0.3s ease;
-}
-
-.dday-input-section,
-.dday-list-section {
-    margin-bottom: 20px;
-}
-
-#ddayNameInput {
-    width: 100%;
-    padding: 12px;
-    border-radius: 8px;
-    border: 1px solid #ddd;
-    margin-bottom: 15px;
-    font-size: 16px;
-}
-
-.dday-add-btn {
-    width: 100%;
-    background-color: #4285F4;
-    color: white;
-    font-size: 16px;
-    padding: 12px;
-}
-
-.dday-add-btn:hover {
-    background-color: #3367D6;
-}
-
-.dday-list {
-    list-style: none;
-    margin-top: 15px;
-}
-
-.dday-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 0;
-    border-bottom: 1px solid #eee;
-}
-
-.dday-text {
-    flex: 1;
-    font-size: 16px;
-}
-
-.dday-days {
-    color: #4285F4;
-    font-weight: bold;
-    margin-left: 10px;
-}
-
-.delete-dday {
-    color: #EA4335;
-    background: none;
-    border: none;
-    font-size: 18px;
-    cursor: pointer;
-    padding: 0 10px;
-    transition: transform 0.2s ease;
-}
-
-.delete-dday:hover {
-    transform: scale(1.2);
-}
-
-.dday-preview {
-    font-size: 14px;
-    color: #666;
-    margin-top: 10px;
-}
-
-.dday-preview p {
-    margin: 5px 0;
-}
+updateSubjectSelect();
+updateSubjectTimes();

@@ -1426,5 +1426,45 @@ function renderGroupContent() {
 }
 document.head.appendChild(style);
 
+function renderStats() {
+    const weekStart = getWeekStartDate(currentWeekOffset);
+    const weekRange = document.getElementById('weekRange');
+    const weekCalendar = document.getElementById('weekCalendar');
+    const statsDetails = document.getElementById('statsDetails');
+
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekStart.getDate() + 6);
+    weekRange.textContent = `${weekStart.toLocaleDateString()} - ${weekEnd.toLocaleDateString()}`;
+
+    weekCalendar.innerHTML = '';
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    for (let i = 0; i < 7; i++) {
+        const date = new Date(weekStart);
+        date.setDate(weekStart.getDate() + i);
+        const dateStr = date.toISOString().split('T')[0];
+        const studyTime = (window.studyData && window.studyData[dateStr]) || 0;
+        const hours = Math.floor(studyTime / 3600);
+        const minutes = Math.floor((studyTime % 3600) / 60);
+
+        const dayDiv = document.createElement('div');
+        dayDiv.className = 'week-day';
+        dayDiv.innerHTML = `
+            <div>${days[i]}</div>
+            <div>${date.getDate()}</div>
+            <div>${hours}h ${minutes}m</div>
+        `;
+        dayDiv.onclick = () => showStatsDetails(dateStr);
+        if (currentSelectedDate === dateStr) dayDiv.classList.add('selected');
+        weekCalendar.appendChild(dayDiv);
+    }
+
+    if (!currentSelectedDate) {
+        const firstDayStr = weekStart.toISOString().split('T')[0];
+        showStatsDetails(firstDayStr);
+    } else {
+        showStatsDetails(currentSelectedDate);
+    }
+}
+
 updateSubjectSelect();
 updateSubjectTimes();

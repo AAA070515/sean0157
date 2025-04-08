@@ -8,8 +8,6 @@ let currentWeekOffset = 0;
 let currentSelectedSubject = null;
 let lastCheckedDate = new Date().toISOString().split('T')[0];
 
-window.ddays = [];
-
 const today = new Date();
 let currentDate = today.toISOString().split('T')[0];
 
@@ -23,11 +21,12 @@ async function loadUserData(userId) {
             window.subjectStudyTime = data.subjectStudyTime || {};
             window.diaryData = data.diaryData || {};
             window.todos = data.todos || [];
-            window.ddays = data.ddays || []; // D-Day 추가
+            window.ddays = data.ddays || []; 
             window.goals = data.goals || { daily: null, weekly: null };
             window.studySessions = data.studySessions || {};
             window.nickname = data.nickname || 'User';
             window.currentGroupCode = data.groupCode || null;
+            console.log("Loaded data with ddays:", window.ddays);
             updateSubjectSelect();
             updateSubjectTimes();
             updateStudyTimeDisplay();
@@ -35,6 +34,7 @@ async function loadUserData(userId) {
             updateGoalsProgress();
             renderHome();
             renderTodos();
+            renderDDays();
             renderGroupDashboard();
         } else {
             window.subjects = [];
@@ -42,7 +42,7 @@ async function loadUserData(userId) {
             window.subjectStudyTime = {};
             window.diaryData = {};
             window.todos = [];
-            window.ddays = []; // D-Day 초기화
+            window.ddays = [];
             window.goals = { daily: null, weekly: null };
             window.studySessions = {};
             window.currentGroupCode = null;
@@ -53,13 +53,13 @@ async function loadUserData(userId) {
             updateGoalsProgress();
             renderHome();
             renderTodos();
+            renderDDays();
             renderGroupDashboard();
         }
     }, (error) => {
         console.error("Load failed:", error.code, error.message);
     });
 }
-
 window.saveUserData = async function() {
     if (!window.currentUser) return;
     const userId = window.currentUser.uid;

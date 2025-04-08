@@ -55,8 +55,6 @@ async function loadUserData(userId) {
             renderTodos();
             renderGroupDashboard();
         }
-    }, (error) => {
-        console.error("Load failed:", error.code, error.message);
     });
 }
 
@@ -69,7 +67,7 @@ window.saveUserData = async function() {
         subjectStudyTime: window.subjectStudyTime || {},
         diaryData: window.diaryData || {},
         todos: window.todos || [],
-        ddays: window.ddays || [], // D-Day 추가
+        ddays: window.ddays || [],
         goals: window.goals || { daily: null, weekly: null },
         studySessions: window.studySessions || {},
         nickname: window.nickname || 'User',
@@ -77,9 +75,7 @@ window.saveUserData = async function() {
     };
     try {
         await window.firestoreSetDoc(window.firestoreDoc(db, "users", userId), dataToSave, { merge: true });
-        console.log("Data saved successfully!");
     } catch (error) {
-        console.error("Save failed:", error.code, error.message);
         alert("Failed to save data: " + error.message);
     }
 };
@@ -901,8 +897,6 @@ async function resetAllSettings() {
                 document.querySelectorAll('.mood-bean').forEach(bean => bean.classList.remove('selected'));
                 showScreen('home');
                 alert('All settings have been reset.');
-            } catch (error) {
-                console.error('데이터 초기화 실패:', error.code, error.message);
             }
         }
     }

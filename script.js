@@ -751,27 +751,37 @@ document.getElementById('diaryImage').addEventListener('change', function() {
 async function uploadImage() {
     const fileInput = document.getElementById('diaryImage');
     const file = fileInput.files[0];
-    if (!file) return;
+    if (!file) {
+        console.log('No file selected.');
+        return;
+    }
 
     if (!window.currentUser) {
         alert('You must be logged in to upload an image.');
+        console.log('User not logged in.');
         return;
     }
 
     try {
+        console.log('Starting image upload for user:', window.currentUser.uid);
         const storageRef = ref(window.storage, `diary_images/${window.currentUser.uid}/${Date.now()}_${file.name}`);
+        console.log('Storage reference created:', storageRef.fullPath);
+
         const snapshot = await uploadBytes(storageRef, file);
+        console.log('Upload successful, snapshot:', snapshot);
+
         const downloadURL = await getDownloadURL(snapshot.ref);
+        console.log('Download URL obtained:', downloadURL);
 
         uploadedImage = downloadURL;
-
         const preview = document.getElementById('imagePreview');
         preview.innerHTML = `<img src="${uploadedImage}" alt="Uploaded Image">`;
-
         fileInput.value = '';
+
+        console.log('Image upload completed successfully.');
     } catch (error) {
-        console.error('Image upload error:', error);
-        alert('Failed to upload image. Please try again.');
+        console.error('Image upload failed:', error.code, error.message);
+        alert(`Failed to upload image: ${error.message}`);
     }
 }
 

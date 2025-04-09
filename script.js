@@ -1481,7 +1481,11 @@ function renderStats() {
 
     const weekEnd = new Date(weekStart);
     weekEnd.setDate(weekStart.getDate() + 6);
-    weekRange.textContent = `${weekStart.toLocaleDateString()} - ${weekEnd.toLocaleDateString()}`;
+
+    // 연도 제거하고 월-일 형식으로 표시
+    const startStr = `${weekStart.getMonth() + 1}-${weekStart.getDate()}`;
+    const endStr = `${weekEnd.getMonth() + 1}-${weekEnd.getDate()}`;
+    weekRange.textContent = `${startStr} - ${endStr}`;
 
     weekCalendar.innerHTML = '';
     const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];

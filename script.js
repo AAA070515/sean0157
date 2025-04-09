@@ -589,20 +589,27 @@ async function saveDiary() {
         return;
     }
 
-    window.diaryData[date] = { 
+    // diaryData에 저장
+    window.diaryData[date] = {
         mood: selectedMood,
-        memo: memo, 
-        image: uploadedImage || window.diaryData[date]?.image || null 
+        memo: memo,
+        image: uploadedImage || window.diaryData[date]?.image || null
     };
-    await window.saveUserData();
-    renderHome();
-    document.getElementById('memoInput').value = '';
-    document.getElementById('diaryImage').value = '';
-    document.querySelectorAll('.mood-bean').forEach(bean => bean.classList.remove('selected'));
-    selectedMood = null;
-    uploadedImage = null;
-    document.getElementById('imagePreview').innerHTML = '';
-    alert('Journal entry saved!');
+
+    try {
+        await window.saveUserData();
+        renderHome();
+        document.getElementById('memoInput').value = '';
+        document.getElementById('diaryImage').value = '';
+        document.querySelectorAll('.mood-bean').forEach(bean => bean.classList.remove('selected'));
+        selectedMood = null;
+        uploadedImage = null;
+        document.getElementById('imagePreview').innerHTML = '';
+        alert('Journal entry saved!');
+    } catch (error) {
+        console.error('Failed to save diary:', error);
+        alert('Failed to save journal entry: ' + error.message);
+    }
 }
 
 function renderTodos() {
@@ -748,19 +755,47 @@ document.getElementById('diaryImage').addEventListener('change', function() {
     uploadImage();
 });
 
-function uploadImage() {
+async function uploadImage() {
     const fileInput = document.getElementById('diaryImage');
     const file = fileInput.files[0];
-    if (file) {
-        const reader = new FileReader();
-        reader.on = function(e) {
-            upedImage = e.target.result;
-            const preview = document.getElementById('imagePreview');
-            preview.innerHTML = `<img src="${upedImage}" alt="Uped Image">`;
-        };
-        reader.readAsDataURL(file);
-        fileInput.value = '';
+    const preview = document.getElementById('imagePreview');
+
+    if (!file) {
+        alert('Please select an image to upload.');
+        return;
     }
+
+    // 로컬 미리보기
+    const reader = new FileReader();
+    reader.onload = function (e) {
+        preview.innerHTML = `<img src="${e.target.result}" alt="Uploaded Image">`;
+    };
+    reader.readAsDataURL(file);
+
+    try {
+        // Firebase Storage에 업로드
+        const userId = window.currentUser.uid;
+        const date = document.getElementById('diaryDate').value || currentDate;
+        const storagePath = `diary_images/${userId}/${date}_${file.name}`;
+        const imageRef = window.storageRef(window.storage, storagePath);
+
+        // 이미지 업로드
+        const snapshot = await window.uploadBytes(imageRef, file);
+        // 업로드된 이미지의 다운로드 URL 가져오기
+        const downloadURL = await window.getDownloadURL(snapshot.ref);
+
+        // 업로드된 이미지 URL 저장
+        uploadedImage = downloadURL;
+        console.log('Image uploaded successfully:', uploadedImage);
+    } catch (error) {
+        console.error('Image upload failed:', error);
+        alert('Failed to upload image: ' + error.message);
+        preview.innerHTML = ''; // 에러 시 미리보기 제거
+        uploadedImage = null;
+    }
+
+    // 파일 입력 초기화
+    fileInput.value = '';
 }
 
 function DiaryData(selectedDate) {
@@ -1513,6 +1548,29 @@ function renderStats() {
         showStatsDetails(firstDayStr);
     } else {
         showStatsDetails(currentSelectedDate);
+    }
+}
+
+function loadDiaryData(selectedDate) {
+    const diaryEntry = window.diaryData[selectedDate];
+
+    document.querySelectorAll('.mood-bean').forEach(bean => bean.classList.remove('selected'));
+    document.getElementById('memoInput').value = '';
+    document.getElementById('imagePreview').innerHTML = '';
+    selectedMood = null;
+    uploadedImage = null;
+
+    if (diaryEntry) {
+        const mood = diaryEntry.mood;
+        if (mood) {
+            document.querySelector(`.mood-bean.${mood}`).classList.add('selected');
+            selectedMood = mood;
+        }
+        document.getElementById('memoInput').value = diaryEntry.memo || '';
+        if (diaryEntry.image) {
+            document.getElementById('imagePreview').innerHTML = `<img src="${diaryEntry.image}" alt="Diary Image">`;
+            uploadedImage = diaryEntry.image; // 기존 이미지 유지
+        }
     }
 }
 

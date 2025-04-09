@@ -327,8 +327,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot, getDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
-        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-storage.js"; // Storage 모듈 추가
-    
+
         const firebaseConfig = {
             apiKey: "AIzaSyDx_BBG73R3FReoFsRPuIKcDb754LAxTCI",
             authDomain: "sean0157-92c62.firebaseapp.com",
@@ -338,24 +337,18 @@
             appId: "1:1052880240716:web:13289245ada3ff291174e9",
             measurementId: "G-HRWSZ6MSNB"
         };
-    
+
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const storage = getStorage(app);
-    
-        // 전역 변수로 설정
+
         window.firebaseAuth = auth;
         window.firestoreDb = db;
-        window.storage = storage;
         window.firestoreDoc = doc;
         window.firestoreGetDoc = getDoc;
         window.firestoreSetDoc = setDoc;
         window.firestoreOnSnapshot = onSnapshot;
         window.firestoreDeleteDoc = deleteDoc;
-        window.storageRef = ref;
-        window.uploadBytes = uploadBytes;
-        window.getDownloadURL = getDownloadURL;
 
         let currentUser = null;
         let currentGroupCode = null;
@@ -503,12 +496,8 @@
             });
         }
         
-        window.saveUserData = async function () {
-            if (!window.currentUser) {
-                console.error('No current user found. Cannot save data.');
-                return;
-            }
-        
+        window.saveUserData = async function() {
+            if (!window.currentUser) return;
             const userId = window.currentUser.uid;
             const dataToSave = {
                 subjects: window.subjects || [],
@@ -521,23 +510,9 @@
                 studySessions: window.studySessions || {},
                 nickname: window.nickname || 'User',
                 groupCode: window.currentGroupCode || null,
-                widgetVisibility: window.widgetVisibility || {
-                    studyTime: true,
-                    todo: true,
-                    diary: true,
-                    goalProgress: true,
-                    dday: true
-                }
+                widgetVisibility: window.widgetVisibility
             };
-        
-            try {
-                const userRef = window.firestoreDoc(window.firestoreDb, "users", userId);
-                await window.firestoreSetDoc(userRef, dataToSave, { merge: true });
-                console.log('Data successfully saved to Firestore:', dataToSave);
-            } catch (error) {
-                console.error('Failed to save data to Firestore:', error);
-                throw error; // 상위 함수에서 에러를 잡을 수 있도록 전달
-            }
+            await window.firestoreSetDoc(window.firestoreDoc(db, "users", userId), dataToSave, { merge: true });
         };
     </script>
     <script src="script.js"></script>

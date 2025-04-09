@@ -696,9 +696,14 @@ async function deleteSubject(subjectName) {
 
 function updateSubjectSelect() {
     const subjectSelect = document.getElementById('subjectSelect');
-    subjectSelect.innerHTML = '<option value="">Select a subject</option>';
-    window.subjects.forEach(subject => {
-        subjectSelect.innerHTML += `<option value="${subject}">${subject}</option>`;
+    subjectSelect.innerHTML = '<option value="">Select Subject</option>';
+    
+    const subjects = window.subjects || []; // 기본값 설정
+    subjects.forEach(subject => {
+        const option = document.createElement('option');
+        option.value = subject;
+        option.textContent = subject;
+        subjectSelect.appendChild(option);
     });
 }
 
@@ -749,17 +754,46 @@ document.getElementById('diaryImage').addEventListener('change', function() {
 });
 
 function uploadImage() {
+async function uploadImage() {
     const fileInput = document.getElementById('diaryImage');
     const file = fileInput.files[0];
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            uploadedImage = e.target.result;
-            const preview = document.getElementById('imagePreview');
-            preview.innerHTML = `<img src="${uploadedImage}" alt="Uploaded Image">`;
-        };
-        reader.readAsDataURL(file);
+    if (!file) {
+        console.log('No file selected.');
+        return;
+    }
+
+    if (!window.currentUser) {
+        alert('You must be logged in to upload an image.');
+        console.log('User not logged in.');
+        return;
+    }
+
+    try {
+        console.log('Starting image upload for user:', window.currentUser.uid);
+        const storageRef = window.storageRef(window.storage, `diary_images/${window.currentUser.uid}/${Date.now()}_${file.name}`);
+        console.log('Storage reference created:', storageRef.fullPath);
+
+        // 인증 토큰 확인
+        const token = await window.currentUser.getIdToken();
+        console.log('User token obtained:', token);
+
+        const snapshot = await window.uploadBytes(storageRef, file, { 
+            contentType: file.type // 파일 타입 명시
+        });
+        console.log('Upload successful, snapshot:', snapshot);
+
+        const downloadURL = await window.getDownloadURL(snapshot.ref);
+        console.log('Download URL obtained:', downloadURL);
+
+        uploadedImage = downloadURL;
+        const preview = document.getElementById('imagePreview');
+        preview.innerHTML = `<img src="${uploadedImage}" alt="Uploaded Image">`;
         fileInput.value = '';
+
+        console.log('Image upload completed successfully.');
+    } catch (error) {
+        console.error('Image upload failed:', error.code, error.message);
+        alert(`Failed to upload image: ${error.message}`);
     }
 }
 

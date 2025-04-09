@@ -748,18 +748,30 @@ document.getElementById('diaryImage').addEventListener('change', function() {
     uploadImage();
 });
 
-function uploadImage() {
+async function uploadImage() {
     const fileInput = document.getElementById('diaryImage');
     const file = fileInput.files[0];
-    if (file) {
-        const reader = new FileReader();
-        reader.on = function(e) {
-            upedImage = e.target.result;
-            const preview = document.getElementById('imagePreview');
-            preview.innerHTML = `<img src="${upedImage}" alt="Uped Image">`;
-        };
-        reader.readAsDataURL(file);
+    if (!file) return;
+
+    if (!window.currentUser) {
+        alert('You must be logged in to upload an image.');
+        return;
+    }
+
+    try {
+        const storageRef = ref(window.storage, `diary_images/${window.currentUser.uid}/${Date.now()}_${file.name}`);
+        const snapshot = await uploadBytes(storageRef, file);
+        const downloadURL = await getDownloadURL(snapshot.ref);
+
+        uploadedImage = downloadURL;
+
+        const preview = document.getElementById('imagePreview');
+        preview.innerHTML = `<img src="${uploadedImage}" alt="Uploaded Image">`;
+
         fileInput.value = '';
+    } catch (error) {
+        console.error('Image upload error:', error);
+        alert('Failed to upload image. Please try again.');
     }
 }
 
@@ -1513,6 +1525,30 @@ function renderStats() {
         showStatsDetails(firstDayStr);
     } else {
         showStatsDetails(currentSelectedDate);
+    }
+}
+
+function loadDiaryData(selectedDate) { // 함수 이름도 loadDiaryData로 통일
+    const diaryEntry = window.diaryData[selectedDate];
+    
+    document.querySelectorAll('.mood-bean').forEach(bean => bean.classList.remove('selected'));
+    document.getElementById('memoInput').value = '';
+    document.getElementById('imagePreview').innerHTML = '';
+    selectedMood = null;
+    uploadedImage = null;
+    
+    if (diaryEntry) {
+        const mood = diaryEntry.mood;
+        if (mood) {
+            document.querySelector(`.mood-bean.${mood}`).classList.add('selected');
+            selectedMood = mood;
+        }
+        
+        document.getElementById('memoInput').value = diaryEntry.memo || '';
+        if (diaryEntry.image) {
+            document.getElementById('imagePreview').innerHTML = `<img src="${diaryEntry.image}" alt="Diary Image">`;
+            uploadedImage = diaryEntry.image;
+        }
     }
 }
 

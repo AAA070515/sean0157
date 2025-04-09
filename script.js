@@ -55,12 +55,8 @@ async function loadUserData(userId) {
     });
 }
 
-window.saveUserData = async function () {
-    if (!window.currentUser) {
-        console.error('No current user found. Cannot save data.');
-        return;
-    }
-
+window.saveUserData = async function() {
+    if (!window.currentUser) return;
     const userId = window.currentUser.uid;
     const dataToSave = {
         subjects: window.subjects || [],
@@ -73,23 +69,9 @@ window.saveUserData = async function () {
         studySessions: window.studySessions || {},
         nickname: window.nickname || 'User',
         groupCode: window.currentGroupCode || null,
-        widgetVisibility: window.widgetVisibility || {
-            studyTime: true,
-            todo: true,
-            diary: true,
-            goalProgress: true,
-            dday: true
-        }
+        widgetVisibility: window.widgetVisibility
     };
-
-    try {
-        const userRef = window.firestoreDoc(window.firestoreDb, "users", userId);
-        await window.firestoreSetDoc(userRef, dataToSave, { merge: true });
-        console.log('Data successfully saved to Firestore:', dataToSave);
-    } catch (error) {
-        console.error('Failed to save data to Firestore:', error);
-        throw error; // 상위 함수에서 에러를 잡을 수 있도록 전달
-    }
+    await window.firestoreSetDoc(window.firestoreDoc(db, "users", userId), dataToSave, { merge: true });
 };
 
 function checkAndResetDailyData() {
@@ -488,14 +470,6 @@ function toggleDayDetails(date) {
     }
     
     dayDetails.classList.remove('hidden');
-
-    const image = window.diaryData[date]?.image || null;
-    const imagePreview = document.getElementById('dayImagePreview');
-    imagePreview.innerHTML = '';
-    if (image) {
-        imagePreview.innerHTML = `<img src="${image}" alt="Diary Image">`;
-    }
-    dayDetails.classList.remove('hidden');
 }
 
 function updateStudyTimeDisplay() {
@@ -609,39 +583,26 @@ async function stopTimer() {
 async function saveDiary() {
     const date = document.getElementById('diaryDate').value;
     const memo = document.getElementById('memoInput').value.trim();
-    const fileInput = document.getElementById('diaryImage');
-
     if (!date || !selectedMood || !memo) {
         if (!selectedMood) alert('Please select your mood for today!');
         if (!memo) alert('Please write a memo for your journal entry!');
         return;
     }
 
-    if (fileInput.files.length > 0) {
-        await uploadImage();
-    }
-
-    window.diaryData[date] = {
+    window.diaryData[date] = { 
         mood: selectedMood,
-        memo: memo,
-        image: uploadedImage || window.diaryData[date]?.image || null
+        memo: memo, 
+        image: uploadedImage || window.diaryData[date]?.image || null 
     };
-
-    try {
-        await window.saveUserData();
-        console.log(`Diary entry for ${date} saved:`, window.diaryData[date]);
-        renderHome();
-        document.getElementById('memoInput').value = '';
-        document.getElementById('diaryImage').value = '';
-        document.querySelectorAll('.mood-bean').forEach(bean => bean.classList.remove('selected'));
-        selectedMood = null;
-        uploadedImage = null;
-        document.getElementById('imagePreview').innerHTML = '';
-        alert('Journal entry saved!');
-    } catch (error) {
-        console.error('Failed to save diary entry:', error);
-        alert('Failed to save journal entry: ' + error.message);
-    }
+    await window.saveUserData();
+    renderHome();
+    document.getElementById('memoInput').value = '';
+    document.getElementById('diaryImage').value = '';
+    document.querySelectorAll('.mood-bean').forEach(bean => bean.classList.remove('selected'));
+    selectedMood = null;
+    uploadedImage = null;
+    document.getElementById('imagePreview').innerHTML = '';
+    alert('Journal entry saved!');
 }
 
 function renderTodos() {
@@ -787,45 +748,19 @@ document.getElementById('diaryImage').addEventListener('change', function() {
     uploadImage();
 });
 
-async function uploadImage() {
+function uploadImage() {
     const fileInput = document.getElementById('diaryImage');
     const file = fileInput.files[0];
-    const preview = document.getElementById('imagePreview');
-
-    if (!file) {
-        console.log('No file selected for upload.');
-        alert('Please select an image to upload.');
-        return;
+    if (file) {
+        const reader = new FileReader();
+        reader.on = function(e) {
+            upedImage = e.target.result;
+            const preview = document.getElementById('imagePreview');
+            preview.innerHTML = `<img src="${upedImage}" alt="Uped Image">`;
+        };
+        reader.readAsDataURL(file);
+        fileInput.value = '';
     }
-
-    console.log('Starting image upload for file:', file.name);
-
-    const reader = new FileReader();
-    reader.onload = function (e) {
-        preview.innerHTML = `<img src="${e.target.result}" alt="Uploaded Image">`;
-    };
-    reader.readAsDataURL(file);
-
-    try {
-        const userId = window.currentUser.uid;
-        const date = document.getElementById('diaryDate').value || currentDate;
-        const storagePath = `diary_images/${userId}/${date}_${file.name}`;
-        const imageRef = window.storageRef(window.storage, storagePath);
-
-        console.log('Uploading to:', storagePath);
-        const snapshot = await window.uploadBytes(imageRef, file);
-        const downloadURL = await window.getDownloadURL(snapshot.ref);
-
-        uploadedImage = downloadURL;
-        console.log('Image uploaded successfully. URL:', uploadedImage);
-    } catch (error) {
-        console.error('Image upload failed:', error);
-        alert('Failed to upload image: ' + error.message);
-        preview.innerHTML = '';
-        uploadedImage = null;
-    }
-
-    fileInput.value = '';
 }
 
 function DiaryData(selectedDate) {
@@ -1578,29 +1513,6 @@ function renderStats() {
         showStatsDetails(firstDayStr);
     } else {
         showStatsDetails(currentSelectedDate);
-    }
-}
-
-function loadDiaryData(selectedDate) {
-    const diaryEntry = window.diaryData[selectedDate];
-
-    document.querySelectorAll('.mood-bean').forEach(bean => bean.classList.remove('selected'));
-    document.getElementById('memoInput').value = '';
-    document.getElementById('imagePreview').innerHTML = '';
-    selectedMood = null;
-    uploadedImage = null;
-
-    if (diaryEntry) {
-        const mood = diaryEntry.mood;
-        if (mood) {
-            document.querySelector(`.mood-bean.${mood}`).classList.add('selected');
-            selectedMood = mood;
-        }
-        document.getElementById('memoInput').value = diaryEntry.memo || '';
-        if (diaryEntry.image) {
-            document.getElementById('imagePreview').innerHTML = `<img src="${diaryEntry.image}" alt="Diary Image">`;
-            uploadedImage = diaryEntry.image; // 기존 이미지 유지
-        }
     }
 }
 

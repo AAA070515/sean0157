@@ -344,6 +344,7 @@
         const db = getFirestore(app);
         const storage = getStorage(app);
     
+        // 전역 변수로 설정
         window.firebaseAuth = auth;
         window.firestoreDb = db;
         window.storage = storage;
@@ -352,6 +353,9 @@
         window.firestoreSetDoc = setDoc;
         window.firestoreOnSnapshot = onSnapshot;
         window.firestoreDeleteDoc = deleteDoc;
+        window.storageRef = ref;
+        window.uploadBytes = uploadBytes;
+        window.getDownloadURL = getDownloadURL;
 
         let currentUser = null;
         let currentGroupCode = null;

@@ -55,8 +55,12 @@ async function loadUserData(userId) {
     });
 }
 
-window.saveUserData = async function() {
-    if (!window.currentUser) return;
+window.saveUserData = async function () {
+    if (!window.currentUser) {
+        console.error('No current user found. Cannot save data.');
+        return;
+    }
+
     const userId = window.currentUser.uid;
     const dataToSave = {
         subjects: window.subjects || [],
@@ -69,9 +73,23 @@ window.saveUserData = async function() {
         studySessions: window.studySessions || {},
         nickname: window.nickname || 'User',
         groupCode: window.currentGroupCode || null,
-        widgetVisibility: window.widgetVisibility
+        widgetVisibility: window.widgetVisibility || {
+            studyTime: true,
+            todo: true,
+            diary: true,
+            goalProgress: true,
+            dday: true
+        }
     };
-    await window.firestoreSetDoc(window.firestoreDoc(db, "users", userId), dataToSave, { merge: true });
+
+    try {
+        const userRef = window.firestoreDoc(window.firestoreDb, "users", userId);
+        await window.firestoreSetDoc(userRef, dataToSave, { merge: true });
+        console.log('Data successfully saved to Firestore:', dataToSave);
+    } catch (error) {
+        console.error('Failed to save data to Firestore:', error);
+        throw error; // 상위 함수에서 에러를 잡을 수 있도록 전달
+    }
 };
 
 function checkAndResetDailyData() {
@@ -597,7 +615,8 @@ async function saveDiary() {
     };
 
     try {
-        await window.saveUserData();
+        await window.saveUserData(); // Firestore에 저장
+        console.log(`Diary entry for ${date} saved:`, window.diaryData[date]);
         renderHome();
         document.getElementById('memoInput').value = '';
         document.getElementById('diaryImage').value = '';
@@ -607,7 +626,7 @@ async function saveDiary() {
         document.getElementById('imagePreview').innerHTML = '';
         alert('Journal entry saved!');
     } catch (error) {
-        console.error('Failed to save diary:', error);
+        console.error('Failed to save diary entry:', error);
         alert('Failed to save journal entry: ' + error.message);
     }
 }

@@ -764,13 +764,13 @@ async function uploadImage() {
 
     try {
         console.log('Starting image upload for user:', window.currentUser.uid);
-        const storageRef = ref(window.storage, `diary_images/${window.currentUser.uid}/${Date.now()}_${file.name}`);
+        const storageRef = window.storageRef(window.storage, `diary_images/${window.currentUser.uid}/${Date.now()}_${file.name}`);
         console.log('Storage reference created:', storageRef.fullPath);
 
-        const snapshot = await uploadBytes(storageRef, file);
+        const snapshot = await window.uploadBytes(storageRef, file);
         console.log('Upload successful, snapshot:', snapshot);
 
-        const downloadURL = await getDownloadURL(snapshot.ref);
+        const downloadURL = await window.getDownloadURL(snapshot.ref);
         console.log('Download URL obtained:', downloadURL);
 
         uploadedImage = downloadURL;

@@ -503,8 +503,12 @@
             });
         }
         
-        window.saveUserData = async function() {
-            if (!window.currentUser) return;
+        window.saveUserData = async function () {
+            if (!window.currentUser) {
+                console.error('No current user found. Cannot save data.');
+                return;
+            }
+        
             const userId = window.currentUser.uid;
             const dataToSave = {
                 subjects: window.subjects || [],
@@ -517,9 +521,23 @@
                 studySessions: window.studySessions || {},
                 nickname: window.nickname || 'User',
                 groupCode: window.currentGroupCode || null,
-                widgetVisibility: window.widgetVisibility
+                widgetVisibility: window.widgetVisibility || {
+                    studyTime: true,
+                    todo: true,
+                    diary: true,
+                    goalProgress: true,
+                    dday: true
+                }
             };
-            await window.firestoreSetDoc(window.firestoreDoc(db, "users", userId), dataToSave, { merge: true });
+        
+            try {
+                const userRef = window.firestoreDoc(window.firestoreDb, "users", userId);
+                await window.firestoreSetDoc(userRef, dataToSave, { merge: true });
+                console.log('Data successfully saved to Firestore:', dataToSave);
+            } catch (error) {
+                console.error('Failed to save data to Firestore:', error);
+                throw error; // 상위 함수에서 에러를 잡을 수 있도록 전달
+            }
         };
     </script>
     <script src="script.js"></script>

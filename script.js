@@ -696,14 +696,9 @@ async function deleteSubject(subjectName) {
 
 function updateSubjectSelect() {
     const subjectSelect = document.getElementById('subjectSelect');
-    subjectSelect.innerHTML = '<option value="">Select Subject</option>';
-    
-    const subjects = window.subjects || []; // 기본값 설정
-    subjects.forEach(subject => {
-        const option = document.createElement('option');
-        option.value = subject;
-        option.textContent = subject;
-        subjectSelect.appendChild(option);
+    subjectSelect.innerHTML = '<option value="">Select a subject</option>';
+    window.subjects.forEach(subject => {
+        subjectSelect.innerHTML += `<option value="${subject}">${subject}</option>`;
     });
 }
 
@@ -754,46 +749,17 @@ document.getElementById('diaryImage').addEventListener('change', function() {
 });
 
 function uploadImage() {
-async function uploadImage() {
     const fileInput = document.getElementById('diaryImage');
     const file = fileInput.files[0];
-    if (!file) {
-        console.log('No file selected.');
-        return;
-    }
-
-    if (!window.currentUser) {
-        alert('You must be logged in to upload an image.');
-        console.log('User not logged in.');
-        return;
-    }
-
-    try {
-        console.log('Starting image upload for user:', window.currentUser.uid);
-        const storageRef = window.storageRef(window.storage, `diary_images/${window.currentUser.uid}/${Date.now()}_${file.name}`);
-        console.log('Storage reference created:', storageRef.fullPath);
-
-        // 인증 토큰 확인
-        const token = await window.currentUser.getIdToken();
-        console.log('User token obtained:', token);
-
-        const snapshot = await window.uploadBytes(storageRef, file, { 
-            contentType: file.type // 파일 타입 명시
-        });
-        console.log('Upload successful, snapshot:', snapshot);
-
-        const downloadURL = await window.getDownloadURL(snapshot.ref);
-        console.log('Download URL obtained:', downloadURL);
-
-        uploadedImage = downloadURL;
-        const preview = document.getElementById('imagePreview');
-        preview.innerHTML = `<img src="${uploadedImage}" alt="Uploaded Image">`;
+    if (file) {
+        const reader = new FileReader();
+        reader.on = function(e) {
+            upedImage = e.target.result;
+            const preview = document.getElementById('imagePreview');
+            preview.innerHTML = `<img src="${upedImage}" alt="Uped Image">`;
+        };
+        reader.readAsDataURL(file);
         fileInput.value = '';
-
-        console.log('Image upload completed successfully.');
-    } catch (error) {
-        console.error('Image upload failed:', error.code, error.message);
-        alert(`Failed to upload image: ${error.message}`);
     }
 }
 
@@ -1547,30 +1513,6 @@ function renderStats() {
         showStatsDetails(firstDayStr);
     } else {
         showStatsDetails(currentSelectedDate);
-    }
-}
-
-function loadDiaryData(selectedDate) { // 함수 이름도 loadDiaryData로 통일
-    const diaryEntry = window.diaryData[selectedDate];
-    
-    document.querySelectorAll('.mood-bean').forEach(bean => bean.classList.remove('selected'));
-    document.getElementById('memoInput').value = '';
-    document.getElementById('imagePreview').innerHTML = '';
-    selectedMood = null;
-    uploadedImage = null;
-    
-    if (diaryEntry) {
-        const mood = diaryEntry.mood;
-        if (mood) {
-            document.querySelector(`.mood-bean.${mood}`).classList.add('selected');
-            selectedMood = mood;
-        }
-        
-        document.getElementById('memoInput').value = diaryEntry.memo || '';
-        if (diaryEntry.image) {
-            document.getElementById('imagePreview').innerHTML = `<img src="${diaryEntry.image}" alt="Diary Image">`;
-            uploadedImage = diaryEntry.image;
-        }
     }
 }
 

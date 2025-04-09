@@ -488,6 +488,14 @@ function toggleDayDetails(date) {
     }
     
     dayDetails.classList.remove('hidden');
+
+    const image = window.diaryData[date]?.image || null;
+    const imagePreview = document.getElementById('dayImagePreview');
+    imagePreview.innerHTML = '';
+    if (image) {
+        imagePreview.innerHTML = `<img src="${image}" alt="Diary Image">`;
+    }
+    dayDetails.classList.remove('hidden');
 }
 
 function updateStudyTimeDisplay() {
@@ -601,13 +609,18 @@ async function stopTimer() {
 async function saveDiary() {
     const date = document.getElementById('diaryDate').value;
     const memo = document.getElementById('memoInput').value.trim();
+    const fileInput = document.getElementById('diaryImage');
+
     if (!date || !selectedMood || !memo) {
         if (!selectedMood) alert('Please select your mood for today!');
         if (!memo) alert('Please write a memo for your journal entry!');
         return;
     }
 
-    // diaryData에 저장
+    if (fileInput.files.length > 0) {
+        await uploadImage();
+    }
+
     window.diaryData[date] = {
         mood: selectedMood,
         memo: memo,
@@ -615,7 +628,7 @@ async function saveDiary() {
     };
 
     try {
-        await window.saveUserData(); // Firestore에 저장
+        await window.saveUserData();
         console.log(`Diary entry for ${date} saved:`, window.diaryData[date]);
         renderHome();
         document.getElementById('memoInput').value = '';
@@ -780,11 +793,13 @@ async function uploadImage() {
     const preview = document.getElementById('imagePreview');
 
     if (!file) {
+        console.log('No file selected for upload.');
         alert('Please select an image to upload.');
         return;
     }
 
-    // 로컬 미리보기
+    console.log('Starting image upload for file:', file.name);
+
     const reader = new FileReader();
     reader.onload = function (e) {
         preview.innerHTML = `<img src="${e.target.result}" alt="Uploaded Image">`;
@@ -792,28 +807,24 @@ async function uploadImage() {
     reader.readAsDataURL(file);
 
     try {
-        // Firebase Storage에 업로드
         const userId = window.currentUser.uid;
         const date = document.getElementById('diaryDate').value || currentDate;
         const storagePath = `diary_images/${userId}/${date}_${file.name}`;
         const imageRef = window.storageRef(window.storage, storagePath);
 
-        // 이미지 업로드
+        console.log('Uploading to:', storagePath);
         const snapshot = await window.uploadBytes(imageRef, file);
-        // 업로드된 이미지의 다운로드 URL 가져오기
         const downloadURL = await window.getDownloadURL(snapshot.ref);
 
-        // 업로드된 이미지 URL 저장
         uploadedImage = downloadURL;
-        console.log('Image uploaded successfully:', uploadedImage);
+        console.log('Image uploaded successfully. URL:', uploadedImage);
     } catch (error) {
         console.error('Image upload failed:', error);
         alert('Failed to upload image: ' + error.message);
-        preview.innerHTML = ''; // 에러 시 미리보기 제거
+        preview.innerHTML = '';
         uploadedImage = null;
     }
 
-    // 파일 입력 초기화
     fileInput.value = '';
 }
 

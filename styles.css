@@ -454,11 +454,13 @@ body {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 20px;
+    width: 100%; /* 전체 너비를 명확히 설정 */
 }
 
 .week-controls button {
     background-color: #4285F4;
     color: white;
+    padding: clamp(6px, 1.5vw, 10px); /* 버튼 크기 반응형 */
 }
 
 .week-controls button:hover {
@@ -468,6 +470,8 @@ body {
 .week-controls span {
     font-size: 16px;
     font-weight: bold;
+    text-align: center; /* 텍스트 가운데 정렬 */
+    flex-grow: 1; /* 공간을 균등히 차지하도록 */
 }
 
 .week-calendar {
@@ -475,17 +479,22 @@ body {
     justify-content: space-between;
     gap: 10px;
     margin-bottom: 20px;
+    flex-wrap: wrap; /* 모바일에서 줄바꿈 허용 */
 }
 
 .week-day {
     flex: 1;
-    padding: 15px;
+    padding: 10px; /* 패딩 줄여서 공간 확보 */
     background-color: #fff;
     border: 1px solid #eee;
     border-radius: 8px;
     text-align: center;
     cursor: pointer;
     transition: all 0.3s;
+    min-width: 0; /* flex 아이템이 축소 가능하도록 */
+    overflow: hidden; /* 내용이 넘치면 숨김 */
+    white-space: nowrap; /* 텍스트 줄바꿈 방지 */
+    text-overflow: ellipsis; /* 넘치는 텍스트를 ...으로 표시 */
 }
 
 .week-day:hover {
@@ -1045,6 +1054,21 @@ body {
     }
     .nav-drawer:not(.hidden) {
         right: 0;
+    }
+}
+
+@media (max-width: 576px) {
+    .week-calendar {
+        gap: 5px;
+    }
+
+    .week-day {
+        padding: 8px;
+        font-size: 12px; /* 글자 크기 줄임 */
+    }
+
+    .week-controls span {
+        font-size: 14px; /* 모바일에서 글자 크기 조정 */
     }
 }
 

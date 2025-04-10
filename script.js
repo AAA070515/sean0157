@@ -171,11 +171,13 @@ function showScreen(screen, subTab = null) {
         if (currentSelectedSubject) {
             document.getElementById('subjectSelect').value = currentSelectedSubject;
         }
-    }} else if (screen === 'diary') {
+    } else if (screen === 'diary') {
         document.getElementById('diaryDate').value = currentDate;
         document.getElementById('memoInput').value = '';
         document.querySelectorAll('.mood-bean').forEach(bean => bean.classList.remove('selected'));
         selectedMood = null;
+        uploadedImage = null;
+        document.getElementById('imagePreview').innerHTML = '';
         loadDiaryData(currentDate);
     } else if (screen === 'todo') {
         renderTodos();
@@ -589,13 +591,17 @@ async function saveDiary() {
 
     window.diaryData[date] = { 
         mood: selectedMood,
-        memo: memo
+        memo: memo, 
+        image: uploadedImage || window.diaryData[date]?.image || null 
     };
     await window.saveUserData();
     renderHome();
     document.getElementById('memoInput').value = '';
+    document.getElementById('diaryImage').value = '';
     document.querySelectorAll('.mood-bean').forEach(bean => bean.classList.remove('selected'));
     selectedMood = null;
+    uploadedImage = null;
+    document.getElementById('imagePreview').innerHTML = '';
     alert('Journal entry saved!');
 }
 
@@ -731,6 +737,30 @@ function selectMood(mood) {
     document.querySelectorAll('.mood-bean').forEach(bean => bean.classList.remove('selected'));
     document.querySelector(`.mood-bean.${mood}`).classList.add('selected');
     selectedMood = mood;
+}
+
+function triggerFileInput() {
+    const fileInput = document.getElementById('diaryImage');
+    fileInput.click();
+}
+
+document.getElementById('diaryImage').addEventListener('change', function() {
+    uploadImage();
+});
+
+function uploadImage() {
+    const fileInput = document.getElementById('diaryImage');
+    const file = fileInput.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.on = function(e) {
+            upedImage = e.target.result;
+            const preview = document.getElementById('imagePreview');
+            preview.innerHTML = `<img src="${upedImage}" alt="Uped Image">`;
+        };
+        reader.readAsDataURL(file);
+        fileInput.value = '';
+    }
 }
 
 function DiaryData(selectedDate) {
@@ -1483,24 +1513,6 @@ function renderStats() {
         showStatsDetails(firstDayStr);
     } else {
         showStatsDetails(currentSelectedDate);
-    }
-}
-
-function loadDiaryData(selectedDate) {
-    const diaryEntry = window.diaryData[selectedDate];
-    
-    document.querySelectorAll('.mood-bean').forEach(bean => bean.classList.remove('selected'));
-    document.getElementById('memoInput').value = '';
-    selectedMood = null;
-    
-    if (diaryEntry) {
-        const mood = diaryEntry.mood;
-        if (mood) {
-            document.querySelector(`.mood-bean.${mood}`).classList.add('selected');
-            selectedMood = mood;
-        }
-        
-        document.getElementById('memoInput').value = diaryEntry.memo || '';
     }
 }
 

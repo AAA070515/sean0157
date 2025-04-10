@@ -699,9 +699,11 @@ async function deleteSubject(subjectName) {
 function updateSubjectSelect() {
     const subjectSelect = document.getElementById('subjectSelect');
     subjectSelect.innerHTML = '<option value="">Select a subject</option>';
-    window.subjects.forEach(subject => {
-        subjectSelect.innerHTML += `<option value="${subject}">${subject}</option>`;
-    });
+    if (Array.isArray(window.subjects)) {
+        window.subjects.forEach(subject => {
+            subjectSelect.innerHTML += `<option value="${subject}">${subject}</option>`;
+        });
+    }
 }
 
 function updateSubjectTimes() {
@@ -758,7 +760,6 @@ async function uploadImage() {
     try {
         const date = document.getElementById('diaryDate').value;
         const storageRef = ref(window.storage, `diary/${window.currentUser.uid}/${date}/${file.name}`);
-        
         const snapshot = await uploadBytes(storageRef, file);
         uploadedImage = await getDownloadURL(snapshot.ref);
         

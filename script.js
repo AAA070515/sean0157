@@ -13,48 +13,6 @@ window.ddays = [];
 const today = new Date();
 let currentDate = today.toISOString().split('T')[0];
 
-async function loadUserData(userId) {
-    const userRef = doc(db, "users", userId);
-    window.firestoreOnSnapshot(userRef, (doc) => {
-        if (doc.exists()) {
-            const data = doc.data();
-            window.subjects = data.subjects || [];
-            window.studyData = data.studyData || {};
-            window.subjectStudyTime = data.subjectStudyTime || {};
-            window.diaryData = data.diaryData || {};
-            window.todos = data.todos || [];
-            window.ddays = data.ddays || [];
-            window.goals = data.goals || { daily: null, weekly: null };
-            window.studySessions = data.studySessions || {};
-            window.nickname = data.nickname || 'User';
-            window.currentGroupCode = data.groupCode || null;
-            window.widgetVisibility = data.widgetVisibility || {
-                studyTime: true,
-                todo: true,
-                diary: true,
-                goalProgress: true,
-                dday: true
-            };
-            updateSubjectSelect();
-            updateSubjectTimes();
-            updateStudyTimeDisplay();
-            updateGoalsInputs();
-            updateGoalsProgress();
-            renderHome();
-            renderTodos();
-            renderGroupDashboard();
-        } else {
-            window.widgetVisibility = {
-                studyTime: true,
-                todo: true,
-                diary: true,
-                goalProgress: true,
-                dday: true
-            };
-        }
-    });
-}
-
 window.saveUserData = async function() {
     if (!window.currentUser) return;
     const userId = window.currentUser.uid;
@@ -497,25 +455,7 @@ function startTimer() {
         timerInterval = setInterval(() => {
             timerSeconds++;
             updateTimerDisplay();
-
-            if (timerSeconds % 1 === 0 && window.currentGroupCode) {
-                const groupRef = window.firestoreDoc(window.firestoreDb, "groups", window.currentGroupCode);
-                window.firestoreGetDoc(groupRef).then(groupDoc => {
-                    if (groupDoc.exists()) {
-                        const groupData = groupDoc.data();
-                        const tempStudyTime = (window.studyData[currentDate] || 0) + timerSeconds;
-                        window.firestoreSetDoc(groupRef, {
-                            members: {
-                                ...groupData.members,
-                                [window.currentUser.uid]: {
-                                    nickname: window.nickname,
-                                    studyTime: tempStudyTime
-                                }
-                            }
-                        }, { merge: true });
-                    }
-                });
-            }
+            // 그룹 동기화는 로그인 상태에서만 실행 (제거됨)
         }, 1000);
 
         if (!window.studySessions[currentDate]) {
@@ -553,24 +493,8 @@ async function stopTimer() {
         lastSession.duration = timerSeconds;
     }
 
-    if (window.currentGroupCode) {
-        const groupRef = window.firestoreDoc(window.firestoreDb, "groups", window.currentGroupCode);
-        const groupDoc = await window.firestoreGetDoc(groupRef);
-        if (groupDoc.exists()) {
-            const groupData = groupDoc.data();
-            const updatedMembers = {
-                ...groupData.members,
-                [window.currentUser.uid]: {
-                    nickname: window.nickname,
-                    studyTime: window.studyData[currentDate] || 0
-                }
-            };
-            await window.firestoreSetDoc(groupRef, { members: updatedMembers }, { merge: true });
-        }
-    }
-
     timerSeconds = 0;
-    await window.saveUserData();
+    await window.saveUserData(); // 로그인 여부에 따라 로컬/파이어베이스 저장
     updateTimerDisplay();
     updateStudyTimeDisplay();
     updateSubjectTimes();
@@ -1444,16 +1368,7 @@ function renderGroupContent() {
     const joinCreateBox = document.querySelector('.group-join-create-box');
     const contentBox = document.querySelector('.group-content-box');
 
-    if (!joinCreateBox || !contentBox) {
-        console.error('Error: .group-join-create-box or .group-content-box not found');
-        return;
-    }
-
-    console.log('currentGroupCode:', window.currentGroupCode);
-    console.log('joinCreateBox hidden:', joinCreateBox.classList.contains('hidden'));
-    console.log('contentBox hidden:', contentBox.classList.contains('hidden'));
-
-    if (!window.currentGroupCode) {
+    if (!window.currentUser || !window.currentGroupCode) {
         joinCreateBox.classList.remove('hidden');
         joinCreateBox.style.display = 'flex';
         contentBox.classList.add('hidden');
@@ -1467,10 +1382,8 @@ function renderGroupContent() {
         renderGroupChat();
         showGroupTab('dashboard');
     }
-
-    console.log('After update - joinCreateBox hidden:', joinCreateBox.classList.contains('hidden'));
-    console.log('After update - contentBox hidden:', contentBox.classList.contains('hidden'));
 }
+
 document.head.appendChild(style);
 
 function renderStats() {

@@ -320,13 +320,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot, getDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
-        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-storage.js";
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        const storage = getStorage(app);
-        
         const firebaseConfig = {
             apiKey: "AIzaSyDx_BBG73R3FReoFsRPuIKcDb754LAxTCI",
             authDomain: "sean0157-92c62.firebaseapp.com",
@@ -337,9 +331,12 @@
             measurementId: "G-HRWSZ6MSNB"
         };
 
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
         window.firebaseAuth = auth;
         window.firestoreDb = db;
-        window.storage = storage;
         window.firestoreDoc = doc;
         window.firestoreGetDoc = getDoc;
         window.firestoreSetDoc = setDoc;
@@ -455,7 +452,7 @@
             window.firestoreOnSnapshot(userRef, (doc) => {
                 if (doc.exists()) {
                     const data = doc.data();
-                    window.subjects = window.subjects || [];
+                    window.subjects = data.subjects || [];
                     window.studyData = data.studyData || {};
                     window.subjectStudyTime = data.subjectStudyTime || {};
                     window.diaryData = data.diaryData || {};

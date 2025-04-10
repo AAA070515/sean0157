@@ -37,7 +37,7 @@
             <div class="nav-item" onclick="showScreen('todo')">To-Do</div>
             <div class="nav-item" onclick="showScreen('diary')">Journal</div>
             <div class="nav-item" onclick="showScreen('goals')">Goals</div>
-            <div class="nav-item" id="groupsNavItem" onclick="showScreen('groups')">Groups</div>
+            <div class="nav-item" onclick="showScreen('groups')">Groups</div>
             <div class="nav-item" onclick="showScreen('stats')">Statistics</div>
             <div class="nav-item" id="settings-btn" onclick="showScreen('settings')">Settings</div>
             <div class="nav-item" id="login-btn">Login</div>
@@ -320,7 +320,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot, getDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
-    
+
         const firebaseConfig = {
             apiKey: "AIzaSyDx_BBG73R3FReoFsRPuIKcDb754LAxTCI",
             authDomain: "sean0157-92c62.firebaseapp.com",
@@ -330,11 +330,11 @@
             appId: "1:1052880240716:web:13289245ada3ff291174e9",
             measurementId: "G-HRWSZ6MSNB"
         };
-    
+
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-    
+
         window.firebaseAuth = auth;
         window.firestoreDb = db;
         window.firestoreDoc = doc;
@@ -342,94 +342,114 @@
         window.firestoreSetDoc = setDoc;
         window.firestoreOnSnapshot = onSnapshot;
         window.firestoreDeleteDoc = deleteDoc;
-    
+
         let currentUser = null;
         let currentGroupCode = null;
-        let unsubscribeUserSnapshot = null; // Firestore 리스너 해제를 위한 변수
-    
+
         const loginBtn = document.getElementById('login-btn');
         const logoutBtn = document.getElementById('logout-btn');
-        const groupsNavItem = document.getElementById('groupsNavItem');
-    
-        // 데이터 초기화
-        function initializeData() {
-            return {
-                subjects: [],
-                studyData: {},
-                subjectStudyTime: {},
-                diaryData: {},
-                todos: [],
-                ddays: [],
-                goals: { daily: null, weekly: null },
-                studySessions: {},
-                nickname: 'User',
-                groupCode: null,
-                widgetVisibility: {
-                    studyTime: true,
-                    todo: true,
-                    diary: true,
-                    goalProgress: true,
-                    dday: true
+
+        onAuthStateChanged(auth, (user) => {
+            const loginScreen = document.getElementById('loginScreen');
+            const mainContent = document.querySelector('.main-content');
+
+            if (user) {
+                currentUser = user;
+                window.currentUser = user;
+                loginScreen.classList.add('hidden');
+                mainContent.classList.remove('hidden');
+                loginBtn.style.display = 'none';
+                logoutBtn.style.display = 'block';
+                checkAndSetNickname(user);
+                loadUserData(user.uid);
+            } else {
+                currentUser = null;
+                window.currentUser = null;
+                loginScreen.classList.remove('hidden');
+                mainContent.classList.add('hidden');
+                loginBtn.style.display = 'block';
+                logoutBtn.style.display = 'none';
+            }
+        });
+
+        document.getElementById('googleLoginBtn').addEventListener('click', () => {
+            const provider = new GoogleAuthProvider();
+            signInWithPopup(auth, provider)
+                .then((result) => {
+                    console.log('Login successful:', result.user.displayName);
+                })
+                .catch((error) => {
+                    console.error('Login failed:', error.message);
+                    alert('로그인에 실패했습니다. 다시 시도해주세요.');
+                });
+        });
+
+        loginBtn.addEventListener('click', () => {
+            document.getElementById('googleLoginBtn').click();
+        });
+
+        logoutBtn.addEventListener('click', () => {
+            signOut(auth)
+                .then(() => {
+                    console.log('Logout successful');
+                })
+                .catch((error) => {
+                    console.error('Logout failed:', error.message);
+                    alert('로그아웃에 실패했습니다.');
+                });
+        });
+
+        async function checkAndSetNickname(user) {
+            const userRef = doc(db, "users", user.uid);
+            const userDoc = await getDoc(userRef);
+            
+            if (!userDoc.exists() || !userDoc.data().nickname) {
+                showNicknameModal(user);
+            } else {
+                console.log('Nickname already set:', userDoc.data().nickname);
+            }
+        }
+
+        function showNicknameModal(user) {
+            const modal = document.getElementById('nicknameModal');
+            const input = document.getElementById('nicknameInput');
+            const saveBtn = document.getElementById('saveNicknameBtn');
+            const error = document.getElementById('nicknameError');
+            
+            modal.classList.remove('hidden');
+            input.value = '';
+            error.classList.add('hidden');
+
+            saveBtn.onclick = async () => {
+                const nickname = input.value.trim();
+                if (nickname.length < 2 || nickname.length > 20) {
+                    error.textContent = 'Nickname must be between 2 and 20 characters.';
+                    error.classList.remove('hidden');
+                    return;
+                }
+
+                try {
+                    await setDoc(doc(db, "users", user.uid), { nickname }, { merge: true });
+                    modal.classList.add('hidden');
+                    window.nickname = nickname;
+                    alert(`Welcome, ${nickname}!`);
+                } catch (err) {
+                    error.textContent = 'Failed to save nickname. Try again.';
+                    error.classList.remove('hidden');
+                    console.error('Nickname save error:', err);
                 }
             };
+
+            input.addEventListener('keypress', (event) => {
+                if (event.key === 'Enter') {
+                    saveBtn.click();
+                }
+            });
         }
-    
-        // 로컬 스토리지에서 데이터 로드
-        function loadLocalData() {
-            const localData = localStorage.getItem('berryGoodData');
-            if (localData) {
-                const data = JSON.parse(localData);
-                window.subjects = data.subjects || [];
-                window.studyData = data.studyData || {};
-                window.subjectStudyTime = data.subjectStudyTime || {};
-                window.diaryData = data.diaryData || {};
-                window.todos = data.todos || [];
-                window.ddays = data.ddays || [];
-                window.goals = data.goals || { daily: null, weekly: null };
-                window.studySessions = data.studySessions || {};
-                window.nickname = data.nickname || 'User';
-                window.currentGroupCode = null; // 로컬에서는 그룹 비활성화
-                window.widgetVisibility = data.widgetVisibility || {
-                    studyTime: true,
-                    todo: true,
-                    diary: true,
-                    goalProgress: true,
-                    dday: true
-                };
-            } else {
-                Object.assign(window, initializeData());
-            }
-            updateSubjectSelect();
-            updateSubjectTimes();
-            updateStudyTimeDisplay();
-            updateGoalsInputs();
-            updateGoalsProgress();
-            renderHome();
-            renderTodos();
-        }
-    
-        // 로컬 스토리지에 데이터 저장
-        function saveLocalData() {
-            const dataToSave = {
-                subjects: window.subjects || [],
-                studyData: window.studyData || {},
-                subjectStudyTime: window.subjectStudyTime || {},
-                diaryData: window.diaryData || {},
-                todos: window.todos || [],
-                ddays: window.ddays || [],
-                goals: window.goals || { daily: null, weekly: null },
-                studySessions: window.studySessions || {},
-                nickname: window.nickname || 'User',
-                widgetVisibility: window.widgetVisibility
-            };
-            localStorage.setItem('berryGoodData', JSON.stringify(dataToSave));
-        }
-    
-        // Firebase에서 데이터 로드
-        async function loadFirebaseData(userId) {
+
+        async function loadUserData(userId) {
             const userRef = doc(db, "users", userId);
-            if (unsubscribeUserSnapshot) unsubscribeUserSnapshot(); // 기존 리스너 해제
-            unsubscribeUserSnapshot = onSnapshot(userRef, (doc) => {
+            window.firestoreOnSnapshot(userRef, (doc) => {
                 if (doc.exists()) {
                     const data = doc.data();
                     window.subjects = data.subjects || [];
@@ -449,24 +469,29 @@
                         goalProgress: true,
                         dday: true
                     };
+                    updateSubjectSelect();
+                    updateSubjectTimes();
+                    updateStudyTimeDisplay();
+                    updateGoalsInputs();
+                    updateGoalsProgress();
+                    renderHome();
+                    renderTodos();
+                    renderGroupDashboard();
                 } else {
-                    Object.assign(window, initializeData());
+                    window.widgetVisibility = {
+                        studyTime: true,
+                        todo: true,
+                        diary: true,
+                        goalProgress: true,
+                        dday: true
+                    };
                 }
-                updateSubjectSelect();
-                updateSubjectTimes();
-                updateStudyTimeDisplay();
-                updateGoalsInputs();
-                updateGoalsProgress();
-                renderHome();
-                renderTodos();
-                renderGroupDashboard();
             });
         }
-    
-        // Firebase에 데이터 저장
-        async function saveFirebaseData() {
-            if (!currentUser) return;
-            const userId = currentUser.uid;
+        
+        window.saveUserData = async function() {
+            if (!window.currentUser) return;
+            const userId = window.currentUser.uid;
             const dataToSave = {
                 subjects: window.subjects || [],
                 studyData: window.studyData || {},
@@ -480,120 +505,8 @@
                 groupCode: window.currentGroupCode || null,
                 widgetVisibility: window.widgetVisibility
             };
-            await setDoc(doc(db, "users", userId), dataToSave, { merge: true });
-        }
-    
-        // 전역 saveUserData 함수
-        window.saveUserData = async function() {
-            if (currentUser) {
-                await saveFirebaseData();
-            } else {
-                saveLocalData();
-            }
+            await window.firestoreSetDoc(window.firestoreDoc(db, "users", userId), dataToSave, { merge: true });
         };
-    
-        // 인증 상태 변경 감지
-        onAuthStateChanged(auth, (user) => {
-            const loginScreen = document.getElementById('loginScreen');
-            const mainContent = document.querySelector('.main-content');
-    
-            if (user) {
-                currentUser = user;
-                window.currentUser = user;
-                loginScreen.classList.add('hidden');
-                mainContent.classList.remove('hidden');
-                loginBtn.style.display = 'none';
-                logoutBtn.style.display = 'block';
-                groupsNavItem.style.display = 'block'; // 로그인 시 Groups 보이기
-                checkAndSetNickname(user);
-                loadFirebase withData(user.uid);
-            } else {
-                currentUser = null;
-                window.currentUser = null;
-                loginScreen.classList.remove('hidden');
-                mainContent.classList.add('hidden');
-                loginBtn.style.display = 'block';
-                logoutBtn.style.display = 'none';
-                groupsNavItem.style.display = 'none'; // 로그아웃 시 Groups 숨기기
-                if (unsubscribeUserSnapshot) unsubscribeUserSnapshot(); // Firebase 리스너 해제
-                loadLocalData(); // 로컬 데이터 로드
-            }
-        });
-    
-        document.getElementById('googleLoginBtn').addEventListener('click', () => {
-            const provider = new GoogleAuthProvider();
-            signInWithPopup(auth, provider)
-                .then((result) => {
-                    console.log('Login successful:', result.user.displayName);
-                })
-                .catch((error) => {
-                    console.error('Login failed:', error.message);
-                    alert('로그인에 실패했습니다. 다시 시도해주세요.');
-                });
-        });
-    
-        loginBtn.addEventListener('click', () => {
-            document.getElementById('googleLoginBtn').click();
-        });
-    
-        logoutBtn.addEventListener('click', () => {
-            signOut(auth)
-                .then(() => {
-                    console.log('Logout successful');
-                })
-                .catch((error) => {
-                    console.error('Logout failed:', error.message);
-                    alert('로그아웃에 실패했습니다.');
-                });
-        });
-    
-        async function checkAndSetNickname(user) {
-            const userRef = doc(db, "users", user.uid);
-            const userDoc = await getDoc(userRef);
-            
-            if (!userDoc.exists() || !userDoc.data().nickname) {
-                showNicknameModal(user);
-            } else {
-                console.log('Nickname already set:', userDoc.data().nickname);
-            }
-        }
-    
-        function showNicknameModal(user) {
-            const modal = document.getElementById('nicknameModal');
-            const input = document.getElementById('nicknameInput');
-            const saveBtn = document.getElementById('saveNicknameBtn');
-            const error = document.getElementById('nicknameError');
-            
-            modal.classList.remove('hidden');
-            input.value = '';
-            error.classList.add('hidden');
-    
-            saveBtn.onclick = async () => {
-                const nickname = input.value.trim();
-                if (nickname.length < 2 || nickname.length > 20) {
-                    error.textContent = 'Nickname must be between 2 and 20 characters.';
-                    error.classList.remove('hidden');
-                    return;
-                }
-    
-                try {
-                    await setDoc(doc(db, "users", user.uid), { nickname }, { merge: true });
-                    modal.classList.add('hidden');
-                    window.nickname = nickname;
-                    alert(`Welcome, ${nickname}!`);
-                } catch (err) {
-                    error.textContent = 'Failed to save nickname. Try again.';
-                    error.classList.remove('hidden');
-                    console.error('Nickname save error:', err);
-                }
-            };
-    
-            input.addEventListener('keypress', (event) => {
-                if (event.key === 'Enter') {
-                    saveBtn.click();
-                }
-            });
-        }
     </script>
     <script src="script.js"></script>
 </body>

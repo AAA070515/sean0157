@@ -24,14 +24,12 @@
             <p id="nicknameError" class="error hidden"></p>
         </div>
     </div>
-
     <header class="header">
         <div class="logo" onclick="showScreen('home')">
             <img src="logo.png" alt="BerryGood Logo" style="height: 40px;">
         </div>
         <div class="hamburger-icon" onclick="toggleDrawer()">☰</div>
     </header>
-
     <nav class="nav-drawer hidden">
         <div class="drawer-content">
             <div class="nav-item active" onclick="showScreen('home')">Home</div>
@@ -41,7 +39,7 @@
             <div class="nav-item" onclick="showScreen('goals')">Goals</div>
             <div class="nav-item" onclick="showScreen('groups')">Groups</div>
             <div class="nav-item" onclick="showScreen('stats')">Statistics</div>
-            <div class="nav-item" onclick="showScreen('settings')">Settings</div>
+            <div class="nav-item" id="settings-btn" onclick="showScreen('settings')">Settings</div>
             <div class="nav-item" id="login-btn">Login</div>
         </div>
     </nav>
@@ -64,20 +62,43 @@
                             <div id="dayImagePreview" style="margin-top: 15px;"></div>
                         </div>
                     </div>
+                    <div class="widget" onclick="showScreen('study')">
+                        <h3>Today's Study Time</h3>
+                        <div id="dashboardStudyTime" class="big-text">0h 0m 0s</div>
+                    </div>
+                    <div class="widget" onclick="showScreen('todo')">
+                        <h3>To-Do List</h3>
+                        <ul id="dashboardTodoPreview" class="todo-preview"></ul>
+                    </div>
+                    <div class="widget" onclick="showScreen('diary')">
+                        <h3>Recent Journal</h3>
+                        <div id="dashboardDiary" class="diary-preview">
+                            <p>No recent entries</p>
+                        </div>
+                    </div>
+                    <div class="widget" onclick="showScreen('stats')">
+                        <h3>Goal Progress</h3>
+                        <div id="dashboardGoalProgress" class="goal-preview"></div>
+                    </div>
+                    <div class="widget" onclick="showScreen('todo', 'dday')">
+                        <h3>Upcoming D-Day</h3>
+                        <div id="dashboardDDayPreview" class="dday-preview">
+                            <p>No D-Days set</p>
+                        </div>
+                    </div>
                 </div>
             </section>
-
             <section id="studyScreen" class="hidden">
                 <div class="timer-section">
                     <div style="display: flex;">
                         <label for="subjectInput" class="hidden-label">Add subject</label>
-                        <input type="text" id="subjectInput" class="subject-input" placeholder="Add subject">
+                        <input type="text" class="subject-input" id="subjectInput" placeholder="Add subject">
                         <button class="subject-add-btn btn" onclick="addSubject()">Add</button>
                     </div>
-                    <select id="subjectSelect" class="subject-select">
+                    <select class="subject-select" id="subjectSelect">
                         <option value="">Select a subject</option>
                     </select>
-                    <div id="timerDisplay" class="timer-display">00:00:00</div>
+                    <div class="timer-display" id="timerDisplay">00:00:00</div>
                     <div class="timer-controls">
                         <button class="timer-btn start-btn btn" onclick="startTimer()">Start</button>
                         <button class="timer-btn pause-btn btn" onclick="pauseTimer()">Pause</button>
@@ -90,7 +111,6 @@
                     <div id="subjectTimes"></div>
                 </div>
             </section>
-
             <section id="diaryScreen" class="hidden">
                 <div class="diary-section">
                     <h3>Select Date</h3>
@@ -108,11 +128,10 @@
                 </div>
                 <div class="diary-section">
                     <h3>Daily Note</h3>
-                    <textarea id="memoInput" class="memo-input" placeholder="Write a brief note about your day..." rows="3"></textarea>
+                    <textarea class="memo-input" id="memoInput" placeholder="Write a brief note about your day..." rows="3"></textarea>
                 </div>
                 <button class="save-button btn" onclick="saveDiary()">Save Journal Entry</button>
             </section>
-
             <section id="todoScreen" class="hidden">
                 <div class="todo-section">
                     <div class="todo-tabs">
@@ -122,7 +141,7 @@
                     <div id="todoTabContent" class="todo-content">
                         <div style="display: flex;">
                             <label for="todoInput" class="hidden-label">Add new task</label>
-                            <input type="text" id="todoInput" class="todo-input" placeholder="Add new task">
+                            <input type="text" class="todo-input" id="todoInput" placeholder="Add new task">
                             <button class="todo-add-btn btn" onclick="addTodo()">Add</button>
                         </div>
                         <div class="task-filters">
@@ -151,7 +170,6 @@
                     </div>
                 </div>
             </section>
-
             <section id="goalsScreen" class="hidden">
                 <div class="goals-section">
                     <h3>Set Your Goals</h3>
@@ -173,7 +191,6 @@
                     </div>
                 </div>
             </section>
-
             <section id="statsScreen" class="hidden">
                 <div class="stats-section">
                     <h3>Weekly Statistics</h3>
@@ -191,7 +208,6 @@
                     </div>
                 </div>
             </section>
-
             <section id="settingsScreen" class="hidden">
                 <div class="settings-section">
                     <h3>Settings</h3>
@@ -245,7 +261,6 @@
                     <button id="reset-all-btn" class="save-button btn" onclick="resetAllSettings()">Reset All Settings</button>
                 </div>
             </section>
-
             <section id="groupsScreen" class="hidden">
                 <div class="groups">
                     <h3>Groups</h3>
@@ -289,9 +304,9 @@
 
     <footer class="ads-footer">
         <ins class="kakao_ad_area" style="display:none;"
-             data-ad-unit="DAN-psytms2fqMVfnnaM"
-             data-ad-width="320"
-             data-ad-height="50"></ins>
+            data-ad-unit = "DAN-psytms2fqMVfnnaM"
+            data-ad-width = "320"
+            data-ad-height = "50"></ins>
         <script type="text/javascript" src="//t1.daumcdn.net/kas/static/ba.min.js" async></script>
     </footer>
 
@@ -354,18 +369,24 @@
         document.getElementById('googleLoginBtn').addEventListener('click', () => {
             const provider = new GoogleAuthProvider();
             signInWithPopup(auth, provider)
-                .then((result) => console.log('Login successful:', result.user.displayName))
+                .then((result) => {
+                    console.log('Login successful:', result.user.displayName);
+                })
                 .catch((error) => {
                     console.error('Login failed:', error.message);
                     alert('로그인에 실패했습니다. 다시 시도해주세요.');
                 });
         });
 
-        loginBtn.addEventListener('click', () => document.getElementById('googleLoginBtn').click());
+        loginBtn.addEventListener('click', () => {
+            document.getElementById('googleLoginBtn').click();
+        });
 
         logoutBtn.addEventListener('click', () => {
             signOut(auth)
-                .then(() => console.log('Logout successful'))
+                .then(() => {
+                    console.log('Logout successful');
+                })
                 .catch((error) => {
                     console.error('Logout failed:', error.message);
                     alert('로그아웃에 실패했습니다.');
@@ -375,6 +396,7 @@
         async function checkAndSetNickname(user) {
             const userRef = doc(db, "users", user.uid);
             const userDoc = await getDoc(userRef);
+            
             if (!userDoc.exists() || !userDoc.data().nickname) {
                 showNicknameModal(user);
             } else {
@@ -387,7 +409,7 @@
             const input = document.getElementById('nicknameInput');
             const saveBtn = document.getElementById('saveNicknameBtn');
             const error = document.getElementById('nicknameError');
-
+            
             modal.classList.remove('hidden');
             input.value = '';
             error.classList.add('hidden');
@@ -399,6 +421,7 @@
                     error.classList.remove('hidden');
                     return;
                 }
+
                 try {
                     await setDoc(doc(db, "users", user.uid), { nickname }, { merge: true });
                     modal.classList.add('hidden');
@@ -412,7 +435,9 @@
             };
 
             input.addEventListener('keypress', (event) => {
-                if (event.key === 'Enter') saveBtn.click();
+                if (event.key === 'Enter') {
+                    saveBtn.click();
+                }
             });
         }
 
@@ -457,7 +482,7 @@
                 }
             });
         }
-
+        
         window.saveUserData = async function() {
             if (!window.currentUser) return;
             const userId = window.currentUser.uid;
